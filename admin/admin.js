@@ -365,4 +365,27 @@ if (params.get('google') === 'connected') {
   history.replaceState({}, '', '/admin/');
 }
 
+// Lógica de Navegação por Abas do Painel Admin
+const navItems = document.querySelectorAll('.nav-item');
+const tabContents = document.querySelectorAll('.tab-content');
+
+navItems.forEach((item) => {
+  item.addEventListener('click', () => {
+    const targetTab = item.dataset.tab;
+    
+    // Atualiza estado ativo dos botões do menu
+    navItems.forEach((nav) => nav.classList.remove('active'));
+    item.classList.add('active');
+    
+    // Alterna a exibição das abas de conteúdo
+    tabContents.forEach((content) => {
+      if (content.id === `tab-content-${targetTab}`) {
+        content.classList.remove('hidden');
+      } else {
+        content.classList.add('hidden');
+      }
+    });
+  });
+});
+
 tryAutoLogin();
