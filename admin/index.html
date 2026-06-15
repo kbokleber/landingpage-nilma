@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Depoimentos | Dra. Nilma Alves</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <section id="login-view" class="login-wrap">
+    <h1>Administração</h1>
+    <p class="sub">Gerencie os depoimentos publicados no site.</p>
+    <div class="card">
+      <label for="password">Senha</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="Senha de administração">
+      <button class="btn" type="button" id="login-btn">Entrar</button>
+      <p id="login-error" class="message err hidden" role="alert"></p>
+    </div>
+    <p><a href="/">← Voltar ao site</a></p>
+  </section>
+
+  <section id="panel-view" class="panel-wrap hidden">
+    <div class="topbar">
+      <div>
+        <h1>Depoimentos</h1>
+        <p class="sub">Sincronize com o Google, edite e publique no site estático.</p>
+      </div>
+      <div>
+        <a href="/" target="_blank" rel="noopener">Ver site</a>
+        <button class="btn outline" type="button" id="logout-btn" style="margin-left:8px">Sair</button>
+      </div>
+    </div>
+
+    <div id="flash" class="message hidden" role="status"></div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Google Business</h2>
+      <div class="status-bar" id="google-status"></div>
+      <p id="google-next-step" class="sub hidden"></p>
+      <div class="toolbar">
+        <button class="btn secondary" type="button" id="connect-google-btn">Conectar Google</button>
+        <button class="btn outline" type="button" id="discover-locations-btn" disabled>Descobrir perfil</button>
+        <button class="btn" type="button" id="sync-btn" disabled>Sincronizar todos</button>
+        <button class="btn" type="button" id="publish-btn">Publicar no site</button>
+      </div>
+      <div id="location-picker" class="location-picker hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Adicionar depoimento manual</h2>
+      <div class="grid-2">
+        <div>
+          <label for="manual-author">Autor</label>
+          <input type="text" id="manual-author" placeholder="Nome do cliente">
+        </div>
+        <div>
+          <label for="manual-rating">Estrelas</label>
+          <select id="manual-rating">
+            <option value="5">5</option>
+            <option value="4">4</option>
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
+          </select>
+        </div>
+      </div>
+      <label for="manual-text">Texto</label>
+      <textarea id="manual-text" placeholder="Texto do depoimento"></textarea>
+      <button class="btn secondary" type="button" id="add-manual-btn">Adicionar</button>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Rascunho (<span id="item-count">0</span>)</h2>
+      <div id="review-list"></div>
+    </div>
+  </section>
+
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advogada Dr. Nilma Alves | São Paulo | Direito Familiar</title>
+  <meta name="description" content="Dra. Nilma Alves - atuação em Direito de Família, Sucessões e Imobiliário.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#efefef;
+      --surface:#ffffff;
+      --ink:#222222;
+      --muted:#555555;
+      --wine:#7f4258;
+      --wine-dark:#70354c;
+      --line:#dfdfdf;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Poppins',Arial,Helvetica,sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+      line-height:1.6;
+      font-weight:300;
+    }
+    img{max-width:100%;display:block}
+    a{text-decoration:none;color:inherit}
+    .container{width:min(1140px,93%);margin:0 auto}
+
+    .top{
+      background:#ffffff;
+      padding-top:12px;
+    }
+    .top .container{
+      min-height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .menu{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:8px;
+    }
+    .menu a{
+      background:var(--wine-dark);
+      color:#fff;
+      border-radius:6px;
+      padding:8px 16px;
+      font-size:11px;
+      letter-spacing:.4px;
+      font-weight:500;
+      line-height:1;
+    }
+    .menu a:hover{filter:brightness(1.08)}
+
+    .hero{
+      background:#fff;
+    }
+    .logo-wrap{
+      text-align:center;
+      padding:18px 0 26px;
+      background:#ffffff;
+    }
+    .logo-wrap img{
+      width:min(487px,80%);
+      height:auto;
+      margin:0 auto;
+    }
+    .hero-art{
+      width:100%;
+      margin:0 auto;
+    }
+    .hero-art img{
+      width:100%;
+      height:auto;
+      object-fit:cover;
+    }
+
+    section{padding:56px 0}
+
+    /* QUEM SOMOS */
+    .who-wrap{
+      background:var(--bg);
+      max-width:560px;
+      margin:0 auto;
+      padding:0 0 8px;
+    }
+    .who-title{
+      text-align:left;
+      font-size:52px;
+      font-weight:600;
+      line-height:1.05;
+      letter-spacing:-1px;
+      margin-bottom:18px;
+    }
+    .who-title .dot{color:var(--wine);}
+    .who-text{
+      font-size:14px;
+      color:#212121;
+      line-height:1.5;
+      margin-bottom:16px;
+      text-align:left;
+      font-weight:300;
+    }
+    .who-cta{
+      display:inline-block;
+      background:var(--wine-dark);
+      color:#fff;
+      border-radius:8px;
+      padding:9px 18px;
+      font-size:11px;
+      font-weight:500;
+      letter-spacing:.4px;
+      line-height:1;
+      margin-top:6px;
+    }
+    .who-cta:hover{filter:brightness(1.08)}
+
+    /* AREAS */
+    .areas-section{
+      background:var(--wine);
+      padding:58px 0 66px;
+    }
+    .areas-wrap{max-width:1000px;margin:0 auto;}
+    .areas-heading{
+      text-align:center;
+      color:#fff;
+      font-size:52px;
+      letter-spacing:-1px;
+      margin-bottom:40px;
+      font-weight:600;
+      line-height:1;
+    }
+    .areas-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:46px;
+    }
+    .area-card{color:#fff;}
+    .area-card .icon{
+      width:84px;
+      height:84px;
+      object-fit:contain;
+      margin:0 auto 20px;
+    }
+    .area-card h3{
+      text-align:center;
+      margin-bottom:16px;
+      font-size:24px;
+      font-weight:500;
+    }
+    .area-card p{
+      text-align:justify;
+      font-size:13px;
+      line-height:1.55;
+      color:#f3eaee;
+      font-weight:300;
+    }
+    .ler-mais{
+      margin-top:10px;
+      font-size:12px;
+      color:#fff;
+      font-weight:500;
+      display:inline-block;
+    }
+
+    /* SOBRE MIM */
+    .about-section{
+      background:var(--bg);
+      padding:40px 0;
+    }
+    .about-box{
+      background:#ededed;
+      width:min(1180px,94%);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:1.85fr 1fr;
+      align-items:start;
+    }
+    .about-left{
+      padding:54px 48px 44px;
+      display:flex;
+      flex-direction:column;
+    }
+    .about-title{
+      font-size:52px;
+      font-weight:600;
+      line-height:1;
+      letter-spacing:-1px;
+      margin-bottom:20px;
+    }
+    .about-title .dot{color:var(--wine);}
+    .about-ident{
+      font-size:14px;
+      line-height:1.5;
+      margin-bottom:22px;
+      color:#222;
+      font-weight:500;
+    }
+    .about-copy{
+      font-size:13.5px;
+      line-height:1.55;
+      margin-bottom:12px;
+      color:#1f1f1f;
+      text-align:justify;
+      font-weight:300;
+    }
+    .about-more{
+      font-size:12px;
+      font-weight:500;
+      color:#1d1d1d;
+      display:inline-block;
+    }
+    .about-footer{
+      margin-top:30px;
+      display:flex;
+      align-items:center;
+      gap:26px;
+      flex-wrap:wrap;
+    }
+    .about-btn{
+      display:inline-block;
+      background:var(--wine-dark);
+      color:#fff;
+      border-radius:8px;
+      padding:9px 18px;
+      font-size:11px;
+      line-height:1;
+      font-weight:500;
+      letter-spacing:.3px;
+    }
+    .about-icons{display:flex;gap:10px;align-items:center;}
+    .about-social-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;
+      height:28px;
+      color:var(--wine-dark);
+      transition:opacity .2s;
+    }
+    .about-social-link:hover{opacity:.75;}
+    .about-social-link svg{width:22px;height:22px;display:block;}
+    .about-right{
+      background:#e4e4e4;
+      padding:20px 18px;
+      box-sizing:border-box;
+    }
+    .about-right img{
+      width:100%;
+      height:auto;
+      display:block;
+      object-fit:contain;
+      object-position:center top;
+    }
+
+    /* BLOG / ULTIMOS CONTEUDOS - feed Instagram */
+    .blog-section{background:#fff;padding:54px 0 60px;}
+    .blog-heading{
+      text-align:center;
+      font-size:46px;
+      font-weight:600;
+      letter-spacing:-1px;
+      margin-bottom:34px;
+    }
+    .blog-heading .dot{color:var(--wine);}
+    .ig-widget{
+      width:min(1249px,96%);
+      margin:0 auto;
+      background:#fff;
+      border:1px solid #efefef;
+    }
+    .ig-header{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:18px 22px;
+      border-bottom:1px solid #efefef;
+      flex-wrap:wrap;
+    }
+    .ig-avatar{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      object-fit:cover;
+      flex:0 0 56px;
+    }
+    .ig-meta{flex:1;min-width:180px;}
+    .ig-meta strong{
+      display:block;
+      font-size:15px;
+      font-weight:600;
+      color:#262626;
+      margin-bottom:6px;
+    }
+    .ig-stats{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      font-size:13px;
+      color:#262626;
+      font-weight:300;
+    }
+    .ig-stats b{font-weight:600;}
+    .ig-follow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--wine-dark);
+      color:#fff;
+      border-radius:6px;
+      padding:8px 16px;
+      font-size:12px;
+      font-weight:500;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .ig-follow img{width:14px;height:14px;filter:brightness(0) invert(1);}
+    .ig-follow:hover{filter:brightness(1.08);}
+    .ig-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+    }
+    .ig-item{
+      position:relative;
+      aspect-ratio:1;
+      overflow:hidden;
+      background:#f3f3f3;
+    }
+    .ig-item img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transition:transform .25s ease;
+    }
+    .ig-item:hover img{transform:scale(1.03);}
+    .ig-video-icon{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:20px;
+      height:20px;
+      fill:#fff;
+      filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));
+    }
+
+    /* DEPOIMENTOS */
+    .reviews-section{
+      background:var(--bg);
+      padding:54px 0 60px;
+    }
+    .reviews-heading{
+      text-align:center;
+      font-size:46px;
+      font-weight:600;
+      letter-spacing:-1px;
+      margin-bottom:16px;
+    }
+    .reviews-heading .dot{color:var(--wine);}
+    .reviews-summary{
+      text-align:center;
+      margin-bottom:32px;
+      font-size:14px;
+      color:var(--muted);
+      font-weight:300;
+    }
+    .reviews-summary .rating-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 16px;
+      margin-bottom:10px;
+      font-weight:500;
+      color:var(--ink);
+    }
+    .reviews-summary .stars{color:#f5a623;letter-spacing:2px;}
+    .reviews-summary a{color:var(--wine);font-weight:500;}
+    .reviews-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+      margin-bottom:28px;
+    }
+    .review-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:22px 20px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-height:180px;
+    }
+    .review-card-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .review-card-author{
+      font-weight:600;
+      font-size:14px;
+      color:var(--ink);
+    }
+    .review-card-author a{color:inherit;}
+    .review-card-author a:hover{color:var(--wine);}
+    .review-card-stars{color:#f5a623;font-size:14px;letter-spacing:1px;}
+    .review-card-text{
+      font-size:13px;
+      line-height:1.55;
+      color:#333;
+      flex:1;
+      font-weight:300;
+    }
+    .review-card-meta{
+      font-size:11px;
+      color:#888;
+    }
+    .review-card-tag{
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      color:var(--wine);
+      font-weight:500;
+    }
+    .reviews-pagination{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .reviews-pagination button{
+      background:var(--wine-dark);
+      color:#fff;
+      border:0;
+      border-radius:6px;
+      padding:9px 18px;
+      font-family:inherit;
+      font-size:12px;
+      font-weight:500;
+      cursor:pointer;
+    }
+    .reviews-pagination button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    .reviews-pagination button:not(:disabled):hover{filter:brightness(1.08);}
+    .reviews-pagination .page-indicator{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:400;
+    }
+    .reviews-empty{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      padding:20px 0;
+    }
+
+    /* CONTATO */
+    .contact{
+      background:var(--wine);
+      color:#fff;
+      padding:46px 0 0;
+      position:relative;
+      overflow:hidden;
+    }
+    .contact::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(rgba(127,66,88,.92),rgba(127,66,88,.92)),
+        url("assets/hero-novo.jpg") center/cover no-repeat;
+      opacity:.30;
+      pointer-events:none;
+    }
+    .contact-content{
+      position:relative;
+      z-index:1;
+      width:min(1030px,94%);
+      margin:0 auto 26px;
+      display:grid;
+      grid-template-columns:.85fr 1.15fr;
+      gap:30px;
+      align-items:start;
+    }
+    .contact-left h2{
+      text-align:left;
+      color:#fff;
+      font-size:52px;
+      letter-spacing:-1px;
+      margin-bottom:22px;
+      font-weight:600;
+    }
+    .contact-item{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      margin:14px 0;
+      font-size:14px;
+      line-height:1.5;
+      color:#f7eff2;
+      font-weight:300;
+    }
+    .contact-item img{width:20px;height:20px;object-fit:contain;margin-top:2px;}
+    .contact-icon{
+      width:20px;
+      height:20px;
+      flex-shrink:0;
+      margin-top:2px;
+      color:#fff;
+    }
+    .contact-icon svg{width:100%;height:100%;display:block;}
+    .contact-item--social{padding-left:32px;}
+    .contact-icons{margin-top:12px;display:flex;align-items:center;gap:10px;}
+    .contact-social-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;
+      height:28px;
+      color:#fff;
+      transition:opacity .2s;
+    }
+    .contact-social-link:hover{opacity:.8;}
+    .contact-social-link svg{width:22px;height:22px;display:block;}
+    .contact-form{max-width:520px;}
+    .contact-form input,
+    .contact-form textarea{
+      width:100%;
+      border:1px solid #d8d8d8;
+      background:#fff;
+      color:#222;
+      border-radius:3px;
+      padding:10px 12px;
+      font-size:13px;
+      margin-bottom:8px;
+      font-family:'Poppins',Arial,sans-serif;
+      font-weight:300;
+    }
+    .contact-form textarea{min-height:112px;resize:vertical;}
+    .send-btn{
+      border:0;
+      background:transparent;
+      color:#fff;
+      width:100%;
+      text-align:center;
+      font-size:18px;
+      letter-spacing:1px;
+      margin-top:8px;
+      cursor:pointer;
+      font-family:'Poppins',Arial,sans-serif;
+      font-weight:400;
+    }
+    .map-wrap{
+      position:relative;
+      z-index:1;
+      width:100%;
+      margin:0 auto;
+    }
+    .map-wrap iframe{
+      width:100%;
+      height:260px;
+      border:0;
+      display:block;
+    }
+
+    footer{
+      background:#fff;
+      text-align:center;
+      padding:24px 0 28px;
+    }
+    footer .copy{font-size:.85rem;color:#646464;font-weight:300;}
+    footer .copy a{color:var(--wine);font-weight:500;}
+
+    @media (max-width:980px){
+      .contact-content{grid-template-columns:1fr;gap:20px}
+      .contact-left h2{font-size:40px}
+      .contact-form{max-width:100%}
+      .areas-grid{grid-template-columns:1fr;gap:38px}
+      .areas-heading{font-size:38px}
+      .who-title,.about-title{font-size:40px}
+      .blog-heading{font-size:36px}
+      .reviews-heading{font-size:36px}
+      .reviews-grid{grid-template-columns:1fr}
+      .about-box{grid-template-columns:1fr;min-height:auto}
+      .about-left{padding:34px 24px 26px}
+      .about-right{min-height:0;height:auto;padding:16px}
+      .menu a{padding:7px 12px;font-size:10px}
+      .ig-grid{grid-template-columns:repeat(2,1fr)}
+      .ig-header{padding:16px}
+      .ig-follow{margin-left:auto}
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="container">
+      <nav class="menu" aria-label="Menu principal">
+        <a href="#home">HOME</a>
+        <a href="#quem-somos">QUEM SOMOS</a>
+        <a href="#areas">ÁREAS DE ATUAÇÃO</a>
+        <a href="#sobre-mim">SOBRE MIM</a>
+        <a href="#depoimentos">DEPOIMENTOS</a>
+        <a href="#redes">REDES SOCIAIS</a>
+        <a href="#contato">CONTATO</a>
+        <a href="#blog">BLOG</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="logo-wrap">
+        <img src="assets/logo.png" alt="Nilma Alves Advocacia">
+      </div>
+      <div class="hero-art">
+        <img src="assets/hero-novo.jpg" alt="Deusa da Justiça">
+      </div>
+    </section>
+
+    <section id="quem-somos">
+      <div class="container who-wrap">
+        <h2 class="who-title">Quem Somos<span class="dot">.</span></h2>
+        <p class="who-text">Atuante aproximadamente 16 anos, contamos em nossa estrutura organizacional com uma equipe capacitada e comprometida em diversas áreas do Direito, porém com ênfase e especialização em Direito de Família, Sucessões e Imobiliário todas as atividades ligadas à advocacia preventiva, consultiva, extrajudicial e contenciosa, mantendo uma estrutura operacional que prioriza o contato personalizado e humanizado com os clientes e a qualidade dos serviços.</p>
+        <p class="who-text">Temos como princípios fundamentais o compromisso com o trabalho honesto, a competência e a excelência na prestação de serviços, o escritório se diferencia, sobretudo, na constante busca de soluções jurídicas que priorizem a prevenção e a solução pacífica para seus clientes, observando o indispensável zelo profissional, respeito e ética, proporcionando desempenho altamente satisfatório, através da prestação de serviços advocatícios minuciosos e eficazes.</p>
+        <p class="who-text">O crescimento dos últimos anos nos impõe a necessidade de buscar uma atuação mais próxima, para melhor atender nossos clientes, primando sempre pela competência técnica, mas também pelo atendimento ágil, diferenciado e pela transparência de nosso trabalho.</p>
+        <p class="who-text">Estamos à disposição para auxiliá-los!</p>
+        <a class="who-cta" href="http://api.whatsapp.com/send?phone=5513997414710" target="_blank" rel="noreferrer noopener">Solicitar Atendimento</a>
+      </div>
+    </section>
+
+    <section id="areas" class="areas-section">
+      <div class="container areas-wrap">
+        <h2 class="areas-heading">Áreas de atuação.</h2>
+        <div class="areas-grid">
+          <article class="area-card">
+            <img class="icon" src="assets/icon-familia.png" alt="Direito de Família">
+            <h3>Direito de Familia</h3>
+            <p>O Direito de família é a área do direito que detém normas relativas à estrutura, proteção e organização da família. Trata das relações familiares e dos direitos e deveres referentes a essas relações. É o ramo do Direito que orienta e institui as normas de convivência familiar, casos envolvendo casamento, divórcio, reconhecimento de união estável, união homoafetiva, guarda dos filhos, paternidade, pensão alimentícia, adoção, alienação parental.</p>
+            <a class="ler-mais" href="#">Ler mais &gt;</a>
+          </article>
+          <article class="area-card">
+            <img class="icon" src="assets/icon-sucessoes.png" alt="Direito das Sucessões">
+            <h3>Direito das Sucessões</h3>
+            <p>O Direito das Sucessões é estabelecido no Código Civil e se refere à regulamentação do processo de transferência do patrimônio de um indivíduo após a sua morte, aos seus herdeiros ou legatários. Para garantir que a partilha de bens entre os herdeiros ocorra de maneira justa e correta, surgiu o direito das sucessões. Esta área trata de temas como herança, inventário, sucessão, dentre outros. Também tratamos aqui o planejamento sucessório, isto é, a pessoa organiza, antecipadamente, como ficará seu patrimônio após seu óbito.</p>
+            <a class="ler-mais" href="#">Ler mais &gt;</a>
+          </article>
+          <article class="area-card">
+            <img class="icon" src="assets/icon-imobiliario.png" alt="Direito Imobiliário">
+            <h3>Direito Imobiliário</h3>
+            <p>Normalmente as pessoas tendem a imaginar que direito imobiliário é o órgão do direito que regula a compra e venda ou locação de imóvel, posse, financiamento, registro, doação e usucapião, entretanto, diverso que muitos pensam, é muito mais abrangente. Direito imobiliário é responsável por quaisquer questões que envolvam direito das obrigações, direito contratual, direito notarial, responsabilidade civil, direito de família, direito do consumidor, entre outras temáticas.</p>
+            <a class="ler-mais" href="#">Ler mais &gt;</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="sobre-mim" class="about-section">
+      <div class="about-box">
+        <div class="about-left">
+          <h2 class="about-title">Sobre mim<span class="dot">.</span></h2>
+          <p class="about-ident">Dra. Nilma Alves de Oliveira<br>OAB/SP nº 268.128</p>
+          <p class="about-copy">Olá, meu nome é Nilma Alves de Oliveira, sou advogada (OAB/SP 268.128) desde 2007. Mas não sou só advogada, também sou esposa, mãe de dois filhos lindos, irmã, filha e amiga o que me ajuda a entender diversas situações apresentadas no escritório. Me formei em 2006 pela Universidade Santa Cecília – UNISANTA/SP, fiz Pós Graduação pela fundação Getúlio Vargas (FGV) e durante esses mais de 16 anos de advocacia, fiz diversos cursos e especializações e não paro de buscar conhecimento, pois o direito é isso, movimento, disciplina e evolução.</p>
+          <a class="about-more" href="#">Ler mais &gt;</a>
+          <div class="about-footer">
+            <a class="about-btn" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Enviar Mensagem</a>
+            <div class="about-icons">
+              <a class="about-social-link" href="https://www.facebook.com/advnilmaalves?mibextid=LQQJ4d" target="_blank" rel="noreferrer noopener" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 9.5V7.7c0-.8.6-1 1-1h2V3h-3c-2.7 0-4 1.7-4 4v2.5H7v3.5h2.5V21h4V13h2.7l.3-3.5H13.5z"/></svg>
+              </a>
+              <a class="about-social-link" href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.5 8.5h3v11h-3v-11zm1.5-4.5a1.75 1.75 0 1 1 0 3.5 1.75 1.75 0 0 1 0-3.5zM10 8.5h2.9v1.5h.04c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19.5h-3v-5.2c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 1.5v6.5H10V8.5z"/></svg>
+              </a>
+              <a class="about-social-link" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+    <div class="about-right">
+        <img src="assets/dra-nilma-novo.jpg" alt="Dra. Nilma Alves">
+        </div>
+      </div>
+    </section>
+
+    <section id="depoimentos" class="reviews-section" hidden>
+      <div class="container">
+        <h2 class="reviews-heading">Depoimentos<span class="dot">.</span></h2>
+        <div class="reviews-summary" id="reviews-summary"></div>
+        <div class="reviews-grid" id="reviews-grid" aria-live="polite"></div>
+        <div class="reviews-pagination" id="reviews-pagination" hidden>
+          <button type="button" id="reviews-prev" aria-label="Depoimentos anteriores">Anterior</button>
+          <span class="page-indicator" id="reviews-page-indicator"></span>
+          <button type="button" id="reviews-next" aria-label="Próximos depoimentos">Próximo</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="blog" class="blog-section">
+      <div class="container">
+        <h2 class="blog-heading">Últimos conteúdos<span class="dot">.</span></h2>
+        <div class="ig-widget">
+          <div class="ig-header">
+            <img class="ig-avatar" src="assets/ig-avatar.jpg" alt="Foto de perfil @advnilmaalves">
+            <div class="ig-meta">
+              <strong>advnilmaalves</strong>
+              <div class="ig-stats">
+                <span><b>297</b> Publicações</span>
+                <span><b>1.208</b> Seguidores</span>
+                <span><b>1.570</b> Seguindo</span>
+              </div>
+            </div>
+            <a class="ig-follow" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener">
+              <img src="assets/icon-instagram.png" alt="">
+              Seguir
+            </a>
+          </div>
+          <div class="ig-grid">
+            <a class="ig-item" href="https://www.instagram.com/advnilmaalves/reel/DZTJGcySDQR/" target="_blank" rel="noreferrer noopener" aria-label="Ver reel no Instagram">
+              <img src="assets/ig-post-1.jpg" alt="Reel @advnilmaalves">
+              <svg class="ig-video-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4l1.5-2h7a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 19 21H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 5h1.5zm0 2v11H19V7h-5.8L11.7 5H6.5zm7.2 2.2 4.3 2.5-4.3 2.5V9.2z"/></svg>
+            </a>
+            <a class="ig-item" href="https://www.instagram.com/advnilmaalves/reel/DRIms4VEq16/" target="_blank" rel="noreferrer noopener" aria-label="Ver reel no Instagram">
+              <img src="assets/ig-post-2.jpg" alt="Reel @advnilmaalves">
+              <svg class="ig-video-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4l1.5-2h7a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 19 21H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 5h1.5zm0 2v11H19V7h-5.8L11.7 5H6.5zm7.2 2.2 4.3 2.5-4.3 2.5V9.2z"/></svg>
+            </a>
+            <a class="ig-item" href="https://www.instagram.com/advnilmaalves/reel/DNOmQ1dSODh/" target="_blank" rel="noreferrer noopener" aria-label="Ver reel no Instagram">
+              <img src="assets/ig-post-3.jpg" alt="Reel @advnilmaalves">
+              <svg class="ig-video-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4l1.5-2h7a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 19 21H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 5h1.5zm0 2v11H19V7h-5.8L11.7 5H6.5zm7.2 2.2 4.3 2.5-4.3 2.5V9.2z"/></svg>
+            </a>
+            <a class="ig-item" href="https://www.instagram.com/advnilmaalves/reel/DBbZJtYxalt/" target="_blank" rel="noreferrer noopener" aria-label="Ver reel no Instagram">
+              <img src="assets/ig-post-4.jpg" alt="Reel @advnilmaalves">
+              <svg class="ig-video-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4l1.5-2h7a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 19 21H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 5h1.5zm0 2v11H19V7h-5.8L11.7 5H6.5zm7.2 2.2 4.3 2.5-4.3 2.5V9.2z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contato">
+      <div class="contact-content">
+        <div class="contact-left" id="redes">
+          <h2>Contato<span class="dot">.</span></h2>
+          <div class="contact-item">
+            <span class="contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-10a7 7 0 1 0-14 0c0 5.5 7 10 7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+            </span>
+            <div>R. Washington, 253, Centro<br>Guarujá/São Paulo | CEP: 11410-150</div>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </span>
+            <div>(13) 3355-9621 | (13) 98112-4710</div>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </span>
+            <div>nilma_alves@hotmail.com</div>
+          </div>
+          <div class="contact-item contact-item--social">
+            <div class="contact-icons">
+              <a class="contact-social-link" href="https://www.facebook.com/advnilmaalves?mibextid=LQQJ4d" target="_blank" rel="noreferrer noopener" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 9.5V7.7c0-.8.6-1 1-1h2V3h-3c-2.7 0-4 1.7-4 4v2.5H7v3.5h2.5V21h4V13h2.7l.3-3.5H13.5z"/></svg>
+              </a>
+              <a class="contact-social-link" href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.5 8.5h3v11h-3v-11zm1.5-4.5a1.75 1.75 0 1 1 0 3.5 1.75 1.75 0 0 1 0-3.5zM10 8.5h2.9v1.5h.04c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19.5h-3v-5.2c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 1.5v6.5H10V8.5z"/></svg>
+              </a>
+              <a class="contact-social-link" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        <form class="contact-form" action="#" method="post">
+          <input type="text" name="nome" placeholder="Nome completo" aria-label="Nome completo">
+          <input type="email" name="email" placeholder="e-mail" aria-label="E-mail">
+          <input type="text" name="whatsapp" placeholder="Whatsapp com DDD" aria-label="Whatsapp com DDD">
+          <textarea name="mensagem" placeholder="Descreva sua necessidade" aria-label="Descreva sua necessidade"></textarea>
+          <input type="text" name="assunto" placeholder="Assunto" aria-label="Assunto">
+          <button class="send-btn" type="submit">ENVIAR</button>
+        </form>
+      </div>
+      <div class="map-wrap">
+        <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=R.%20Washington%2C%20253%2C%20Guaruj%C3%A1&t=&z=15&ie=UTF8&iwloc=&output=embed" title="Mapa do endereço"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="copy">© <span id="footer-year"></span> by Nilma Alves Advocacia - created by <a href="https://kbosolucoes.com.br" target="_blank" rel="noreferrer noopener">KBO Soluções</a></div>
+    </div>
+  </footer>
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    (function initReviews() {
+      const PAGE_SIZE = 5;
+      const section = document.getElementById('depoimentos');
+      const summaryEl = document.getElementById('reviews-summary');
+      const gridEl = document.getElementById('reviews-grid');
+      const paginationEl = document.getElementById('reviews-pagination');
+      const prevBtn = document.getElementById('reviews-prev');
+      const nextBtn = document.getElementById('reviews-next');
+      const indicatorEl = document.getElementById('reviews-page-indicator');
+
+      let items = [];
+      let page = 0;
+
+      function stars(n) {
+        const count = Math.max(0, Math.min(5, Number(n) || 0));
+        return '★'.repeat(count) + '☆'.repeat(5 - count);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function formatDate(value) {
+        if (!value) return '';
+        const [y, m, d] = value.split('-');
+        if (!y || !m || !d) return value;
+        return `${d}/${m}/${y}`;
+      }
+
+      function renderSummary(data) {
+        const rating = data.rating != null ? Number(data.rating).toFixed(1) : null;
+        const total = data.totalReviews != null ? data.totalReviews : items.length;
+        const mapsUrl = data.googleMapsUrl || '#';
+
+        summaryEl.innerHTML = `
+          ${rating ? `<div class="rating-badge"><span class="stars" aria-hidden="true">${stars(Math.round(Number(rating)))}</span> ${rating} no Google</div>` : ''}
+          <div>${total ? `${total} avaliações no Google` : ''}${total ? ' · ' : ''}<a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noreferrer noopener">Ver todas no Google</a></div>
+        `;
+      }
+
+      function renderPage() {
+        const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+        page = Math.min(page, totalPages - 1);
+        const start = page * PAGE_SIZE;
+        const pageItems = items.slice(start, start + PAGE_SIZE);
+
+        gridEl.innerHTML = pageItems.map((item) => {
+          const authorHtml = item.authorUrl
+            ? `<a href="${escapeHtml(item.authorUrl)}" target="_blank" rel="noreferrer noopener">${escapeHtml(item.author)}</a>`
+            : escapeHtml(item.author);
+          const tag = item.source === 'manual'
+            ? '<span class="review-card-tag">Depoimento</span>'
+            : '<span class="review-card-tag">Google</span>';
+
+          return `
+            <article class="review-card">
+              <div class="review-card-header">
+                <div class="review-card-author">${authorHtml}</div>
+                <div class="review-card-stars" aria-label="${item.rating} estrelas">${stars(item.rating)}</div>
+              </div>
+              <p class="review-card-text">${escapeHtml(item.text)}</p>
+              <div class="review-card-meta">${formatDate(item.publishedAt)} ${tag}</div>
+            </article>
+          `;
+        }).join('');
+
+        if (items.length > PAGE_SIZE) {
+          paginationEl.hidden = false;
+          indicatorEl.textContent = `${page + 1} / ${totalPages}`;
+          prevBtn.disabled = page === 0;
+          nextBtn.disabled = page >= totalPages - 1;
+        } else {
+          paginationEl.hidden = true;
+        }
+      }
+
+      prevBtn.addEventListener('click', () => {
+        if (page > 0) {
+          page -= 1;
+          renderPage();
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        const totalPages = Math.ceil(items.length / PAGE_SIZE);
+        if (page < totalPages - 1) {
+          page += 1;
+          renderPage();
+        }
+      });
+
+      fetch('./assets/reviews.json')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data?.items?.length) return;
+          items = data.items;
+          section.hidden = false;
+          renderSummary(data);
+          renderPage();
+        })
+        .catch(() => {});
+    })();
+  </script>
+</body>
+</html>
