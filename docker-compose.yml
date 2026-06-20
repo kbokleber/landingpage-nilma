@@ -9,10 +9,17 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # Caminho do banco (dentro do volume persistente)
+      # Banco SQLite (dentro do volume persistente /app/data)
       - BLOG_DB_PATH=/app/data/blog.db
+      # Capas e galeria do blog (também dentro do mesmo volume)
+      - BLOG_UPLOAD_DIR=/app/data/uploads/blog
     volumes:
-      # ⚠️ IMPORTANTE: volume persistente — sem ele, dados se perdem a cada redeploy
+      # ⚠️ IMPORTANTE: volume persistente — sem ele, dados se perdem a cada redeploy.
+      # Este volume cobre TUDO em /app/data:
+      #   - blog.db (SQLite)
+      #   - uploads/blog/ (capas e galeria dos posts)
+      #   - instagram-tokens.json (token OAuth do Instagram)
+      #   - instagram-sync-meta.json (controle da última sincronização)
       - nilma-data:/app/data
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/public/instagram/recent"]

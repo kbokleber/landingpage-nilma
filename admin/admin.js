@@ -417,6 +417,7 @@ const apiKeyNew = document.getElementById('api-key-new');
 const apiKeyList = document.getElementById('api-key-list');
 
 let blogCurrentId = null;
+let blogCoverPendingFile = null;
 
 function setBlogStatus(text) {
   blogEditorStatus.textContent = text || '';
@@ -431,6 +432,15 @@ function renderCoverPreview(url) {
     blogCoverRemove.hidden = true;
   }
   blogCover.value = url || '';
+}
+
+function renderPendingCover(file) {
+  if (!file) return;
+  const objectUrl = URL.createObjectURL(file);
+  blogCoverPreview.innerHTML = `<img src="${escapeAttr(objectUrl)}" alt="Capa selecionada (prévia)">`;
+  blogCoverRemove.hidden = false;
+  blogCover.dataset.pendingName = file.name;
+  blogCover.dataset.pendingSize = String(file.size);
 }
 
 function readBlogForm() {
@@ -450,6 +460,7 @@ function fillBlogForm(post) {
   blogAuthor.value = post.author || 'Dra. Nilma Alves';
   blogExcerpt.value = post.excerpt || '';
   blogContent.value = post.contentHtml || '';
+  blogCoverPendingFile = null;
   renderCoverPreview(post.coverImage || '');
   blogTags.value = (post.tags || []).join(', ');
   blogStatus.value = post.status || 'draft';
@@ -561,9 +572,27 @@ async function saveBlogPost({ publishNow = false } = {}) {
     setBlogStatus('Preencha título e conteúdo.');
     return;
   }
+  const useMultipart = !!blogCoverPendingFile;
   try {
     let post;
-    if (blogCurrentId) {
+    if (useMultipart) {
+      const fd = new FormData();
+      fd.append('title', payload.title);
+      fd.append('excerpt', payload.excerpt || '');
+      fd.append('contentHtml', payload.contentHtml || '');
+      fd.append('author', payload.author || 'Dra. Nilma Alves');
+      fd.append('tags', payload.tags.join(','));
+      fd.append('status', payload.status || 'draft');
+      fd.append('cover', blogCoverPendingFile, blogCoverPendingFile.name);
+      const url = blogCurrentId ? `/api/admin/posts/${blogCurrentId}` : '/api/admin/posts';
+      const method = blogCurrentId ? 'PUT' : 'POST';
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(url, { method, body: fd, credentials: 'include', headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar.');
+      post = data;
+    } else if (blogCurrentId) {
       post = await api(`/api/admin/posts/${blogCurrentId}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
@@ -573,9 +602,12 @@ async function saveBlogPost({ publishNow = false } = {}) {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+    }
+    if (!blogCurrentId) {
       blogCurrentId = post.id;
       blogEditorTitle.textContent = `Editar post #${post.id}`;
     }
+    blogCoverPendingFile = null;
     if (publishNow && post.status !== 'published') {
       post = await api(`/api/admin/posts/${blogCurrentId}/publish`, { method: 'POST' });
     }
@@ -648,37 +680,13 @@ if (blogFilterClearBtn) {
 blogCoverInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (!blogCurrentId) {
-    showFlash('Salve o rascunho antes de enviar a capa.', 'err');
-    blogCoverInput.value = '';
-    return;
-  }
-  const formData = new FormData();
-  formData.append('cover', file);
-  setBlogStatus('Enviando capa...');
-  try {
-    const headers = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/posts/${blogCurrentId}/cover`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-      headers,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro no upload');
-    renderCoverPreview(data.coverImage);
-    showFlash('Capa atualizada.', 'ok');
-    setBlogStatus(`Capa salva às ${new Date().toLocaleTimeString('pt-BR')}.`);
-  } catch (err) {
-    showFlash(err.message, 'err');
-    setBlogStatus(err.message);
-  } finally {
-    blogCoverInput.value = '';
-  }
+  blogCoverPendingFile = file;
+  renderPendingCover(file);
+  setBlogStatus(`Capa "${file.name}" selecionada. Será enviada ao clicar em Salvar.`);
 });
 
 blogCoverRemove.addEventListener('click', async () => {
+  blogCoverPendingFile = null;
   if (!blogCurrentId) {
     renderCoverPreview('');
     return;

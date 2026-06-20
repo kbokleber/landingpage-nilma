@@ -105,14 +105,18 @@ async function exchangeForLongLivedToken(shortToken) {
   const appId = getConfig('INSTAGRAM_APP_ID');
   const appSecret = getConfig('INSTAGRAM_APP_SECRET');
   const mode = getAuthMode();
-  const params = new URLSearchParams({
-    client_id: appId,
-    client_secret: appSecret,
-    grant_type: mode === 'instagram' ? 'ig_exchange_token' : 'fb_exchange_token',
-  });
+  const params = new URLSearchParams();
   if (mode === 'instagram') {
+    // Business Login for Instagram: apenas client_secret + access_token + grant_type
+    // https://developers.facebook.com/docs/instagram-platform/business-login
+    params.set('grant_type', 'ig_exchange_token');
+    params.set('client_secret', appSecret);
     params.set('access_token', shortToken);
   } else {
+    // Facebook Login legado: client_id + client_secret + fb_exchange_token
+    params.set('client_id', appId);
+    params.set('client_secret', appSecret);
+    params.set('grant_type', 'fb_exchange_token');
     params.set('fb_exchange_token', shortToken);
   }
   // Long-lived tokens são sempre via graph.facebook.com (até para IG)
@@ -178,20 +182,20 @@ async function refreshLongLivedToken() {
   const current = getAccessToken();
   if (!current) throw new Error('Sem token para renovar.');
   const mode = getAuthMode();
-  const params = new URLSearchParams({
-    client_id: getConfig('INSTAGRAM_APP_ID'),
-    client_secret: getConfig('INSTAGRAM_APP_SECRET'),
-  });
+  const params = new URLSearchParams();
   if (mode === 'instagram') {
-    // Business Login for Instagram: ig_exchange_token
+    // Business Login for Instagram: refresh usa o mesmo endpoint, mesmo formato
+    // de long-lived token (ig_exchange_token). Token atual é o long-lived.
     params.set('grant_type', 'ig_exchange_token');
+    params.set('client_secret', getConfig('INSTAGRAM_APP_SECRET'));
     params.set('access_token', current);
   } else {
-    // Facebook Login legado
+    params.set('client_id', getConfig('INSTAGRAM_APP_ID'));
+    params.set('client_secret', getConfig('INSTAGRAM_APP_SECRET'));
     params.set('grant_type', 'fb_exchange_token');
     params.set('fb_exchange_token', current);
   }
-  const url = `${GRAPH_BASE}/oauth/access_token?${params.toString()}`;
+  const url = `${GRAPH_BASE}/access_token?${params.toString()}`;
   const res = await fetch(url);
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.error) {
@@ -207,16 +211,21 @@ async function graphGet(path, params = {}) {
   const token = getAccessToken();
   if (!token) throw new Error('Instagram não conectado.');
   if (isTokenExpiringSoon()) {
-    try { await refreshLongLivedToken(); } catch { /* tenta mesmo assim */ }
+    try { await refreshLongLivedToken(); } catch (e) { console.error('[instagram] refresh falhou:', e.message); }
   }
   const url = new URL(`${GRAPH_BASE}${path}`);
   Object.entries({ ...params, access_token: getAccessToken() }).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
   });
+  // Log reduzido (sem expor o token inteiro)
+  const tokPreview = token ? `${token.slice(0, 8)}…(${token.length})` : 'none';
+  console.log(`[instagram] GET ${path} token=${tokPreview}`);
   const res = await fetch(url.toString());
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.error) {
-    throw new Error(data.error?.message || `Graph API falhou (HTTP ${res.status}) em ${path}.`);
+    const msg = data.error?.message || `Graph API falhou (HTTP ${res.status}) em ${path}.`;
+    console.error(`[instagram] ERRO ${path}: ${msg} (type=${data.error?.type || '?'}, code=${data.error?.code || '?'})`);
+    throw new Error(msg);
   }
   return data;
 }
@@ -249,6 +258,8 @@ async function handleOAuthCallback(code) {
     accessToken = longLived.access_token;
     expiresAt = longLived.expires_in ? Math.floor(Date.now() / 1000) + Number(longLived.expires_in) : null;
   } catch (err) {
+    // Loga para facilitar diagnóstico — Business Login é strict
+    console.error('[instagram] Falha ao trocar short token por long-lived:', err.message);
     longLived = null;
   }
 

@@ -16,6 +16,40 @@ const {
 const router = express.Router();
 router.use(authMiddleware);
 
+function readMultipartBody(req) {
+  const rawTitle = req.body?.title;
+  const rawExcerpt = req.body?.excerpt;
+  const rawContent = req.body?.contentHtml;
+  const rawAuthor = req.body?.author;
+  const rawTags = req.body?.tags;
+  const rawStatus = req.body?.status;
+
+  const title = typeof rawTitle === 'string' ? rawTitle : '';
+  const excerpt = typeof rawExcerpt === 'string' ? rawExcerpt : '';
+  const contentHtml = typeof rawContent === 'string' ? rawContent : '';
+  const author = typeof rawAuthor === 'string' ? rawAuthor : '';
+
+  let tags;
+  if (typeof rawTags === 'string') {
+    const trimmed = rawTags.trim();
+    if (!trimmed) tags = [];
+    else if (trimmed.startsWith('[')) {
+      try { tags = JSON.parse(trimmed); } catch { tags = trimmed.split(',').map((t) => t.trim()).filter(Boolean); }
+    } else {
+      tags = trimmed.split(',').map((t) => t.trim()).filter(Boolean);
+    }
+  }
+  const status = typeof rawStatus === 'string' ? rawStatus : undefined;
+
+  return { title, excerpt, contentHtml, author, tags, status };
+}
+
+function cleanUpFiles(req) {
+  if (req.file?.path) {
+    try { require('fs').unlinkSync(req.file.path); } catch {}
+  }
+}
+
 router.get('/posts', (req, res) => {
   const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
   const offset = Math.max(0, Number(req.query.offset) || 0);
@@ -34,19 +68,42 @@ router.get('/posts/:id', (req, res) => {
   res.json({ ...post, images });
 });
 
-router.post('/posts', (req, res) => {
-  const { title, excerpt, contentHtml, coverImage, author, tags, status } = req.body || {};
-  if (!title || !contentHtml) {
-    return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
+router.post('/posts', upload.single('cover'), (req, res) => {
+  try {
+    const { title, excerpt, contentHtml, author, tags, status } = readMultipartBody(req);
+    if (!title || !contentHtml) {
+      cleanUpFiles(req);
+      return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
+    }
+    const coverImage = req.file ? `/uploads/blog/${req.file.filename}` : '';
+    const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status });
+    if (req.file) {
+      post.coverImageUploaded = true;
+    }
+    res.status(201).json(post);
+  } catch (err) {
+    cleanUpFiles(req);
+    res.status(400).json({ error: err.message });
   }
-  const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status });
-  res.status(201).json(post);
 });
 
-router.put('/posts/:id', (req, res) => {
-  const post = updatePost(Number(req.params.id), req.body || {});
-  if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
-  res.json(post);
+router.put('/posts/:id', upload.single('cover'), (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { title, excerpt, contentHtml, author, tags, status } = readMultipartBody(req);
+    const body = { title, excerpt, contentHtml, author, tags };
+    if (status) body.status = status;
+    if (req.file) body.coverImage = `/uploads/blog/${req.file.filename}`;
+    const post = updatePost(id, body);
+    if (!post) {
+      cleanUpFiles(req);
+      return res.status(404).json({ error: 'Post não encontrado.' });
+    }
+    res.json(post);
+  } catch (err) {
+    cleanUpFiles(req);
+    res.status(400).json({ error: err.message });
+  }
 });
 
 router.post('/posts/:id/publish', (req, res) => {
@@ -64,7 +121,10 @@ router.delete('/posts/:id', (req, res) => {
 router.post('/posts/:id/cover', upload.single('cover'), (req, res) => {
   const id = Number(req.params.id);
   const post = getPostById(id);
-  if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
+  if (!post) {
+    cleanUpFiles(req);
+    return res.status(404).json({ error: 'Post não encontrado.' });
+  }
   if (!req.file) return res.status(400).json({ error: 'Arquivo de imagem é obrigatório.' });
   const url = `/uploads/blog/${req.file.filename}`;
   const updated = updatePost(id, { coverImage: url });
@@ -74,7 +134,10 @@ router.post('/posts/:id/cover', upload.single('cover'), (req, res) => {
 router.post('/posts/:id/images', upload.single('image'), (req, res) => {
   const id = Number(req.params.id);
   const post = getPostById(id);
-  if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
+  if (!post) {
+    cleanUpFiles(req);
+    return res.status(404).json({ error: 'Post não encontrado.' });
+  }
   if (!req.file) return res.status(400).json({ error: 'Arquivo de imagem é obrigatório.' });
   const alt = (req.body && req.body.alt) || '';
   const url = `/uploads/blog/${req.file.filename}`;
