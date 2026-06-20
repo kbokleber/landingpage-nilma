@@ -33,10 +33,9 @@
 
     .top{
       background:#ffffff;
-      padding-top:12px;
     }
     .top .container{
-      min-height:42px;
+      min-height:10px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -45,14 +44,14 @@
       display:flex;
       flex-wrap:wrap;
       justify-content:center;
-      gap:8px;
+      gap:10px;
     }
     .menu a{
       background:var(--wine-dark);
       color:#fff;
-      border-radius:6px;
-      padding:8px 16px;
-      font-size:11px;
+      border-radius:8px;
+      padding:12px 20px;
+      font-size:13px;
       letter-spacing:.4px;
       font-weight:500;
       line-height:1;
@@ -61,10 +60,11 @@
 
     .hero{
       background:#fff;
+      padding:0 0 56px;
     }
     .logo-wrap{
       text-align:center;
-      padding:18px 0 26px;
+      padding:45px 0 45px;
       background:#ffffff;
     }
     .logo-wrap img{
@@ -87,7 +87,7 @@
     /* QUEM SOMOS */
     .who-wrap{
       background:var(--bg);
-      max-width:560px;
+      max-width:1000px;
       margin:0 auto;
       padding:0 0 8px;
     }
@@ -180,8 +180,9 @@
       width:min(1180px,94%);
       margin:0 auto;
       display:grid;
-      grid-template-columns:1.85fr 1fr;
-      align-items:start;
+      grid-template-columns:1.6fr 1fr;
+      align-items:stretch;
+      overflow:hidden;
     }
     .about-left{
       padding:54px 48px 44px;
@@ -205,12 +206,13 @@
     }
     .about-copy{
       font-size:13.5px;
-      line-height:1.55;
-      margin-bottom:12px;
+      line-height:1.6;
+      margin-bottom:18px;
       color:#1f1f1f;
       text-align:justify;
       font-weight:300;
     }
+    .about-copy + .about-copy{margin-top:6px}
     .about-more{
       font-size:12px;
       font-weight:500;
@@ -248,13 +250,19 @@
     .about-social-link:hover{opacity:.75;}
     .about-social-link svg{width:22px;height:22px;display:block;}
     .about-right{
-      background:#e4e4e4;
-      padding:20px 18px;
+      background:#ededed;
+      padding:14px 14px;
       box-sizing:border-box;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      overflow:hidden;
     }
     .about-right img{
-      width:100%;
-      height:auto;
+      width:auto;
+      max-width:100%;
+      height:100%;
+      max-height:560px;
       display:block;
       object-fit:contain;
       object-position:center top;
@@ -596,7 +604,8 @@
       .reviews-grid{grid-template-columns:1fr}
       .about-box{grid-template-columns:1fr;min-height:auto}
       .about-left{padding:34px 24px 26px}
-      .about-right{min-height:0;height:auto;padding:16px}
+      .about-right{min-height:0;height:auto;padding:12px}
+      .about-right img{width:100%;height:auto;max-height:520px;margin:0 auto}
       .menu a{padding:7px 12px;font-size:10px}
       .ig-grid{grid-template-columns:repeat(2,1fr)}
       .ig-header{padding:16px}
@@ -612,7 +621,7 @@
         <a href="#quem-somos">QUEM SOMOS</a>
         <a href="#areas">ÁREAS DE ATUAÇÃO</a>
         <a href="#sobre-mim">SOBRE MIM</a>
-        <a href="#depoimentos">DEPOIMENTOS</a>
+        <a href="#depoimentos" id="menu-depoimentos" hidden>DEPOIMENTOS</a>
         <a href="#redes">REDES SOCIAIS</a>
         <a href="#contato">CONTATO</a>
         <a href="#blog">BLOG</a>
@@ -672,8 +681,8 @@
         <div class="about-left">
           <h2 class="about-title">Sobre mim<span class="dot">.</span></h2>
           <p class="about-ident">Dra. Nilma Alves de Oliveira<br>OAB/SP nº 268.128</p>
-          <p class="about-copy">Olá, meu nome é Nilma Alves de Oliveira, sou advogada (OAB/SP 268.128) desde 2007. Mas não sou só advogada, também sou esposa, mãe de dois filhos lindos, irmã, filha e amiga o que me ajuda a entender diversas situações apresentadas no escritório. Me formei em 2006 pela Universidade Santa Cecília – UNISANTA/SP, fiz Pós Graduação pela fundação Getúlio Vargas (FGV) e durante esses mais de 16 anos de advocacia, fiz diversos cursos e especializações e não paro de buscar conhecimento, pois o direito é isso, movimento, disciplina e evolução.</p>
-          <a class="about-more" href="#">Ler mais &gt;</a>
+          <p class="about-copy">Olá, meu nome é Nilma Alves de Oliveira, sou advogada (OAB/SP 268.128) desde 2007.</p>
+          <p class="about-copy">Mas não sou só advogada, também sou esposa, mãe de dois filhos lindos, irmã, filha e amiga o que me ajuda a entender diversas situações apresentadas no escritório. Me formei em 2006 pela Universidade Santa Cecília – UNISANTA/SP, fiz Pós Graduação pela fundação Getúlio Vargas (FGV) e durante esses mais de 16 anos de advocacia, fiz diversos cursos e especializações e não paro de buscar conhecimento, pois o direito é isso, movimento, disciplina e evolução.</p>
           <div class="about-footer">
             <a class="about-btn" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Enviar Mensagem</a>
             <div class="about-icons">
@@ -690,7 +699,7 @@
           </div>
         </div>
     <div class="about-right">
-        <img src="assets/dra-nilma-novo.jpg" alt="Dra. Nilma Alves">
+        <img src="assets/dra-nilma-original.jpg" alt="Dra. Nilma Alves">
         </div>
       </div>
     </section>
@@ -811,6 +820,7 @@
     (function initReviews() {
       const PAGE_SIZE = 5;
       const section = document.getElementById('depoimentos');
+      const menuLink = document.getElementById('menu-depoimentos');
       const summaryEl = document.getElementById('reviews-summary');
       const gridEl = document.getElementById('reviews-grid');
       const paginationEl = document.getElementById('reviews-pagination');
@@ -909,6 +919,7 @@
           if (!data?.items?.length) return;
           items = data.items;
           section.hidden = false;
+          if (menuLink) menuLink.hidden = false;
           renderSummary(data);
           renderPage();
         })
