@@ -748,6 +748,22 @@ input[type="date"].select-inline {
   border-color: var(--wine-dark);
   box-shadow: 0 0 0 3px rgba(112, 53, 76, 0.1);
 }
+.setting-secret {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.setting-secret input {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+.setting-secret button {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 16px;
+  line-height: 1;
+}
 .setting-help {
   display: block;
   margin-top: 4px;

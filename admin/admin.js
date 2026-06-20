@@ -905,7 +905,34 @@ function renderSettingsForm(items) {
   settingsForm.innerHTML = items.map((item) => {
     const meta = SETTINGS_LABELS[item.key] || { label: item.key };
     const type = meta.type || 'text';
-    const safeValue = type === 'password' ? '' : escapeAttr(item.value || '');
+    const isMasked = type === 'password' || !!item.sensitive;
+    const storedValue = item.value || '';
+    const safeValue = isMasked ? '' : escapeAttr(storedValue);
+    const placeholder = isMasked
+      ? (item.hasValue ? '(clique no 👁 para revelar)' : '(vazio)')
+      : '';
+    const inputHtml = isMasked
+      ? `
+        <div class="setting-secret">
+          <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
+            type="password"
+            value=""
+            autocomplete="new-password"
+            placeholder="${placeholder}"
+            data-masked="1"
+            data-stored-value="${escapeAttr(storedValue)}"
+            data-original="">
+          <button class="btn outline" type="button" data-action="toggle-mask" data-key="${escapeAttr(item.key)}" title="Mostrar/ocultar valor">👁</button>
+        </div>
+      `
+      : `
+        <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
+          type="${type === 'number' ? 'number' : 'text'}"
+          value="${safeValue}"
+          autocomplete="off"
+          placeholder=""
+          data-original="${safeValue}">
+      `;
     return `
       <div class="setting-row">
         <label for="setting-${item.key}">
@@ -913,12 +940,7 @@ function renderSettingsForm(items) {
           <code class="setting-key">${escapeHtml(item.key)}</code>
           ${item.sensitive ? '<span class="setting-sensitive">sensível</span>' : ''}
         </label>
-        <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
-          type="${type === 'password' ? 'password' : (type === 'number' ? 'number' : 'text')}"
-          value="${safeValue}"
-          autocomplete="new-password"
-          placeholder="${type === 'password' ? '(mantenha em branco para não alterar)' : ''}"
-          data-original="${safeValue}">
+        ${inputHtml}
         ${meta.help ? `<small class="setting-help">${escapeHtml(meta.help)}</small>` : ''}
         <small class="setting-source">Origem: ${item.source} · Atualizado: ${item.updatedAt || '—'}</small>
       </div>
@@ -930,6 +952,45 @@ function renderSettingsForm(items) {
       setSettingsStatus('Há alterações não salvas.', 'warn');
     });
   });
+  settingsForm.querySelectorAll('button[data-action="toggle-mask"]').forEach((btn) => {
+    btn.addEventListener('click', () => toggleSettingMask(btn.dataset.key));
+  });
+}
+
+async function toggleSettingMask(key) {
+  const input = settingsForm.querySelector(`input[name="${key}"]`);
+  if (!input) return;
+  const isPasswordType = input.type === 'password';
+
+  if (!isPasswordType) {
+    // Está visível → oculta
+    input.type = 'password';
+    input.value = '';
+    return;
+  }
+
+  if (input.dataset.masked === '1' && input.value === '') {
+    if (input.dataset.sensitive === '1') {
+      // Sensível criptografado → precisa confirmar senha do admin via backend
+      const password = prompt('Confirme sua senha de administrador para revelar este valor:');
+      if (!password) return;
+      try {
+        const result = await api(`/api/admin/settings/${encodeURIComponent(key)}/reveal`, {
+          method: 'POST',
+          body: JSON.stringify({ password }),
+        });
+        input.value = result.value;
+        input.dataset.storedValue = result.value;
+        input.type = 'text';
+      } catch (err) {
+        showFlash(err.message, 'err');
+      }
+    } else {
+      // Não sensível, valor já veio em getAll
+      input.value = input.dataset.storedValue || '';
+      input.type = 'text';
+    }
+  }
 }
 
 async function loadSettings() {
@@ -948,7 +1009,7 @@ async function saveSettings() {
   const updates = [];
   inputs.forEach((input) => {
     const key = input.name;
-    if (input.type === 'password') {
+    if (input.dataset.masked === '1') {
       if (input.value !== '') updates.push({ key, value: input.value });
     } else if (input.value !== input.dataset.original) {
       updates.push({ key, value: input.value });
