@@ -48,7 +48,16 @@ getDb();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(ROOT));
+app.use(express.static(ROOT, {
+  setHeaders: (res, filePath) => {
+    // HTML nunca deve ser cacheado (sempre pega versão nova)
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  },
+}));
 app.use('/uploads/blog', express.static(path.join(ROOT, 'data', 'uploads', 'blog')));
 
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
