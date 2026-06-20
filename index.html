@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advogada Dr. Nilma Alves | São Paulo | Direito Familiar</title>
+  <title>Dra. Nilma Alves — Advogada de Família e Sucessões em Guarujá/SP</title>
   <meta name="description" content="Dra. Nilma Alves - atuação em Direito de Família, Sucessões e Imobiliário.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -249,6 +249,12 @@
     }
     .about-social-link:hover{opacity:.75;}
     .about-social-link svg{width:22px;height:22px;display:block;}
+    .about-location{
+      margin:18px 0 0;
+      font-size:14px;
+      color:#666;
+      line-height:1.5;
+    }
     .about-right{
       background:#ededed;
       padding:14px 14px;
@@ -692,6 +698,17 @@
       background:#eee;
       border-radius:4px;
     }
+    .instagram-static{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    .ig-static-cta{
+      text-align:center;
+      margin-top:24px;
+    }
     .ig-tile img{
       width:100%;
       height:100%;
@@ -732,8 +749,137 @@
       .instagram-profile{padding:10px 14px;gap:12px;border-radius:16px;}
       .ig-avatar{width:42px;height:42px;}
       .instagram-grid{grid-template-columns:repeat(2,1fr);}
+      .instagram-static{grid-template-columns:repeat(2,1fr);}
+    }
+
+    /* FAQ */
+    .faq-section{
+      padding:80px 0;
+      background:#fff;
+    }
+    .faq-heading{
+      font-size:48px;
+      font-weight:600;
+      color:var(--ink);
+      text-align:center;
+      margin:0 0 40px;
+      letter-spacing:.5px;
+    }
+    .faq-heading .dot{color:var(--wine);}
+    .faq-list{
+      max-width:820px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .faq-item{
+      background:#fafafa;
+      border:1px solid #e6e6e6;
+      border-radius:10px;
+      padding:18px 22px;
+      transition:box-shadow .2s;
+    }
+    .faq-item[open]{
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+      background:#fff;
+    }
+    .faq-item summary{
+      font-size:17px;
+      font-weight:600;
+      color:var(--ink);
+      cursor:pointer;
+      list-style:none;
+      position:relative;
+      padding-right:32px;
+      line-height:1.4;
+    }
+    .faq-item summary::-webkit-details-marker{display:none;}
+    .faq-item summary::after{
+      content:"+";
+      position:absolute;
+      right:0;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:24px;
+      font-weight:400;
+      color:var(--wine);
+      transition:transform .2s;
+    }
+    .faq-item[open] summary::after{
+      content:"−";
+      transform:translateY(-50%) rotate(180deg);
+    }
+    .faq-item p{
+      margin:14px 0 0;
+      font-size:15.5px;
+      line-height:1.7;
+      color:#444;
+    }
+    @media (max-width:720px){
+      .faq-section{padding:60px 0;}
+      .faq-heading{font-size:34px;}
+      .faq-item{padding:14px 16px;}
+      .faq-item summary{font-size:15.5px;}
     }
   </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Qual é o prazo para abrir o inventário depois que alguém da família morre?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "O prazo legal é de 60 dias a partir do falecimento. Se esse prazo for ultrapassado, incide uma multa sobre o ITCMD (imposto de herança). Mas isso não impede a abertura — o inventário pode e deve ser feito mesmo após o prazo, para regularizar a situação dos bens."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "É possível fazer o inventário sem precisar ir ao juiz?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim. Quando todos os herdeiros são maiores de idade, estão de acordo com a divisão e não há testamento pendente de aprovação, é possível fazer o inventário extrajudicial — diretamente no cartório, de forma mais rápida e menos custosa. Quando há herdeiro menor de idade ou conflito entre os herdeiros, o caminho é o inventário judicial."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona a partilha de bens no divórcio quando o casal tem filho?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A partilha de bens é feita entre os cônjuges — os filhos não entram na divisão do divórcio (eles herdam futuramente, no inventário). O que entra na partilha depende do regime de bens do casamento. No regime mais comum (comunhão parcial), partilham-se os bens adquiridos durante o casamento. O que cada um tinha antes de casar, em geral, fica fora."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O que é o inventário extrajudicial e quando ele é indicado?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "É o inventário feito no cartório, sem necessidade de processo judicial. É mais rápido e menos custoso. É indicado quando: todos os herdeiros são maiores e capazes, há acordo sobre a divisão, não existe testamento a ser homologado e todos os herdeiros têm representação de advogado."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como regularizar um imóvel que nunca teve escritura?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Depende da situação específica do imóvel. Se você mora no local há vários anos de forma contínua e pacífica, pode ser possível a usucapião. Se o imóvel foi comprado de gaveta (com recibo, sem escritura), existem caminhos para regularização junto ao cartório. O primeiro passo é uma consulta para avaliar a documentação disponível e identificar o caminho mais adequado."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Preciso de advogado para fazer o divórcio consensual?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim. Mesmo quando o casal está em acordo, a lei exige a presença de advogado. Se não houver filhos menores, é possível usar o mesmo advogado para os dois. Se houver filhos menores, cada parte precisa do seu próprio advogado. Com tudo organizado, o divórcio consensual pode ser feito no cartório — sem precisar ir ao juiz."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="top">
@@ -744,6 +890,7 @@
         <a href="#areas">ÁREAS DE ATUAÇÃO</a>
         <a href="#sobre-mim">SOBRE MIM</a>
         <a href="#ultimos-conteudos">ÚLTIMOS CONTEÚDOS</a>
+        <a href="#faq">DÚVIDAS FREQUENTES</a>
         <a href="#depoimentos" id="menu-depoimentos" hidden>DEPOIMENTOS</a>
         <a href="#redes">REDES SOCIAIS</a>
         <a href="#contato">CONTATO</a>
@@ -765,11 +912,12 @@
     <section id="quem-somos">
       <div class="container who-wrap">
         <h2 class="who-title">Quem Somos<span class="dot">.</span></h2>
-        <p class="who-text">Atuante aproximadamente 16 anos, contamos em nossa estrutura organizacional com uma equipe capacitada e comprometida em diversas áreas do Direito, porém com ênfase e especialização em Direito de Família, Sucessões e Imobiliário todas as atividades ligadas à advocacia preventiva, consultiva, extrajudicial e contenciosa, mantendo uma estrutura operacional que prioriza o contato personalizado e humanizado com os clientes e a qualidade dos serviços.</p>
-        <p class="who-text">Temos como princípios fundamentais o compromisso com o trabalho honesto, a competência e a excelência na prestação de serviços, o escritório se diferencia, sobretudo, na constante busca de soluções jurídicas que priorizem a prevenção e a solução pacífica para seus clientes, observando o indispensável zelo profissional, respeito e ética, proporcionando desempenho altamente satisfatório, através da prestação de serviços advocatícios minuciosos e eficazes.</p>
-        <p class="who-text">O crescimento dos últimos anos nos impõe a necessidade de buscar uma atuação mais próxima, para melhor atender nossos clientes, primando sempre pela competência técnica, mas também pelo atendimento ágil, diferenciado e pela transparência de nosso trabalho.</p>
-        <p class="who-text">Estamos à disposição para auxiliá-los!</p>
-        <a class="who-cta" href="http://api.whatsapp.com/send?phone=5513997414710" target="_blank" rel="noreferrer noopener">Solicitar Atendimento</a>
+        <p class="who-text">O Nilma Alves Advocacia é um escritório especializado em Direito de Família, Sucessões e Imobiliário, com sede em Guarujá/SP e atendimento para todo o Brasil.</p>
+        <p class="who-text">Aqui você encontra uma advogada que entende que cada caso carrega uma história de família — e que cuida do jurídico com a atenção, o respeito e a clareza que essa história merece.</p>
+        <p class="who-text">Atuamos nas situações que mais exigem cuidado: a separação que precisa ser resolvida sem ampliar o conflito, o inventário que a família quer fechar antes que vire problema, o imóvel que está pendente há anos e precisa finalmente ser regularizado.</p>
+        <p class="who-text">Nosso compromisso é entregar resultado com transparência — e fazer com que você entenda cada etapa do processo, sem precisar de tradutor jurídico.</p>
+        <p class="who-text"><strong>Mais de 16 anos de experiência. Atendimento humanizado. Soluções reais.</strong></p>
+        <a class="who-cta" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Solicitar Atendimento pelo WhatsApp</a>
       </div>
     </section>
 
@@ -779,21 +927,30 @@
         <div class="areas-grid">
           <article class="area-card">
             <img class="icon" src="assets/icon-familia.png" alt="Direito de Família">
-            <h3>Direito de Familia</h3>
-            <p>O Direito de família é a área do direito que detém normas relativas à estrutura, proteção e organização da família. Trata das relações familiares e dos direitos e deveres referentes a essas relações. É o ramo do Direito que orienta e institui as normas de convivência familiar, casos envolvendo casamento, divórcio, reconhecimento de união estável, união homoafetiva, guarda dos filhos, paternidade, pensão alimentícia, adoção, alienação parental.</p>
-            <a class="ler-mais" href="#">Ler mais &gt;</a>
+            <h3>Direito de Família</h3>
+            <p>Separação, divórcio, guarda de filhos, pensão alimentícia, reconhecimento de união estável, adoção, alienação parental.</p>
+            <p>Situações que mexem com o que há de mais importante na vida de uma pessoa — e que, justamente por isso, precisam de uma advogada que saiba equilibrar técnica e sensibilidade.</p>
+            <p>Aqui você não vai encontrar alguém que empurra para o litígio. O objetivo é encontrar o caminho mais rápido, menos desgastante e mais justo para todas as partes — especialmente quando há filhos envolvidos.</p>
+            <p><strong>Se você está no início de uma separação, com dúvidas sobre seus direitos ou precisando organizar a guarda, a pensão ou a partilha de bens: me chama. A primeira conversa é sem compromisso.</strong></p>
+            <a class="ler-mais" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Falar pelo WhatsApp &gt;</a>
           </article>
           <article class="area-card">
             <img class="icon" src="assets/icon-sucessoes.png" alt="Direito das Sucessões">
             <h3>Direito das Sucessões</h3>
-            <p>O Direito das Sucessões é estabelecido no Código Civil e se refere à regulamentação do processo de transferência do patrimônio de um indivíduo após a sua morte, aos seus herdeiros ou legatários. Para garantir que a partilha de bens entre os herdeiros ocorra de maneira justa e correta, surgiu o direito das sucessões. Esta área trata de temas como herança, inventário, sucessão, dentre outros. Também tratamos aqui o planejamento sucessório, isto é, a pessoa organiza, antecipadamente, como ficará seu patrimônio após seu óbito.</p>
-            <a class="ler-mais" href="#">Ler mais &gt;</a>
+            <p>Inventário, partilha de bens, testamento, planejamento sucessório, herança.</p>
+            <p>Quando alguém da família morre, além do luto, vem a responsabilidade de organizar o que ficou. E fazer isso da forma certa — no prazo, com todos os herdeiros alinhados — faz toda a diferença no resultado.</p>
+            <p>Atuo tanto no inventário extrajudicial (mais rápido, feito em cartório quando a família chega em acordo) quanto no judicial (quando há conflito, herdeiro menor de idade ou testamento). E também no planejamento sucessório — para quem quer organizar agora e evitar que a família passe por isso depois.</p>
+            <p><strong>Se você está no início de um inventário, tem dúvidas sobre testamento ou quer proteger o que construiu para as próximas gerações: me chama. Juntos encontramos o melhor caminho para a sua família.</strong></p>
+            <a class="ler-mais" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Falar pelo WhatsApp &gt;</a>
           </article>
           <article class="area-card">
             <img class="icon" src="assets/icon-imobiliario.png" alt="Direito Imobiliário">
             <h3>Direito Imobiliário</h3>
-            <p>Normalmente as pessoas tendem a imaginar que direito imobiliário é o órgão do direito que regula a compra e venda ou locação de imóvel, posse, financiamento, registro, doação e usucapião, entretanto, diverso que muitos pensam, é muito mais abrangente. Direito imobiliário é responsável por quaisquer questões que envolvam direito das obrigações, direito contratual, direito notarial, responsabilidade civil, direito de família, direito do consumidor, entre outras temáticas.</p>
-            <a class="ler-mais" href="#">Ler mais &gt;</a>
+            <p>Regularização de imóveis, usucapião, escritura, compra e venda, contratos de locação, doação com reserva de usufruto.</p>
+            <p>No litoral de São Paulo, é muito comum encontrar imóveis comprados de gaveta, construídos sem regularização, ou que passaram de geração em geração sem nunca ter passado pelo cartório.</p>
+            <p>Esses imóveis têm solução. E a solução muitas vezes é mais simples do que as pessoas imaginam — especialmente quando o direito imobiliário e o direito de família caminham juntos, como costuma acontecer nas situações de herança, divórcio e partilha.</p>
+            <p><strong>Se você tem um imóvel com pendência — ou quer garantir que o imóvel da família chegue sem problema para as próximas gerações: me chama. Avaliamos o seu caso juntos.</strong></p>
+            <a class="ler-mais" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Falar pelo WhatsApp &gt;</a>
           </article>
         </div>
       </div>
@@ -807,7 +964,7 @@
           <p class="about-copy">Olá, meu nome é Nilma Alves de Oliveira, sou advogada (OAB/SP 268.128) desde 2007.</p>
           <p class="about-copy">Mas não sou só advogada, também sou esposa, mãe de dois filhos lindos, irmã, filha e amiga o que me ajuda a entender diversas situações apresentadas no escritório. Me formei em 2006 pela Universidade Santa Cecília – UNISANTA/SP, fiz Pós Graduação pela fundação Getúlio Vargas (FGV) e durante esses mais de 16 anos de advocacia, fiz diversos cursos e especializações e não paro de buscar conhecimento, pois o direito é isso, movimento, disciplina e evolução.</p>
           <div class="about-footer">
-            <a class="about-btn" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Enviar Mensagem</a>
+            <a class="about-btn" href="http://api.whatsapp.com/send?phone=5513981124710" target="_blank" rel="noreferrer noopener">Falar pelo WhatsApp</a>
             <div class="about-icons">
               <a class="about-social-link" href="https://www.facebook.com/advnilmaalves?mibextid=LQQJ4d" target="_blank" rel="noreferrer noopener" aria-label="Facebook">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 9.5V7.7c0-.8.6-1 1-1h2V3h-3c-2.7 0-4 1.7-4 4v2.5H7v3.5h2.5V21h4V13h2.7l.3-3.5H13.5z"/></svg>
@@ -820,6 +977,7 @@
               </a>
             </div>
           </div>
+          <p class="about-location">📍 Guarujá/SP — Rua Washington, 253, Centro | Atendimento presencial e online</p>
         </div>
     <div class="about-right">
         <img src="assets/dra-nilma-original.jpg" alt="Dra. Nilma Alves">
@@ -830,21 +988,25 @@
     <section id="ultimos-conteudos" class="instagram-section">
       <div class="container">
         <h2 class="instagram-heading">Últimos conteúdos<span class="dot">.</span></h2>
-        <div class="instagram-profile" id="instagram-profile">
-          <img id="ig-profile-avatar" src="assets/dra-nilma-original.jpg" alt="advnilmaalves" class="ig-avatar">
-          <div class="ig-profile-meta">
-            <strong id="ig-profile-username">advnilmaalves</strong>
-            <span id="ig-profile-stats" class="ig-stats">Carregando...</span>
+        <div class="instagram-static">
+          <div class="ig-tile">
+            <img src="assets/ig-post-1.jpg" alt="Publicação do Instagram @advnilmaalves">
           </div>
-          <a class="ig-follow-btn" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 2c-3.2 0-3.5 0-4.7.1-1 0-1.6.2-2 .3-.5.2-.9.4-1.2.8-.4.4-.6.7-.8 1.2-.1.4-.3 1-.3 2-.1 1.2-.1 1.5-.1 4.7s0 3.5.1 4.7c0 1 .2 1.6.3 2 .2.5.4.9.8 1.2.4.4.7.6 1.2.8.4.1 1 .3 2 .3 1.2.1 1.5.1 4.7.1s3.5 0 4.7-.1c1 0 1.6-.2 2-.3.5-.2.9-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.4.3-1 .3-2 .1-1.2.1-1.5.1-4.7s0-3.5-.1-4.7c0-1-.2-1.6-.3-2-.2-.5-.4-.9-.8-1.2-.4-.4-.7-.6-1.2-.8-.4-.1-1-.3-2-.3-1.2-.1-1.5-.1-4.7-.1zm0 3.4a4.4 4.4 0 1 1 0 8.8 4.4 4.4 0 0 1 0-8.8zm0 2a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8zm5.5-2.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
-            Seguir
-          </a>
+          <div class="ig-tile">
+            <img src="assets/ig-post-2.jpg" alt="Publicação do Instagram @advnilmaalves">
+          </div>
+          <div class="ig-tile">
+            <img src="assets/ig-post-3.jpg" alt="Publicação do Instagram @advnilmaalves">
+          </div>
+          <div class="ig-tile">
+            <img src="assets/ig-post-4.jpg" alt="Publicação do Instagram @advnilmaalves">
+          </div>
         </div>
-        <div class="instagram-grid" id="instagram-grid" aria-live="polite"></div>
-        <div id="instagram-empty" class="ig-empty-state hidden">
-          <p>Ainda não há posts sincronizados do Instagram.</p>
-          <p class="sub">Conecte o Instagram em <a href="/admin/">Painel Admin → Configurações → Instagram</a> para começar.</p>
+        <div class="ig-static-cta">
+          <a class="ig-follow-btn" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 2c-3.2 0-3.5 0-4.7.1-1 0-1.6.2-2 .3-.5.2-.9.4-1.2.8-.4.4-.6.7-.8 1.2-.1.4-.3 1-.3 2-.1 1.2-.1 1.5-.1 4.7s0 3.5.1 4.7c0 1 .2 1.6.3 2 .2.5.4.9.8 1.2.4.4.7.6 1.2.8.4.1 1 .3 2 .3 1.2.1 1.5.1 4.7.1s3.5 0 4.7-.1c1 0 1.6-.2 2-.3.5-.2.9-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.4.3-1 .3-2 .1-1.2.1-1.5.1-4.7s0-3.5-.1-4.7c0-1-.2-1.6-.3-2-.2-.5-.4-.9-.8-1.2-.4-.4-.7-.6-1.2-.8-.4-.1-1-.3-2-.3-1.2-.1-1.5-.1-4.7-.1zm0 3.4a4.4 4.4 0 1 1 0 8.8 4.4 4.4 0 0 1 0-8.8zm0 2a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8zm5.5-2.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+            Ver mais no Instagram
+          </a>
         </div>
       </div>
     </section>
@@ -903,6 +1065,38 @@
       </div>
     </section>
 
+    <section id="faq" class="faq-section">
+      <div class="container">
+        <h2 class="faq-heading">Dúvidas frequentes<span class="dot">.</span></h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Qual é o prazo para abrir o inventário depois que alguém da família morre?</summary>
+            <p>O prazo legal é de 60 dias a partir do falecimento. Se esse prazo for ultrapassado, incide uma multa sobre o ITCMD (imposto de herança). Mas isso não impede a abertura — o inventário pode e deve ser feito mesmo após o prazo, para regularizar a situação dos bens.</p>
+          </details>
+          <details class="faq-item">
+            <summary>É possível fazer o inventário sem precisar ir ao juiz?</summary>
+            <p>Sim. Quando todos os herdeiros são maiores de idade, estão de acordo com a divisão e não há testamento pendente de aprovação, é possível fazer o inventário extrajudicial — diretamente no cartório, de forma mais rápida e menos custosa. Quando há herdeiro menor de idade ou conflito entre os herdeiros, o caminho é o inventário judicial.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Como funciona a partilha de bens no divórcio quando o casal tem filho?</summary>
+            <p>A partilha de bens é feita entre os cônjuges — os filhos não entram na divisão do divórcio (eles herdam futuramente, no inventário). O que entra na partilha depende do regime de bens do casamento. No regime mais comum (comunhão parcial), partilham-se os bens adquiridos durante o casamento. O que cada um tinha antes de casar, em geral, fica fora.</p>
+          </details>
+          <details class="faq-item">
+            <summary>O que é o inventário extrajudicial e quando ele é indicado?</summary>
+            <p>É o inventário feito no cartório, sem necessidade de processo judicial. É mais rápido e menos custoso. É indicado quando: todos os herdeiros são maiores e capazes, há acordo sobre a divisão, não existe testamento a ser homologado e todos os herdeiros têm representação de advogado.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Como regularizar um imóvel que nunca teve escritura?</summary>
+            <p>Depende da situação específica do imóvel. Se você mora no local há vários anos de forma contínua e pacífica, pode ser possível a usucapião. Se o imóvel foi comprado de gaveta (com recibo, sem escritura), existem caminhos para regularização junto ao cartório. O primeiro passo é uma consulta para avaliar a documentação disponível e identificar o caminho mais adequado.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Preciso de advogado para fazer o divórcio consensual?</summary>
+            <p>Sim. Mesmo quando o casal está em acordo, a lei exige a presença de advogado. Se não houver filhos menores, é possível usar o mesmo advogado para os dois. Se houver filhos menores, cada parte precisa do seu próprio advogado. Com tudo organizado, o divórcio consensual pode ser feito no cartório — sem precisar ir ao juiz.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
     <section class="contact" id="contato">
       <div class="contact-content">
         <div class="contact-left" id="redes">
@@ -917,7 +1111,7 @@
             <span class="contact-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </span>
-            <div>(13) 3355-9621 | (13) 98112-4710</div>
+            <div>(13) 98112-4710</div>
           </div>
           <div class="contact-item">
             <span class="contact-icon" aria-hidden="true">
@@ -1072,50 +1266,8 @@
     })();
 
     // === Últimos Conteúdos (Instagram) ===
-    (function initInstagram() {
-      const grid = document.getElementById('instagram-grid');
-      const empty = document.getElementById('instagram-empty');
-      const stats = document.getElementById('ig-profile-stats');
-      if (!grid) return;
-
-      function escapeHtml(s) {
-        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
-
-      function mediaSrc(it) {
-        return it.localPath || it.thumbnailUrl || it.mediaUrl || '';
-      }
-
-      fetch('/api/public/instagram/recent?limit=8')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (!data?.items?.length) {
-            grid.classList.add('hidden');
-            empty.classList.remove('hidden');
-            return;
-          }
-          empty.classList.add('hidden');
-          grid.classList.remove('hidden');
-          grid.innerHTML = data.items.map((it) => {
-            const src = mediaSrc(it);
-            const alt = (it.caption || 'Post do Instagram').slice(0, 120);
-            const typeBadge = (it.igMediaType && it.igMediaType !== 'IMAGE' && it.igMediaType !== 'CAROUSEL_ALBUM')
-              ? `<span class="ig-tile-type">${escapeHtml(it.igMediaType)}</span>`
-              : '';
-            return `
-              <a class="ig-tile" href="${escapeHtml(it.permalink || '#')}" target="_blank" rel="noopener" aria-label="${escapeHtml(alt)}">
-                ${src ? `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy">` : ''}
-                ${typeBadge}
-              </a>
-            `;
-          }).join('');
-          stats.textContent = `${data.items.length} publicações recentes`;
-        })
-        .catch(() => {
-          grid.classList.add('hidden');
-          empty.classList.remove('hidden');
-        });
-    })();
+    // Seção agora é estática (4 imagens chumbadas). Quando o Instagram
+    // for conectado, este JS pode voltar a popular a partir da API.
   </script>
 </body>
 </html>
