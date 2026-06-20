@@ -882,22 +882,30 @@ document.querySelectorAll('.nav-item').forEach((item) => {
 const settingsForm = document.getElementById('settings-form');
 const settingsStatus = document.getElementById('settings-status');
 
-const SETTINGS_LABELS = {
-  PORT: { label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
-  ADMIN_PASSWORD: { label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
-  GOOGLE_CLIENT_ID: { label: 'Google Client ID', help: 'OAuth 2.0 Client ID do Google Cloud.', type: 'text' },
-  GOOGLE_CLIENT_SECRET: { label: 'Google Client Secret', help: 'OAuth 2.0 Client Secret.', type: 'password' },
-  GOOGLE_REDIRECT_URI: { label: 'Google Redirect URI', help: 'URL de callback configurada no Google Cloud.', type: 'text' },
-  BLOG_UPLOAD_MAX_MB: { label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
-  INSTAGRAM_APP_ID: { label: 'Instagram App ID', help: 'App ID do seu app em developers.facebook.com. Não é sensível.', type: 'text' },
-  INSTAGRAM_APP_SECRET: { label: 'Instagram App Secret', help: 'App Secret. Criptografado no banco. Use 👁 para revelar.', type: 'password' },
-  INSTAGRAM_REDIRECT_URI: { label: 'Instagram Redirect URI', help: 'Deve coincidir com o configurado no app do Facebook. Padrão: http://127.0.0.1:3001/api/instagram/callback', type: 'text' },
-  INSTAGRAM_PAGE_ID: { label: 'Instagram Page ID (vinculada)', help: 'Preenchido automaticamente após conectar. Não é sensível.', type: 'text' },
-  INSTAGRAM_IG_USER_ID: { label: 'Instagram Business User ID', help: 'Preenchido automaticamente após conectar.', type: 'text' },
-  INSTAGRAM_SYNC_INTERVAL_MIN: { label: 'Intervalo de sincronização (min)', help: 'Mínimo 5 minutos. Requer reiniciar o servidor para mudar.', type: 'number' },
-  INSTAGRAM_AUTO_IMPORT: { label: 'Sincronização automática', help: '1 = ativa, 0 = apenas manual via botão "Sincronizar agora".', type: 'text' },
-  INSTAGRAM_AUTH_MODE: { label: 'Método de login', help: 'instagram = login direto com @advnilmaalves (Business Login, mais simples). facebook = login via Facebook + Página vinculada.', type: 'text' },
+const SETTINGS_GROUPS = {
+  site: { label: 'Site', icon: '⚙️', help: 'Configurações gerais do servidor e da aplicação.' },
+  google: { label: 'Google', icon: '🔎', help: 'Credenciais da Google Business Profile API (avaliações do Google).' },
+  instagram: { label: 'Instagram', icon: '📸', help: 'Credenciais do app Meta para sincronização do Instagram.' },
 };
+
+const SETTINGS_LABELS = {
+  PORT: { group: 'site', label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
+  ADMIN_PASSWORD: { group: 'site', label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
+  BLOG_UPLOAD_MAX_MB: { group: 'site', label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
+  GOOGLE_CLIENT_ID: { group: 'google', label: 'Google Client ID', help: 'OAuth 2.0 Client ID do Google Cloud.', type: 'text' },
+  GOOGLE_CLIENT_SECRET: { group: 'google', label: 'Google Client Secret', help: 'OAuth 2.0 Client Secret.', type: 'password' },
+  GOOGLE_REDIRECT_URI: { group: 'google', label: 'Google Redirect URI', help: 'URL de callback configurada no Google Cloud.', type: 'text' },
+  INSTAGRAM_APP_ID: { group: 'instagram', label: 'Instagram App ID', help: 'App ID do seu app em developers.facebook.com. Não é sensível.', type: 'text' },
+  INSTAGRAM_APP_SECRET: { group: 'instagram', label: 'Instagram App Secret', help: 'App Secret. Criptografado no banco. Use 👁 para revelar.', type: 'password' },
+  INSTAGRAM_REDIRECT_URI: { group: 'instagram', label: 'Instagram Redirect URI', help: 'Deve coincidir com o configurado no app do Facebook. Padrão: http://127.0.0.1:3001/api/instagram/callback', type: 'text' },
+  INSTAGRAM_PAGE_ID: { group: 'instagram', label: 'Instagram Page ID (vinculada)', help: 'Preenchido automaticamente após conectar. Não é sensível.', type: 'text' },
+  INSTAGRAM_IG_USER_ID: { group: 'instagram', label: 'Instagram Business User ID', help: 'Preenchido automaticamente após conectar.', type: 'text' },
+  INSTAGRAM_SYNC_INTERVAL_MIN: { group: 'instagram', label: 'Intervalo de sincronização (min)', help: 'Mínimo 5 minutos. Requer reiniciar o servidor para mudar.', type: 'number' },
+  INSTAGRAM_AUTO_IMPORT: { group: 'instagram', label: 'Sincronização automática', help: '1 = ativa, 0 = apenas manual via botão "Sincronizar agora".', type: 'text' },
+  INSTAGRAM_AUTH_MODE: { group: 'instagram', label: 'Método de login', help: 'instagram = login direto com @advnilmaalves (Business Login, mais simples). facebook = login via Facebook + Página vinculada.', type: 'text' },
+};
+
+let currentSettingsGroup = 'site';
 
 let settingsDirty = false;
 
@@ -907,7 +915,17 @@ function setSettingsStatus(text, kind) {
 }
 
 function renderSettingsForm(items) {
-  settingsForm.innerHTML = items.map((item) => {
+  // Filtra só o grupo ativo
+  const filtered = items.filter((item) => {
+    const meta = SETTINGS_LABELS[item.key];
+    if (!meta) return true; // desconhecido: mostra em "site"
+    return meta.group === currentSettingsGroup;
+  });
+  if (filtered.length === 0) {
+    settingsForm.innerHTML = '<p class="sub" style="padding:16px 0">Nenhuma configuração neste grupo.</p>';
+    return;
+  }
+  settingsForm.innerHTML = filtered.map((item) => {
     const meta = SETTINGS_LABELS[item.key] || { label: item.key };
     const type = meta.type || 'text';
     const isMasked = type === 'password' || !!item.sensitive;
@@ -1044,6 +1062,36 @@ document.getElementById('settings-save-btn').addEventListener('click', saveSetti
 document.getElementById('settings-reload-btn').addEventListener('click', () => {
   if (settingsDirty && !confirm('Descartar alterações não salvas?')) return;
   loadSettings();
+});
+
+// Sub-abas dentro de Configurações
+function switchSettingsGroup(group) {
+  if (!SETTINGS_GROUPS[group]) return;
+  if (settingsDirty && !confirm('Descartar alterações não salvas?')) return;
+  currentSettingsGroup = group;
+  document.querySelectorAll('.settings-sub-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.group === group);
+  });
+  // Esconde/mostra os cards auxiliares pelo data-group
+  document.querySelectorAll('#tab-content-configuracoes .card[data-group]').forEach((card) => {
+    card.classList.toggle('hidden', card.dataset.group !== group);
+  });
+  loadSettings();
+}
+
+// Ao abrir a aba Configurações, aplica o filtro de cards auxiliares para o grupo atual
+document.querySelectorAll('.nav-item').forEach((item) => {
+  item.addEventListener('click', () => {
+    if (item.dataset.tab === 'configuracoes') {
+      document.querySelectorAll('#tab-content-configuracoes .card[data-group]').forEach((card) => {
+        card.classList.toggle('hidden', card.dataset.group !== currentSettingsGroup);
+      });
+    }
+  });
+});
+
+document.querySelectorAll('.settings-sub-tab').forEach((btn) => {
+  btn.addEventListener('click', () => switchSettingsGroup(btn.dataset.group));
 });
 
 document.querySelectorAll('.nav-item').forEach((item) => {

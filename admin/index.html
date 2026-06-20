@@ -206,7 +206,13 @@
         <div id="tab-content-configuracoes" class="tab-content hidden">
           <div class="tab-header">
             <h1>Configurações</h1>
-            <p class="sub">As configurações são salvas no banco de dados SQLite (<code>data/blog.db</code>). Mudanças em <code>PORT</code>, <code>BLOG_DB_PATH</code> e <code>BLOG_UPLOAD_DIR</code> exigem reiniciar o servidor.</p>
+            <p class="sub">As configurações são salvas no banco de dados SQLite (<code>data/blog.db</code>). Mudanças em <code>PORT</code> exigem reiniciar o servidor.</p>
+          </div>
+
+          <div class="settings-subtabs">
+            <button class="settings-sub-tab active" data-group="site" type="button">⚙️ Site</button>
+            <button class="settings-sub-tab" data-group="google" type="button">🔎 Google</button>
+            <button class="settings-sub-tab" data-group="instagram" type="button">📸 Instagram</button>
           </div>
 
           <div class="card">
@@ -218,12 +224,12 @@
             <form id="settings-form" autocomplete="off"></form>
           </div>
 
-          <div class="card">
+          <div class="card" data-group="site">
             <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Senha do admin</h2>
             <p class="sub">A senha fica em <code>ADMIN_PASSWORD</code> acima. Para usar uma nova senha sem editar o JSON, basta alterar o valor no campo "Senha Administrativa" e salvar.</p>
           </div>
 
-          <div class="card">
+          <div class="card" data-group="site">
             <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">API Keys (sistemas externos)</h2>
             <p class="sub" style="margin-bottom:12px">Gere chaves para que outros sistemas publiquem posts automaticamente. <a href="/api/docs/" target="_blank" rel="noopener">Ver documentação da API</a>.</p>
             <div class="toolbar">
@@ -234,7 +240,7 @@
             <div id="api-key-list"></div>
           </div>
 
-          <div class="card">
+          <div class="card" data-group="instagram">
             <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Instagram (sincronização automática)</h2>
             <p class="sub" style="margin-bottom:12px">
               Conecte o Instagram <strong>@advnilmaalves</strong> para puxar os últimos posts automaticamente.
