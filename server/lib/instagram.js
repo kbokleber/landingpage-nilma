@@ -81,11 +81,20 @@ async function exchangeCodeForToken(code) {
     redirect_uri: redirect,
     code,
   });
-  // Business Login for Instagram tem endpoint próprio
-  const base = mode === 'instagram' ? IG_OAUTH_BASE : GRAPH_BASE;
-  const url = `${base}/access_token?${params.toString()}`;
-  const res = await fetch(url);
-  const data = await res.json().catch(() => ({}));
+  let res;
+  let data;
+  if (mode === 'instagram') {
+    // Business Login for Instagram exige POST com x-www-form-urlencoded
+    res = await fetch(`${IG_OAUTH_BASE}/access_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+  } else {
+    // Facebook Login: aceita GET com query string
+    res = await fetch(`${GRAPH_BASE}/oauth/access_token?${params.toString()}`);
+  }
+  data = await res.json().catch(() => ({}));
   if (!res.ok || data.error) {
     throw new Error(data.error?.message || `Falha ao trocar code por token (HTTP ${res.status}).`);
   }
