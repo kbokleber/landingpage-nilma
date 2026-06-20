@@ -177,12 +177,20 @@ function isTokenExpiringSoon() {
 async function refreshLongLivedToken() {
   const current = getAccessToken();
   if (!current) throw new Error('Sem token para renovar.');
+  const mode = getAuthMode();
   const params = new URLSearchParams({
-    grant_type: 'fb_exchange_token',
     client_id: getConfig('INSTAGRAM_APP_ID'),
     client_secret: getConfig('INSTAGRAM_APP_SECRET'),
-    fb_exchange_token: current,
   });
+  if (mode === 'instagram') {
+    // Business Login for Instagram: ig_exchange_token
+    params.set('grant_type', 'ig_exchange_token');
+    params.set('access_token', current);
+  } else {
+    // Facebook Login legado
+    params.set('grant_type', 'fb_exchange_token');
+    params.set('fb_exchange_token', current);
+  }
   const url = `${GRAPH_BASE}/oauth/access_token?${params.toString()}`;
   const res = await fetch(url);
   const data = await res.json().catch(() => ({}));
