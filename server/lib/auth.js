@@ -6,10 +6,11 @@ const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function getAdminPassword() {
   try {
-    return settings.get('ADMIN_PASSWORD') || 'nilma-admin';
-  } catch {
-    return process.env.ADMIN_PASSWORD || 'nilma-admin';
-  }
+    const v = settings.get('ADMIN_PASSWORD');
+    if (typeof v === 'string' && v && !v.startsWith('enc:v1:')) return v;
+  } catch {}
+  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
+  return 'nilma-admin';
 }
 
 function createSession() {

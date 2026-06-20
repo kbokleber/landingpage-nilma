@@ -62,6 +62,46 @@ app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
 app.use('/api/admin', adminInstagramRouter);
+
+app.get('/api/admin/diag', authMiddleware, (req, res) => {
+  const { dbPath } = require('./lib/db');
+  res.json({
+    ok: true,
+    dbPath,
+    cwd: process.cwd(),
+    env: {
+      PORT: process.env.PORT || null,
+      BLOG_DB_PATH: process.env.BLOG_DB_PATH || null,
+    },
+    uptimeSec: Math.round(process.uptime()),
+  });
+});
+
+app.post('/api/admin/reset-password', (req, res) => {
+  const expected = process.env.ADMIN_RESET_TOKEN || '';
+  const provided = String(req.body?.token || '');
+  const newPassword = String(req.body?.newPassword || '');
+  if (!expected) {
+    return res.status(503).json({ error: 'Reset desabilitado. Defina ADMIN_RESET_TOKEN no .env para habilitar.' });
+  }
+  if (!provided || provided !== expected) {
+    return res.status(401).json({ error: 'Token inválido.' });
+  }
+  if (!newPassword || newPassword.length < 4) {
+    return res.status(400).json({ error: 'Nova senha deve ter pelo menos 4 caracteres.' });
+  }
+  try {
+    const { getDb } = require('./lib/db');
+    const db = getDb();
+    db.prepare(`
+      INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+    `).run('ADMIN_PASSWORD', newPassword);
+    res.json({ ok: true, message: 'Senha redefinida com sucesso.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Falha ao redefinir senha: ' + err.message });
+  }
+});
 app.use('/api/instagram', instagramCallbackRouter);
 
 app.post('/api/auth/login', (req, res) => {

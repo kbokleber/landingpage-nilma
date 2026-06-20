@@ -136,12 +136,22 @@ function migrateFromEnv() {
 function migrateExistingPlaintextSecrets() {
   const db = getDb();
   const update = db.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?');
+  const decrypt = db.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?');
   const tx = db.transaction(() => {
     for (const key of SENSITIVE) {
       const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
       if (row && row.value && !isEncrypted(row.value)) {
         update.run(encryptSecret(row.value), key);
       }
+    }
+    // Correção: se ADMIN_PASSWORD foi criptografado por engano em alguma versão,
+    // descriptografa e mantém em texto puro.
+    const ap = db.prepare("SELECT value FROM settings WHERE key = 'ADMIN_PASSWORD'").get();
+    if (ap && ap.value && isEncrypted(ap.value)) {
+      try {
+        const plain = decryptSecret(ap.value);
+        if (plain) decrypt.run(plain, 'ADMIN_PASSWORD');
+      } catch {}
     }
   });
   tx();
