@@ -281,8 +281,10 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  const { dbPath } = require('./lib/db');
   console.log(`Servidor em http://localhost:${PORT}`);
   console.log(`Admin: http://localhost:${PORT}/admin/`);
+  console.log(`Banco SQLite: ${dbPath}`);
   // Cron do Instagram: sincroniza periodicamente se estiver conectado
   try {
     instagramSync.startInstagramSyncCron();

@@ -1,0 +1,26 @@
+services:
+  app:
+    build: .
+    image: landingpage-nilma:latest
+    container_name: landingpage-nilma
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Caminho do banco (dentro do volume persistente)
+      - BLOG_DB_PATH=/app/data/blog.db
+    volumes:
+      # ⚠️ IMPORTANTE: volume persistente — sem ele, dados se perdem a cada redeploy
+      - nilma-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/public/instagram/recent"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  nilma-data:
+    driver: local
