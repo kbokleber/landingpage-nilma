@@ -233,6 +233,28 @@
             <div id="api-key-new" class="message info hidden"></div>
             <div id="api-key-list"></div>
           </div>
+
+          <div class="card">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Instagram (sincronização automática)</h2>
+            <p class="sub" style="margin-bottom:12px">
+              Conecte o Instagram <strong>@advnilmaalves</strong> para puxar os últimos posts automaticamente.
+              Os posts ficam disponíveis na seção <strong>"Últimos Conteúdos"</strong> da home (separado do Blog).
+              Por padrão o login é <strong>direto com o Instagram</strong> (mais simples — não precisa de Página do Facebook).
+              Requer conta Business/Creator e um app em
+              <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> com o produto <em>Instagram Graph API</em>.
+            </p>
+            <div id="ig-status" class="status-bar">Carregando...</div>
+            <div class="toolbar">
+              <button class="btn" type="button" id="ig-connect-btn" disabled>Conectar Instagram</button>
+              <button class="btn outline" type="button" id="ig-sync-btn" disabled>Sincronizar agora</button>
+              <button class="btn outline danger" type="button" id="ig-disconnect-btn" hidden>Desconectar</button>
+              <a class="btn outline" id="ig-profile-link" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noopener">Ver perfil</a>
+            </div>
+            <div id="ig-message" class="message hidden" role="status"></div>
+
+            <h3 style="font-size:1rem;font-weight:600;margin:16px 0 8px">Posts sincronizados</h3>
+            <div id="ig-posts" class="ig-posts-grid"></div>
+          </div>
         </div>
 
         <!-- Aba 4: Ajuda & Suporte -->

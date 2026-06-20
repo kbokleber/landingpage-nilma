@@ -610,6 +610,128 @@
       .ig-grid{grid-template-columns:repeat(2,1fr)}
       .ig-header{padding:16px}
       .ig-follow{margin-left:auto}
+      .instagram-profile{flex-wrap:wrap}
+      .instagram-grid{grid-template-columns:repeat(2,1fr)}
+    }
+
+    /* Últimos Conteúdos (Instagram) */
+    .instagram-section{
+      padding:80px 0;
+      background:#fafafa;
+    }
+    .instagram-heading{
+      font-size:48px;
+      font-weight:600;
+      color:var(--ink);
+      text-align:center;
+      margin:0 0 32px;
+      letter-spacing:-.01em;
+    }
+    .instagram-heading .dot{color:var(--wine);}
+    .instagram-profile{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      max-width:520px;
+      margin:0 auto 32px;
+      background:#fff;
+      padding:14px 22px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+    .ig-avatar{
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      object-fit:cover;
+      border:2px solid var(--line);
+    }
+    .ig-profile-meta{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    #ig-profile-username{
+      font-size:15px;
+      font-weight:600;
+      color:var(--ink);
+    }
+    .ig-stats{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:300;
+    }
+    .ig-follow-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 18px;
+      border-radius:8px;
+      background:var(--wine);
+      color:#fff;
+      font-size:12px;
+      font-weight:600;
+      text-decoration:none;
+      letter-spacing:.03em;
+      transition:background .15s;
+    }
+    .ig-follow-btn:hover{background:var(--wine-dark);}
+    .instagram-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    .ig-tile{
+      position:relative;
+      aspect-ratio:1;
+      overflow:hidden;
+      background:#eee;
+      border-radius:4px;
+    }
+    .ig-tile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transition:transform .25s;
+    }
+    .ig-tile:hover img{transform:scale(1.05);}
+    .ig-tile::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:rgba(127,66,88,0);
+      transition:background .15s;
+    }
+    .ig-tile:hover::after{background:rgba(127,66,88,.18);}
+    .ig-empty-state{
+      text-align:center;
+      padding:40px 20px;
+      color:var(--muted);
+    }
+    .ig-empty-state.hidden{display:none;}
+    .ig-empty-state p{margin:6px 0;}
+    .ig-tile-type{
+      position:absolute;
+      top:8px;
+      right:8px;
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      font-size:10px;
+      font-weight:600;
+      padding:3px 8px;
+      border-radius:4px;
+      letter-spacing:.05em;
+    }
+    @media (max-width:640px){
+      .instagram-section{padding:60px 0;}
+      .instagram-heading{font-size:32px;}
+      .instagram-profile{padding:10px 14px;gap:12px;border-radius:16px;}
+      .ig-avatar{width:42px;height:42px;}
+      .instagram-grid{grid-template-columns:repeat(2,1fr);}
     }
   </style>
 </head>
@@ -621,6 +743,7 @@
         <a href="#quem-somos">QUEM SOMOS</a>
         <a href="#areas">ÁREAS DE ATUAÇÃO</a>
         <a href="#sobre-mim">SOBRE MIM</a>
+        <a href="#ultimos-conteudos">ÚLTIMOS CONTEÚDOS</a>
         <a href="#depoimentos" id="menu-depoimentos" hidden>DEPOIMENTOS</a>
         <a href="#redes">REDES SOCIAIS</a>
         <a href="#contato">CONTATO</a>
@@ -700,6 +823,28 @@
         </div>
     <div class="about-right">
         <img src="assets/dra-nilma-original.jpg" alt="Dra. Nilma Alves">
+        </div>
+      </div>
+    </section>
+
+    <section id="ultimos-conteudos" class="instagram-section">
+      <div class="container">
+        <h2 class="instagram-heading">Últimos conteúdos<span class="dot">.</span></h2>
+        <div class="instagram-profile" id="instagram-profile">
+          <img id="ig-profile-avatar" src="assets/dra-nilma-original.jpg" alt="advnilmaalves" class="ig-avatar">
+          <div class="ig-profile-meta">
+            <strong id="ig-profile-username">advnilmaalves</strong>
+            <span id="ig-profile-stats" class="ig-stats">Carregando...</span>
+          </div>
+          <a class="ig-follow-btn" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noreferrer noopener">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 2c-3.2 0-3.5 0-4.7.1-1 0-1.6.2-2 .3-.5.2-.9.4-1.2.8-.4.4-.6.7-.8 1.2-.1.4-.3 1-.3 2-.1 1.2-.1 1.5-.1 4.7s0 3.5.1 4.7c0 1 .2 1.6.3 2 .2.5.4.9.8 1.2.4.4.7.6 1.2.8.4.1 1 .3 2 .3 1.2.1 1.5.1 4.7.1s3.5 0 4.7-.1c1 0 1.6-.2 2-.3.5-.2.9-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.4.3-1 .3-2 .1-1.2.1-1.5.1-4.7s0-3.5-.1-4.7c0-1-.2-1.6-.3-2-.2-.5-.4-.9-.8-1.2-.4-.4-.7-.6-1.2-.8-.4-.1-1-.3-2-.3-1.2-.1-1.5-.1-4.7-.1zm0 3.4a4.4 4.4 0 1 1 0 8.8 4.4 4.4 0 0 1 0-8.8zm0 2a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8zm5.5-2.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+            Seguir
+          </a>
+        </div>
+        <div class="instagram-grid" id="instagram-grid" aria-live="polite"></div>
+        <div id="instagram-empty" class="ig-empty-state hidden">
+          <p>Ainda não há posts sincronizados do Instagram.</p>
+          <p class="sub">Conecte o Instagram em <a href="/admin/">Painel Admin → Configurações → Instagram</a> para começar.</p>
         </div>
       </div>
     </section>
@@ -924,6 +1069,52 @@
           renderPage();
         })
         .catch(() => {});
+    })();
+
+    // === Últimos Conteúdos (Instagram) ===
+    (function initInstagram() {
+      const grid = document.getElementById('instagram-grid');
+      const empty = document.getElementById('instagram-empty');
+      const stats = document.getElementById('ig-profile-stats');
+      if (!grid) return;
+
+      function escapeHtml(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function mediaSrc(it) {
+        return it.localPath || it.thumbnailUrl || it.mediaUrl || '';
+      }
+
+      fetch('/api/public/instagram/recent?limit=8')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data?.items?.length) {
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+          }
+          empty.classList.add('hidden');
+          grid.classList.remove('hidden');
+          grid.innerHTML = data.items.map((it) => {
+            const src = mediaSrc(it);
+            const alt = (it.caption || 'Post do Instagram').slice(0, 120);
+            const typeBadge = (it.igMediaType && it.igMediaType !== 'IMAGE' && it.igMediaType !== 'CAROUSEL_ALBUM')
+              ? `<span class="ig-tile-type">${escapeHtml(it.igMediaType)}</span>`
+              : '';
+            return `
+              <a class="ig-tile" href="${escapeHtml(it.permalink || '#')}" target="_blank" rel="noopener" aria-label="${escapeHtml(alt)}">
+                ${src ? `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy">` : ''}
+                ${typeBadge}
+              </a>
+            `;
+          }).join('');
+          stats.textContent = `${data.items.length} publicações recentes`;
+        })
+        .catch(() => {
+          grid.classList.add('hidden');
+          empty.classList.remove('hidden');
+        });
     })();
   </script>
 </body>

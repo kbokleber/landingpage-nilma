@@ -87,6 +87,24 @@ function initSchema(db) {
       value TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS instagram_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ig_media_id TEXT UNIQUE NOT NULL,
+      ig_media_type TEXT,
+      caption TEXT,
+      permalink TEXT NOT NULL,
+      media_url TEXT,
+      thumbnail_url TEXT,
+      local_path TEXT,
+      timestamp DATETIME,
+      hidden INTEGER DEFAULT 0,
+      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_instagram_posts_timestamp ON instagram_posts(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_instagram_posts_hidden ON instagram_posts(hidden);
   `);
 
   // Migrações idempotentes (ALTER TABLE seguro)

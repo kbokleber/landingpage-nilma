@@ -38,6 +38,10 @@ const publicPostsRouter = require('./routes/public-posts');
 const adminPostsRouter = require('./routes/admin-posts');
 const adminApiKeysRouter = require('./routes/admin-api-keys');
 const adminSettingsRouter = require('./routes/admin-settings');
+const adminInstagramRouter = require('./routes/instagram');
+const publicInstagramRouter = require('./routes/instagram-public');
+const instagramCallbackRouter = require('./routes/instagram-callback');
+const instagramSync = require('./lib/instagramSync');
 
 settings.ensureMigrated();
 getDb();
@@ -52,10 +56,13 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
 }));
 app.get('/api/docs/openapi.json', (req, res) => res.json(openapiSpec));
 app.use('/api/public', publicPostsRouter);
+app.use('/api/public', publicInstagramRouter);
 app.use('/api/v1', postsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
+app.use('/api/admin', adminInstagramRouter);
+app.use('/api/instagram', instagramCallbackRouter);
 
 app.post('/api/auth/login', (req, res) => {
   const token = login(req.body?.password || '');
@@ -236,4 +243,11 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor em http://localhost:${PORT}`);
   console.log(`Admin: http://localhost:${PORT}/admin/`);
+  // Cron do Instagram: sincroniza periodicamente se estiver conectado
+  try {
+    instagramSync.startInstagramSyncCron();
+    console.log(`[instagram] cron ativo (verifica a cada 60s)`);
+  } catch (err) {
+    console.warn(`[instagram] cron não pôde iniciar: ${err.message}`);
+  }
 });

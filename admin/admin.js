@@ -892,6 +892,14 @@ const SETTINGS_LABELS = {
   BLOG_DB_PATH: { label: 'Banco do Blog (caminho)', help: 'Caminho relativo ao projeto. Vazio = data/blog.db. Requer reiniciar.', type: 'text' },
   BLOG_UPLOAD_DIR: { label: 'Diretório de uploads do Blog', help: 'Vazio = data/uploads/blog. Requer reiniciar.', type: 'text' },
   BLOG_UPLOAD_MAX_MB: { label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
+  INSTAGRAM_APP_ID: { label: 'Instagram App ID', help: 'App ID do seu app em developers.facebook.com. Não é sensível.', type: 'text' },
+  INSTAGRAM_APP_SECRET: { label: 'Instagram App Secret', help: 'App Secret. Criptografado no banco. Use 👁 para revelar.', type: 'password' },
+  INSTAGRAM_REDIRECT_URI: { label: 'Instagram Redirect URI', help: 'Deve coincidir com o configurado no app do Facebook. Padrão: http://127.0.0.1:3001/api/instagram/callback', type: 'text' },
+  INSTAGRAM_PAGE_ID: { label: 'Instagram Page ID (vinculada)', help: 'Preenchido automaticamente após conectar. Não é sensível.', type: 'text' },
+  INSTAGRAM_IG_USER_ID: { label: 'Instagram Business User ID', help: 'Preenchido automaticamente após conectar.', type: 'text' },
+  INSTAGRAM_SYNC_INTERVAL_MIN: { label: 'Intervalo de sincronização (min)', help: 'Mínimo 5 minutos. Requer reiniciar o servidor para mudar.', type: 'number' },
+  INSTAGRAM_AUTO_IMPORT: { label: 'Sincronização automática', help: '1 = ativa, 0 = apenas manual via botão "Sincronizar agora".', type: 'text' },
+  INSTAGRAM_AUTH_MODE: { label: 'Método de login', help: 'instagram = login direto com @advnilmaalves (Business Login, mais simples). facebook = login via Facebook + Página vinculada.', type: 'text' },
 };
 
 let settingsDirty = false;
@@ -1046,6 +1054,164 @@ document.querySelectorAll('.nav-item').forEach((item) => {
     if (item.dataset.tab === 'configuracoes') {
       loadSettings();
       loadApiKeys();
+      loadInstagramPanel();
     }
   });
 });
+
+// ============== INSTAGRAM ==============
+const igStatus = document.getElementById('ig-status');
+const igConnectBtn = document.getElementById('ig-connect-btn');
+const igSyncBtn = document.getElementById('ig-sync-btn');
+const igDisconnectBtn = document.getElementById('ig-disconnect-btn');
+const igPosts = document.getElementById('ig-posts');
+const igMessage = document.getElementById('ig-message');
+
+function igShowMessage(text, kind = 'info') {
+  igMessage.textContent = text;
+  igMessage.className = `message ${kind}`;
+  igMessage.classList.remove('hidden');
+}
+
+async function loadInstagramStatus() {
+  try {
+    const s = await api('/api/admin/instagram/status');
+    renderInstagramStatus(s);
+    return s;
+  } catch (err) {
+    igStatus.innerHTML = `<span class="err">${escapeHtml(err.message)}</span>`;
+    igConnectBtn.disabled = true;
+    igSyncBtn.disabled = true;
+    return null;
+  }
+}
+
+function renderInstagramStatus(s) {
+  if (!s) return;
+  const parts = [];
+  parts.push(`App ID configurado: <strong>${s.configured ? 'Sim' : 'Não'}</strong>`);
+  parts.push(`Conectado: <strong>${s.connected ? 'Sim' : 'Não'}</strong>`);
+  if (s.pageId) parts.push(`Página: <code>${escapeHtml(String(s.pageId))}</code>`);
+  if (s.igUserId) parts.push(`IG User: <code>${escapeHtml(String(s.igUserId))}</code>`);
+  parts.push(`Auto-sync: <strong>${s.autoImport === '0' ? 'Desligado' : `A cada ${s.intervalMin} min`}</strong>`);
+  if (s.lastSyncAt) {
+    const r = s.lastResult || {};
+    parts.push(`Última sync: ${new Date(s.lastSyncAt).toLocaleString('pt-BR')} — +${r.added || 0} novos, ~${r.updated || 0} atualizados`);
+  } else {
+    parts.push(`Última sync: <em>nunca</em>`);
+  }
+  igStatus.innerHTML = parts.map((p) => `<span>${p}</span>`).join('');
+  igConnectBtn.disabled = s.configured ? false : true;
+  igConnectBtn.textContent = s.connected ? 'Reconectar' : 'Conectar Instagram';
+  igSyncBtn.disabled = !s.connected;
+  igDisconnectBtn.hidden = !s.connected;
+  igSyncBtn.textContent = s.connected ? 'Sincronizar agora' : 'Sincronizar agora';
+}
+
+async function loadInstagramPosts() {
+  try {
+    const data = await api('/api/admin/instagram/posts?limit=12');
+    if (!data.items.length) {
+      igPosts.innerHTML = '<p class="sub">Nenhum post sincronizado ainda. Clique em "Sincronizar agora" após conectar.</p>';
+      return;
+    }
+    igPosts.innerHTML = data.items.map((it) => {
+      const media = it.localPath || it.thumbnailUrl || it.mediaUrl || '';
+      const ts = it.timestamp ? new Date(it.timestamp).toLocaleString('pt-BR') : '—';
+      const hiddenBadge = it.hidden ? '<span class="badge" style="background:#fff3cd;color:#856404">oculto</span>' : '';
+      return `
+        <div class="ig-card" data-id="${it.id}">
+          <a href="${escapeAttr(it.permalink)}" target="_blank" rel="noopener">
+            ${media ? `<img src="${escapeAttr(media)}" alt="" loading="lazy">` : '<div class="ig-empty">sem mídia</div>'}
+            <span class="ig-type">${escapeHtml(it.igMediaType || 'POST')}</span>
+            ${hiddenBadge}
+          </a>
+          <div class="ig-meta">
+            <span class="ig-caption">${escapeHtml((it.caption || '').slice(0, 80))}${(it.caption || '').length > 80 ? '…' : ''}</span>
+            <span class="ig-ts">${ts}</span>
+          </div>
+          <div class="ig-actions">
+            ${it.hidden
+              ? `<button class="btn outline" data-action="show" data-id="${it.id}">Mostrar</button>`
+              : `<button class="btn outline" data-action="hide" data-id="${it.id}">Ocultar</button>`}
+            <button class="btn outline danger" data-action="delete" data-id="${it.id}">Excluir</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    igPosts.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (action === 'hide') {
+          await api(`/api/admin/instagram/posts/${id}/hide`, { method: 'POST' });
+          igShowMessage('Post ocultado.', 'ok');
+        } else if (action === 'show') {
+          await api(`/api/admin/instagram/posts/${id}/show`, { method: 'POST' });
+          igShowMessage('Post visível novamente.', 'ok');
+        } else if (action === 'delete') {
+          if (!confirm('Excluir este post do cache local? (não afeta o Instagram)')) return;
+          await api(`/api/admin/instagram/posts/${id}`, { method: 'DELETE' });
+          igShowMessage('Post removido do cache.', 'ok');
+        }
+        loadInstagramPanel();
+      });
+    });
+  } catch (err) {
+    igPosts.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+async function loadInstagramPanel() {
+  await loadInstagramStatus();
+  await loadInstagramPosts();
+}
+
+igConnectBtn.addEventListener('click', async () => {
+  igShowMessage('Gerando URL de conexão...', 'info');
+  try {
+    const data = await api('/api/admin/instagram/connect');
+    window.open(data.url, '_blank', 'noopener');
+    igShowMessage('Autorize o app na nova aba. Após autorizar, você voltará para cá automaticamente.', 'ok');
+  } catch (err) {
+    igShowMessage(err.message, 'err');
+  }
+});
+
+igSyncBtn.addEventListener('click', async () => {
+  igSyncBtn.disabled = true;
+  igShowMessage('Sincronizando...', 'info');
+  try {
+    const result = await api('/api/admin/instagram/sync', {
+      method: 'POST',
+      body: JSON.stringify({ limit: 20 }),
+    });
+    igShowMessage(`+${result.added} novos, ~${result.updated} atualizados, ${result.skipped} sem mudança.${result.errors?.length ? ` ${result.errors.length} erros.` : ''}`, 'ok');
+    loadInstagramPanel();
+  } catch (err) {
+    igShowMessage(err.message, 'err');
+  } finally {
+    igSyncBtn.disabled = false;
+  }
+});
+
+igDisconnectBtn.addEventListener('click', async () => {
+  if (!confirm('Desconectar o Instagram? Posts já sincronizados continuam no banco, mas a sincronização automática para.')) return;
+  try {
+    await api('/api/admin/instagram/disconnect', { method: 'POST' });
+    igShowMessage('Instagram desconectado.', 'ok');
+    loadInstagramPanel();
+  } catch (err) {
+    igShowMessage(err.message, 'err');
+  }
+});
+
+// Mensagens da URL (após callback)
+const igParams = new URLSearchParams(window.location.search);
+if (igParams.get('instagram') === 'connected') {
+  showFlash('Instagram conectado com sucesso!', 'ok');
+  history.replaceState({}, '', '/admin/');
+} else if (igParams.get('instagram') === 'error') {
+  showFlash(`Erro ao conectar Instagram: ${decodeURIComponent(igParams.get('msg') || '')}`, 'err');
+  history.replaceState({}, '', '/admin/');
+}
