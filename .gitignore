@@ -1,5 +1,10 @@
 node_modules/
 .env
+.vscode/
 data/oauth-tokens.json
+data/blog.db
+data/blog.db-shm
+data/blog.db-wal
+data/uploads/
 client_secret*.json
 dev-server*.log

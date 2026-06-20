@@ -389,3 +389,602 @@ navItems.forEach((item) => {
 });
 
 tryAutoLogin();
+
+// ============== BLOG ==============
+const blogList = document.getElementById('blog-list');
+const blogEditor = document.getElementById('blog-editor');
+const blogEditorTitle = document.getElementById('blog-editor-title');
+const blogTitle = document.getElementById('blog-title');
+const blogAuthor = document.getElementById('blog-author');
+const blogExcerpt = document.getElementById('blog-excerpt');
+const blogContent = document.getElementById('blog-content');
+const blogCover = document.getElementById('blog-cover');
+const blogCoverInput = document.getElementById('blog-cover-input');
+const blogCoverPreview = document.getElementById('blog-cover-preview');
+const blogCoverRemove = document.getElementById('blog-cover-remove');
+const blogTags = document.getElementById('blog-tags');
+const blogStatus = document.getElementById('blog-status');
+const blogStatusFilter = document.getElementById('blog-status-filter');
+const blogDateFrom = document.getElementById('blog-date-from');
+const blogDateTo = document.getElementById('blog-date-to');
+const blogFilterClearBtn = document.getElementById('blog-filter-clear-btn');
+const blogFilterInfo = document.getElementById('blog-filter-info');
+const blogImagesDiv = document.getElementById('blog-images');
+const blogImageInput = document.getElementById('blog-image-input');
+const blogEditorStatus = document.getElementById('blog-editor-status');
+const apiKeyName = document.getElementById('api-key-name');
+const apiKeyNew = document.getElementById('api-key-new');
+const apiKeyList = document.getElementById('api-key-list');
+
+let blogCurrentId = null;
+
+function setBlogStatus(text) {
+  blogEditorStatus.textContent = text || '';
+}
+
+function renderCoverPreview(url) {
+  if (url) {
+    blogCoverPreview.innerHTML = `<img src="${escapeAttr(url)}" alt="Capa do post">`;
+    blogCoverRemove.hidden = false;
+  } else {
+    blogCoverPreview.innerHTML = '<span class="cover-empty">Nenhuma capa selecionada</span>';
+    blogCoverRemove.hidden = true;
+  }
+  blogCover.value = url || '';
+}
+
+function readBlogForm() {
+  return {
+    title: blogTitle.value.trim(),
+    excerpt: blogExcerpt.value.trim(),
+    contentHtml: blogContent.value,
+    coverImage: blogCover.value.trim(),
+    author: blogAuthor.value.trim() || 'Dra. Nilma Alves',
+    tags: blogTags.value.split(',').map((t) => t.trim()).filter(Boolean),
+    status: blogStatus.value || 'draft',
+  };
+}
+
+function fillBlogForm(post) {
+  blogTitle.value = post.title || '';
+  blogAuthor.value = post.author || 'Dra. Nilma Alves';
+  blogExcerpt.value = post.excerpt || '';
+  blogContent.value = post.contentHtml || '';
+  renderCoverPreview(post.coverImage || '');
+  blogTags.value = (post.tags || []).join(', ');
+  blogStatus.value = post.status || 'draft';
+  renderBlogImages(post.images || []);
+}
+
+function resetBlogForm() {
+  blogCurrentId = null;
+  blogEditorTitle.textContent = 'Novo post';
+  fillBlogForm({ title: '', author: 'Dra. Nilma Alves', excerpt: '', contentHtml: '', coverImage: '', tags: [], images: [] });
+  setBlogStatus('');
+  blogCoverInput.value = '';
+}
+
+function renderBlogImages(images) {
+  if (!images.length) {
+    blogImagesDiv.innerHTML = '<p class="sub">Nenhuma imagem na galeria.</p>';
+    return;
+  }
+  blogImagesDiv.innerHTML = images.map((img) => `
+    <div class="image-thumb">
+      <img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt || '')}">
+      <button type="button" data-image-id="${img.id}" aria-label="Remover">×</button>
+    </div>
+  `).join('');
+  blogImagesDiv.querySelectorAll('button[data-image-id]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remover esta imagem?')) return;
+      try {
+        await api(`/api/admin/post-images/${btn.dataset.imageId}`, { method: 'DELETE' });
+        await loadBlogEditor(blogCurrentId);
+      } catch (err) {
+        showFlash(err.message, 'err');
+      }
+    });
+  });
+}
+
+async function loadBlogList() {
+  try {
+    const params = new URLSearchParams();
+    if (blogStatusFilter.value) params.set('status', blogStatusFilter.value);
+    if (blogDateFrom && blogDateFrom.value) params.set('dateFrom', blogDateFrom.value);
+    if (blogDateTo && blogDateTo.value) params.set('dateTo', blogDateTo.value);
+    const data = await api(`/api/admin/posts?${params.toString()}`);
+    if (blogFilterInfo) {
+      const filters = [];
+      if (blogStatusFilter.value) filters.push(`status=${blogStatusFilter.value}`);
+      if (blogDateFrom && blogDateFrom.value) filters.push(`de=${blogDateFrom.value}`);
+      if (blogDateTo && blogDateTo.value) filters.push(`até=${blogDateTo.value}`);
+      const filterTxt = filters.length ? ` (filtros: ${filters.join(', ')})` : '';
+      blogFilterInfo.textContent = `${data.total} post${data.total === 1 ? '' : 's'} encontrado${data.total === 1 ? '' : 's'}${filterTxt}`;
+    }
+    if (!data.items.length) {
+      blogList.innerHTML = '<p class="sub">Nenhum post encontrado com os filtros atuais.</p>';
+      return;
+    }
+    blogList.innerHTML = data.items.map((p) => {
+      const createdAt = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-BR') : '—';
+      return `
+      <div class="blog-item">
+        <div class="blog-item-info">
+          <div class="blog-item-title">${escapeHtml(p.title || '(sem título)')}</div>
+          <div class="blog-item-meta">
+            <span class="blog-item-status ${escapeAttr(p.status)}">${escapeHtml(p.status)}</span>
+            <span>Criado: ${createdAt}</span>
+            ${p.publishedAt ? `<span>Publicado: ${new Date(p.publishedAt).toLocaleDateString('pt-BR')}</span>` : ''}
+            <span>/${escapeHtml(p.slug)}</span>
+            ${p.tags && p.tags.length ? `<span>${p.tags.map(escapeHtml).join(', ')}</span>` : ''}
+          </div>
+        </div>
+        <div class="blog-item-actions">
+          <button class="btn secondary" type="button" data-action="edit" data-id="${p.id}">Editar</button>
+          ${p.status !== 'published' ? `<button class="btn" type="button" data-action="publish" data-id="${p.id}">Publicar</button>` : ''}
+          <button class="btn outline danger" type="button" data-action="delete" data-id="${p.id}">Excluir</button>
+        </div>
+      </div>
+    `;
+    }).join('');
+    blogList.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        if (btn.dataset.action === 'edit') loadBlogEditor(id);
+        else if (btn.dataset.action === 'publish') publishBlogPost(id);
+        else if (btn.dataset.action === 'delete') deleteBlogPost(id);
+      });
+    });
+  } catch (err) {
+    blogList.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+async function loadBlogEditor(id) {
+  try {
+    const post = await api(`/api/admin/posts/${id}`);
+    blogCurrentId = id;
+    blogEditorTitle.textContent = `Editar post #${id}`;
+    fillBlogForm(post);
+    blogEditor.classList.remove('hidden');
+    setBlogStatus('Post carregado.');
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function saveBlogPost({ publishNow = false } = {}) {
+  const payload = readBlogForm();
+  if (!payload.title || !payload.contentHtml) {
+    setBlogStatus('Preencha título e conteúdo.');
+    return;
+  }
+  try {
+    let post;
+    if (blogCurrentId) {
+      post = await api(`/api/admin/posts/${blogCurrentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+    } else {
+      post = await api('/api/admin/posts', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      blogCurrentId = post.id;
+      blogEditorTitle.textContent = `Editar post #${post.id}`;
+    }
+    if (publishNow && post.status !== 'published') {
+      post = await api(`/api/admin/posts/${blogCurrentId}/publish`, { method: 'POST' });
+    }
+    if (post.status !== blogStatus.value) {
+      blogStatus.value = post.status;
+    }
+    setBlogStatus(`Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`);
+    const finalStatus = blogStatus.value;
+    const msg = finalStatus === 'published' ? 'Post publicado.' : (finalStatus === 'archived' ? 'Post arquivado.' : 'Rascunho salvo.');
+    showFlash(msg, 'ok');
+    loadBlogList();
+  } catch (err) {
+    setBlogStatus(err.message);
+    showFlash(err.message, 'err');
+  }
+}
+
+async function publishBlogPost(id) {
+  if (!confirm('Publicar este post agora?')) return;
+  try {
+    await api(`/api/admin/posts/${id}/publish`, { method: 'POST' });
+    showFlash('Post publicado.', 'ok');
+    loadBlogList();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function deleteBlogPost(id) {
+  if (!confirm('Excluir este post e suas imagens da galeria? Esta ação não pode ser desfeita.')) return;
+  try {
+    await api(`/api/admin/posts/${id}`, { method: 'DELETE' });
+    showFlash('Post excluído.', 'ok');
+    if (blogCurrentId === id) {
+      blogEditor.classList.add('hidden');
+      resetBlogForm();
+    }
+    loadBlogList();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+document.getElementById('blog-new-btn').addEventListener('click', () => {
+  resetBlogForm();
+  blogEditor.classList.remove('hidden');
+  blogTitle.focus();
+});
+document.getElementById('blog-cancel-btn').addEventListener('click', () => {
+  blogEditor.classList.add('hidden');
+  resetBlogForm();
+});
+document.getElementById('blog-save-draft-btn').addEventListener('click', () => saveBlogPost({ publishNow: false }));
+document.getElementById('blog-publish-btn').addEventListener('click', () => saveBlogPost({ publishNow: true }));
+document.getElementById('blog-delete-btn').addEventListener('click', () => {
+  if (blogCurrentId) deleteBlogPost(blogCurrentId);
+});
+blogStatusFilter.addEventListener('change', loadBlogList);
+if (blogDateFrom) blogDateFrom.addEventListener('change', loadBlogList);
+if (blogDateTo) blogDateTo.addEventListener('change', loadBlogList);
+if (blogFilterClearBtn) {
+  blogFilterClearBtn.addEventListener('click', () => {
+    blogStatusFilter.value = '';
+    if (blogDateFrom) blogDateFrom.value = '';
+    if (blogDateTo) blogDateTo.value = '';
+    loadBlogList();
+  });
+}
+
+blogCoverInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!blogCurrentId) {
+    showFlash('Salve o rascunho antes de enviar a capa.', 'err');
+    blogCoverInput.value = '';
+    return;
+  }
+  const formData = new FormData();
+  formData.append('cover', file);
+  setBlogStatus('Enviando capa...');
+  try {
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`/api/admin/posts/${blogCurrentId}/cover`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no upload');
+    renderCoverPreview(data.coverImage);
+    showFlash('Capa atualizada.', 'ok');
+    setBlogStatus(`Capa salva às ${new Date().toLocaleTimeString('pt-BR')}.`);
+  } catch (err) {
+    showFlash(err.message, 'err');
+    setBlogStatus(err.message);
+  } finally {
+    blogCoverInput.value = '';
+  }
+});
+
+blogCoverRemove.addEventListener('click', async () => {
+  if (!blogCurrentId) {
+    renderCoverPreview('');
+    return;
+  }
+  if (!confirm('Remover a capa atual?')) return;
+  try {
+    const updated = await api(`/api/admin/posts/${blogCurrentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ coverImage: '' }),
+    });
+    renderCoverPreview(updated.coverImage || '');
+    showFlash('Capa removida.', 'ok');
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+});
+
+blogImageInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!blogCurrentId) {
+    showFlash('Salve o rascunho antes de enviar imagens.', 'err');
+    blogImageInput.value = '';
+    return;
+  }
+  const formData = new FormData();
+  formData.append('image', file);
+  try {
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`/api/admin/posts/${blogCurrentId}/images`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro no upload');
+    showFlash('Imagem adicionada.', 'ok');
+    await loadBlogEditor(blogCurrentId);
+  } catch (err) {
+    showFlash(err.message, 'err');
+  } finally {
+    blogImageInput.value = '';
+  }
+});
+
+// API Keys
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+function buildKeyDisplay(key, scope = null) {
+  const suf = scope ? `-${scope}` : '';
+  return `
+    <div class="api-key-reveal">
+      <strong>Chave disponível.</strong> Copie com um clique — você pode revelá-la novamente depois, em "Ver / Copiar".
+      <div class="api-key-secret">
+        <input type="password" id="api-key-secret-input${suf}" value="${escapeAttr(key)}" readonly>
+        <button class="btn outline" type="button" id="api-key-toggle-btn${suf}" title="Mostrar/ocultar">👁</button>
+        <button class="btn" type="button" id="api-key-copy-btn${suf}">Copiar chave</button>
+      </div>
+      <small>Prefixo identificador: <code>${escapeHtml(key.slice(0, 12))}…</code></small>
+    </div>
+  `;
+}
+
+function bindKeyRevealHandlers(key, scope = null) {
+  const suf = scope ? `-${scope}` : '';
+  const input = document.getElementById(`api-key-secret-input${suf}`);
+  const toggle = document.getElementById(`api-key-toggle-btn${suf}`);
+  const copy = document.getElementById(`api-key-copy-btn${suf}`);
+  if (!input || !toggle || !copy) return;
+  toggle.addEventListener('click', () => {
+    input.type = input.type === 'password' ? 'text' : 'password';
+    toggle.textContent = input.type === 'password' ? '👁' : '🙈';
+  });
+  copy.addEventListener('click', async () => {
+    const ok = await copyToClipboard(key);
+    if (ok) {
+      const original = copy.textContent;
+      copy.textContent = '✓ Copiado!';
+      copy.disabled = true;
+      setTimeout(() => {
+        copy.textContent = original;
+        copy.disabled = false;
+      }, 1800);
+    } else {
+      showFlash('Não foi possível copiar. Selecione manualmente (clique no campo → Ctrl+C).', 'err');
+      input.type = 'text';
+      input.focus();
+      input.select();
+    }
+  });
+}
+
+async function loadApiKeys() {
+  try {
+    const data = await api('/api/admin/api-keys');
+    if (!data.items.length) {
+      apiKeyList.innerHTML = '<p class="sub">Nenhuma chave cadastrada.</p>';
+      return;
+    }
+    apiKeyList.innerHTML = data.items.map((k) => `
+      <div class="api-key-item" data-id="${k.id}">
+        <div class="api-key-meta">
+          <div class="api-key-name">${escapeHtml(k.name)}</div>
+          <div class="api-key-info">
+            <span class="api-key-prefix">${escapeHtml(k.prefix)}…</span>
+            <span>Criada: ${new Date(k.createdAt).toLocaleString('pt-BR')}</span>
+            <span>Último uso: ${k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString('pt-BR') : '—'}</span>
+          </div>
+        </div>
+        <div class="api-key-actions">
+          <button class="btn secondary" type="button" data-action="reveal" data-id="${k.id}">Ver / Copiar</button>
+          <button class="btn outline danger" type="button" data-action="delete" data-id="${k.id}">Excluir</button>
+        </div>
+        <div class="api-key-secret hidden" data-secret-for="${k.id}"></div>
+      </div>
+    `).join('');
+    apiKeyList.querySelectorAll('button[data-action="delete"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Excluir esta chave permanentemente? Sistemas externos usando-a deixarão de funcionar imediatamente.')) return;
+        try {
+          await api(`/api/admin/api-keys/${btn.dataset.id}`, { method: 'DELETE' });
+          showFlash('Chave excluída.', 'ok');
+          loadApiKeys();
+        } catch (err) {
+          showFlash(err.message, 'err');
+        }
+      });
+    });
+    apiKeyList.querySelectorAll('button[data-action="reveal"]').forEach((btn) => {
+      btn.addEventListener('click', () => revealApiKeyInline(btn.dataset.id));
+    });
+  } catch (err) {
+    apiKeyList.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+async function revealApiKeyInline(id) {
+  const container = apiKeyList.querySelector(`[data-secret-for="${id}"]`);
+  if (!container) return;
+  const password = prompt('Confirme sua senha de administrador para revelar esta chave:');
+  if (!password) return;
+  try {
+    const result = await api(`/api/admin/api-keys/${id}/reveal`, {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+    container.innerHTML = buildKeyDisplay(result.key, `reveal-${id}`);
+    container.classList.remove('hidden');
+    bindKeyRevealHandlers(result.key, `reveal-${id}`);
+    showFlash('Chave revelada. Copie-a com segurança.', 'ok');
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+document.getElementById('api-key-create-btn').addEventListener('click', async () => {
+  const name = apiKeyName.value.trim() || 'Default';
+  try {
+    const result = await api('/api/admin/api-keys', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+    apiKeyName.value = '';
+    apiKeyNew.innerHTML = buildKeyDisplay(result.key, 'new');
+    apiKeyNew.classList.remove('hidden');
+    bindKeyRevealHandlers(result.key, 'new');
+    showFlash('Chave gerada.', 'ok');
+    loadApiKeys();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+});
+
+document.querySelectorAll('.nav-item').forEach((item) => {
+  item.addEventListener('click', () => {
+    if (item.dataset.tab === 'blog') {
+      loadBlogList();
+    }
+  });
+});
+
+// ============== SETTINGS ==============
+const settingsForm = document.getElementById('settings-form');
+const settingsStatus = document.getElementById('settings-status');
+
+const SETTINGS_LABELS = {
+  PORT: { label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
+  ADMIN_PASSWORD: { label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
+  GOOGLE_CLIENT_ID: { label: 'Google Client ID', help: 'OAuth 2.0 Client ID do Google Cloud.', type: 'text' },
+  GOOGLE_CLIENT_SECRET: { label: 'Google Client Secret', help: 'OAuth 2.0 Client Secret.', type: 'password' },
+  GOOGLE_REDIRECT_URI: { label: 'Google Redirect URI', help: 'URL de callback configurada no Google Cloud.', type: 'text' },
+  GBP_LOCATION_NAME: { label: 'GBP Location Name', help: 'Resource name da localização (accounts/XXX/locations/YYY).', type: 'text' },
+  BLOG_DB_PATH: { label: 'Banco do Blog (caminho)', help: 'Caminho relativo ao projeto. Vazio = data/blog.db. Requer reiniciar.', type: 'text' },
+  BLOG_UPLOAD_DIR: { label: 'Diretório de uploads do Blog', help: 'Vazio = data/uploads/blog. Requer reiniciar.', type: 'text' },
+  BLOG_UPLOAD_MAX_MB: { label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
+};
+
+let settingsDirty = false;
+
+function setSettingsStatus(text, kind) {
+  settingsStatus.textContent = text || '';
+  settingsStatus.style.color = kind === 'err' ? '#c0392b' : (kind === 'ok' ? '#1e7e34' : '#666');
+}
+
+function renderSettingsForm(items) {
+  settingsForm.innerHTML = items.map((item) => {
+    const meta = SETTINGS_LABELS[item.key] || { label: item.key };
+    const type = meta.type || 'text';
+    const safeValue = type === 'password' ? '' : escapeAttr(item.value || '');
+    return `
+      <div class="setting-row">
+        <label for="setting-${item.key}">
+          <span class="setting-name">${escapeHtml(meta.label)}</span>
+          <code class="setting-key">${escapeHtml(item.key)}</code>
+          ${item.sensitive ? '<span class="setting-sensitive">sensível</span>' : ''}
+        </label>
+        <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
+          type="${type === 'password' ? 'password' : (type === 'number' ? 'number' : 'text')}"
+          value="${safeValue}"
+          autocomplete="new-password"
+          placeholder="${type === 'password' ? '(mantenha em branco para não alterar)' : ''}"
+          data-original="${safeValue}">
+        ${meta.help ? `<small class="setting-help">${escapeHtml(meta.help)}</small>` : ''}
+        <small class="setting-source">Origem: ${item.source} · Atualizado: ${item.updatedAt || '—'}</small>
+      </div>
+    `;
+  }).join('');
+  settingsForm.querySelectorAll('input').forEach((input) => {
+    input.addEventListener('input', () => {
+      settingsDirty = true;
+      setSettingsStatus('Há alterações não salvas.', 'warn');
+    });
+  });
+}
+
+async function loadSettings() {
+  try {
+    const data = await api('/api/admin/settings');
+    renderSettingsForm(data.items);
+    settingsDirty = false;
+    setSettingsStatus('Configurações carregadas.', 'ok');
+  } catch (err) {
+    setSettingsStatus(err.message, 'err');
+  }
+}
+
+async function saveSettings() {
+  const inputs = settingsForm.querySelectorAll('input');
+  const updates = [];
+  inputs.forEach((input) => {
+    const key = input.name;
+    if (input.type === 'password') {
+      if (input.value !== '') updates.push({ key, value: input.value });
+    } else if (input.value !== input.dataset.original) {
+      updates.push({ key, value: input.value });
+    }
+  });
+  if (!updates.length) {
+    setSettingsStatus('Nenhuma alteração para salvar.', 'ok');
+    return;
+  }
+  setSettingsStatus('Salvando...');
+  try {
+    const res = await api('/api/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ updates }),
+    });
+    renderSettingsForm(res.items);
+    settingsDirty = false;
+    setSettingsStatus(`Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`, 'ok');
+    showFlash('Configurações salvas.', 'ok');
+  } catch (err) {
+    setSettingsStatus(err.message, 'err');
+    showFlash(err.message, 'err');
+  }
+}
+
+document.getElementById('settings-save-btn').addEventListener('click', saveSettings);
+document.getElementById('settings-reload-btn').addEventListener('click', () => {
+  if (settingsDirty && !confirm('Descartar alterações não salvas?')) return;
+  loadSettings();
+});
+
+document.querySelectorAll('.nav-item').forEach((item) => {
+  item.addEventListener('click', () => {
+    if (item.dataset.tab === 'configuracoes') {
+      loadSettings();
+      loadApiKeys();
+    }
+  });
+});

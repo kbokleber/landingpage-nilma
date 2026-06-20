@@ -25,11 +25,37 @@ const {
 
 const ROOT = path.join(__dirname, '..');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = (() => {
+  try { return Number(settings.get('PORT')) || 3001; } catch { return Number(process.env.PORT) || 3001; }
+})();
+
+const { getDb } = require('./lib/db');
+const settings = require('./lib/settings');
+const swaggerUi = require('swagger-ui-express');
+const openapiSpec = require('./openapi');
+const postsApiRouter = require('./routes/posts');
+const publicPostsRouter = require('./routes/public-posts');
+const adminPostsRouter = require('./routes/admin-posts');
+const adminApiKeysRouter = require('./routes/admin-api-keys');
+const adminSettingsRouter = require('./routes/admin-settings');
+
+settings.ensureMigrated();
+getDb();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(ROOT));
+app.use('/uploads/blog', express.static(path.join(ROOT, 'data', 'uploads', 'blog')));
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+  customSiteTitle: 'Nilma Alves — Blog API',
+}));
+app.get('/api/docs/openapi.json', (req, res) => res.json(openapiSpec));
+app.use('/api/public', publicPostsRouter);
+app.use('/api/v1', postsApiRouter);
+app.use('/api/admin', adminPostsRouter);
+app.use('/api/admin', adminApiKeysRouter);
+app.use('/api/admin', adminSettingsRouter);
 
 app.post('/api/auth/login', (req, res) => {
   const token = login(req.body?.password || '');
@@ -200,6 +226,11 @@ app.post('/api/publish', authMiddleware, (_req, res) => {
   const publicData = buildPublicFromDraft(draft);
   writePublic(publicData);
   res.json({ ok: true, public: publicData });
+});
+
+app.use((err, req, res, next) => {
+  console.error('ERR_STACK:', err.stack || err);
+  res.status(500).json({ error: err.message || 'Erro interno' });
 });
 
 app.listen(PORT, () => {

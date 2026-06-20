@@ -1,13 +1,22 @@
 const crypto = require('crypto');
 const { google } = require('googleapis');
 const { readOAuthTokens, writeOAuthTokens, readGbpSettings } = require('./storage');
+const settings = require('./settings');
 
 const SCOPES = ['https://www.googleapis.com/auth/business.manage'];
 
+function getConfig(key, fallback = '') {
+  try {
+    const fromDb = settings.get(key);
+    if (fromDb) return fromDb;
+  } catch {}
+  return process.env[key] || fallback;
+}
+
 function getOAuthClient() {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/google/callback';
+  const clientId = getConfig('GOOGLE_CLIENT_ID');
+  const clientSecret = getConfig('GOOGLE_CLIENT_SECRET');
+  const redirectUri = getConfig('GOOGLE_REDIRECT_URI', 'http://localhost:3000/api/google/callback');
 
   if (!clientId || !clientSecret) {
     throw new Error('GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET não configurados.');
@@ -52,11 +61,14 @@ function getAuthorizedClient() {
 }
 
 function getLocationName() {
-  return process.env.GBP_LOCATION_NAME || readGbpSettings()?.locationName || null;
+  const fromDb = (() => { try { return settings.get('GBP_LOCATION_NAME'); } catch { return ''; } })();
+  return fromDb || process.env.GBP_LOCATION_NAME || readGbpSettings()?.locationName || null;
 }
 
 function isOAuthConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  const id = getConfig('GOOGLE_CLIENT_ID');
+  const secret = getConfig('GOOGLE_CLIENT_SECRET');
+  return Boolean(id && secret);
 }
 
 async function listGoogleLocations() {

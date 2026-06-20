@@ -1,10 +1,15 @@
 const crypto = require('crypto');
+const settings = require('./settings');
 
 const SESSIONS = new Map();
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function getAdminPassword() {
-  return process.env.ADMIN_PASSWORD || 'nilma-admin';
+  try {
+    return settings.get('ADMIN_PASSWORD') || 'nilma-admin';
+  } catch {
+    return process.env.ADMIN_PASSWORD || 'nilma-admin';
+  }
 }
 
 function createSession() {
@@ -58,4 +63,5 @@ module.exports = {
   authMiddleware,
   validateSession,
   getTokenFromRequest,
+  getAdminPassword,
 };

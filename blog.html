@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog | Dra. Nilma Alves</title>
+  <meta name="description" content="Artigos e conteúdos sobre direito de família, sucessões e imobiliário.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --wine: #7f4258;
+      --wine-dark: #70354c;
+      --bg: #efefef;
+      --ink: #222;
+      --muted: #666;
+      --line: #e3e3e3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: #fff;
+      color: var(--ink);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+    a { color: var(--wine-dark); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+    .top .container {
+      width: min(1140px, 93%);
+      margin: 0 auto;
+      padding: 18px 0;
+    }
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .menu a {
+      background: var(--wine-dark);
+      color: #fff;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    .menu a:hover { filter: brightness(1.08); text-decoration: none; }
+
+    .page-header {
+      background: var(--bg);
+      padding: 50px 0;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 52px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .page-header h1 .dot { color: var(--wine); }
+    .page-header p {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .container {
+      width: min(1140px, 93%);
+      margin: 0 auto;
+    }
+
+    .blog-grid {
+      padding: 60px 0 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 32px;
+    }
+
+    .post-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .post-card-cover {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #ededed center/cover no-repeat;
+    }
+    .post-card-body {
+      padding: 20px 22px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .post-card-date {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+    .post-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .post-card-excerpt {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      flex: 1;
+    }
+    .post-card-link {
+      font-size: 12px;
+      color: var(--wine-dark);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .empty-state, .error-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    footer.site-footer {
+      background: var(--bg);
+      padding: 24px 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    footer.site-footer a { color: var(--wine-dark); font-weight: 500; }
+
+    @media (max-width: 600px) {
+      .page-header h1 { font-size: 36px; }
+      .menu a { padding: 7px 12px; font-size: 10px; }
+      .blog-grid { padding: 32px 0 50px; gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="container">
+      <nav class="menu" aria-label="Menu principal">
+        <a href="/#home">HOME</a>
+        <a href="/#quem-somos">QUEM SOMOS</a>
+        <a href="/#areas">ÁREAS DE ATUAÇÃO</a>
+        <a href="/#sobre-mim">SOBRE MIM</a>
+        <a href="/#redes">REDES SOCIAIS</a>
+        <a href="/#contato">CONTATO</a>
+        <a href="/blog.html">BLOG</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="page-header">
+    <div class="container">
+      <h1>Blog<span class="dot">.</span></h1>
+      <p>Artigos, atualizações e conteúdos sobre direito de família, sucessões e imobiliário.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div id="blog-grid" class="blog-grid">
+      <p class="empty-state">Carregando posts...</p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year"></span> Nilma Alves Advocacia
+      &nbsp;·&nbsp;
+      by <a href="https://kbosolucoes.com.br" target="_blank" rel="noreferrer noopener">KBO Soluções</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      try {
+        return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+      } catch { return ''; }
+    }
+
+    async function loadPosts() {
+      const grid = document.getElementById('blog-grid');
+      try {
+        const res = await fetch('/api/public/posts?limit=50');
+        if (res.status === 401) {
+          grid.innerHTML = '<p class="error-state">API do blog indisponível. Contate o administrador.</p>';
+          return;
+        }
+        const data = await res.json();
+        if (!data.items || !data.items.length) {
+          grid.innerHTML = '<p class="empty-state">Nenhum post publicado ainda. Volte em breve!</p>';
+          return;
+        }
+        grid.innerHTML = data.items.map((p) => `
+          <a class="post-card" href="/post.html?slug=${encodeURIComponent(p.slug)}">
+            <div class="post-card-cover" ${p.coverImage ? `style="background-image:url('${escapeHtml(p.coverImage)}')"` : ''}></div>
+            <div class="post-card-body">
+              <div class="post-card-date">${escapeHtml(formatDate(p.publishedAt))}</div>
+              <div class="post-card-title">${escapeHtml(p.title)}</div>
+              <div class="post-card-excerpt">${escapeHtml(p.excerpt || '')}</div>
+              <span class="post-card-link">Ler mais →</span>
+            </div>
+          </a>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = '<p class="error-state">Erro ao carregar os posts. Tente novamente mais tarde.</p>';
+      }
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>

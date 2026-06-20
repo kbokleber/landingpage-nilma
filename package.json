@@ -7,9 +7,13 @@
     "dev": "node server/index.js"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "multer": "^2.2.0",
+    "sanitize-html": "^2.17.5",
+    "swagger-ui-express": "^5.0.1"
   }
 }

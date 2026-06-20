@@ -35,6 +35,10 @@
             <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             Depoimentos
           </button>
+          <button class="nav-item" data-tab="blog" type="button">
+            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Blog
+          </button>
           <button class="nav-item" data-tab="configuracoes" type="button">
             <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             Configurações
@@ -111,39 +115,127 @@
           </div>
         </div>
 
-        <!-- Aba 2: Configurações -->
-        <div id="tab-content-configuracoes" class="tab-content hidden">
+        <!-- Aba 2: Blog -->
+        <div id="tab-content-blog" class="tab-content hidden">
           <div class="tab-header">
-            <h1>Configurações</h1>
-            <p class="sub">Visualização das configurações do sistema a partir do arquivo <code>.env</code>.</p>
+            <h1>Blog</h1>
+            <p class="sub">Crie e gerencie posts do blog.</p>
           </div>
+
           <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px">Configurações Gerais</h2>
-            <div class="settings-list">
-              <div class="setting-item">
-                <span class="setting-label">Porta do Servidor (PORT)</span>
-                <code class="setting-value">3001</code>
+            <div class="blog-filters toolbar">
+              <button class="btn" type="button" id="blog-new-btn">Novo post</button>
+              <select id="blog-status-filter" class="select-inline">
+                <option value="">Todos os status</option>
+                <option value="draft">Rascunhos</option>
+                <option value="published">Publicados</option>
+                <option value="archived">Arquivados</option>
+              </select>
+              <label class="filter-date" for="blog-date-from">De</label>
+              <input type="date" id="blog-date-from" class="select-inline">
+              <label class="filter-date" for="blog-date-to">Até</label>
+              <input type="date" id="blog-date-to" class="select-inline">
+              <button class="btn outline" type="button" id="blog-filter-clear-btn">Limpar</button>
+              <span id="blog-filter-info" class="sub" style="margin-left:auto"></span>
+            </div>
+            <div id="blog-list"></div>
+          </div>
+
+          <div id="blog-editor" class="card hidden">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px" id="blog-editor-title">Novo post</h2>
+            <div class="grid-2">
+              <div>
+                <label for="blog-title">Título</label>
+                <input type="text" id="blog-title" placeholder="Título do post">
               </div>
-              <div class="setting-item">
-                <span class="setting-label">Senha Administrativa (ADMIN_PASSWORD)</span>
-                <code class="setting-value">•••••••• (configurada)</code>
-              </div>
-              <div class="setting-item">
-                <span class="setting-label">Google Client ID</span>
-                <code class="setting-value">198494063026-vcm4jdr36tqnk2rlnpfri61oolm3dhoi.apps.googleusercontent.com</code>
-              </div>
-              <div class="setting-item">
-                <span class="setting-label">Google Redirect URI</span>
-                <code class="setting-value">http://127.0.0.1:3001/api/google/callback</code>
+              <div>
+                <label for="blog-author">Autor</label>
+                <input type="text" id="blog-author" value="Dra. Nilma Alves">
               </div>
             </div>
-            <div class="message info" style="margin-top:20px;margin-bottom:0;">
-              💡 <strong>Nota:</strong> Para alterar essas variáveis de ambiente, edite o arquivo <code>.env</code> localmente e reinicie o servidor.
+            <div class="grid-2">
+              <div>
+                <label for="blog-status">Status</label>
+                <select id="blog-status">
+                  <option value="draft">Rascunho (não aparece no site)</option>
+                  <option value="published">Publicado (visível no blog público)</option>
+                  <option value="archived">Arquivado (não aparece no site)</option>
+                </select>
+              </div>
             </div>
+            <label for="blog-excerpt">Resumo (excerpt)</label>
+            <textarea id="blog-excerpt" rows="2" placeholder="Resumo curto que aparece na listagem"></textarea>
+            <label for="blog-content">Conteúdo (HTML)</label>
+            <textarea id="blog-content" rows="14" placeholder="<p>Conteúdo do post...</p>"></textarea>
+            <div class="grid-2">
+              <div>
+                <label for="blog-tags">Tags (separadas por vírgula)</label>
+                <input type="text" id="blog-tags" placeholder="imobiliario, 2026">
+              </div>
+            </div>
+
+            <div class="cover-manager">
+              <label>Capa do post</label>
+              <div id="blog-cover-preview" class="cover-preview">
+                <span class="cover-empty">Nenhuma capa selecionada</span>
+              </div>
+              <div class="cover-actions">
+                <input type="file" id="blog-cover-input" accept="image/jpeg,image/png,image/webp">
+                <button class="btn outline" type="button" id="blog-cover-remove" hidden>Remover capa</button>
+              </div>
+              <input type="hidden" id="blog-cover" value="">
+            </div>
+
+            <div class="image-manager">
+              <h3>Galeria de imagens</h3>
+              <input type="file" id="blog-image-input" accept="image/jpeg,image/png,image/webp">
+              <div id="blog-images" class="images-grid"></div>
+            </div>
+
+            <div class="toolbar">
+              <button class="btn" type="button" id="blog-save-draft-btn">Salvar</button>
+              <button class="btn" type="button" id="blog-publish-btn">Publicar agora</button>
+              <button class="btn outline" type="button" id="blog-cancel-btn">Cancelar</button>
+              <button class="btn outline danger" type="button" id="blog-delete-btn">Excluir</button>
+            </div>
+            <p id="blog-editor-status" class="sub"></p>
           </div>
         </div>
 
-        <!-- Aba 3: Ajuda & Suporte -->
+        <!-- Aba 3: Configurações -->
+        <div id="tab-content-configuracoes" class="tab-content hidden">
+          <div class="tab-header">
+            <h1>Configurações</h1>
+            <p class="sub">As configurações são salvas no banco de dados SQLite (<code>data/blog.db</code>). Mudanças em <code>PORT</code>, <code>BLOG_DB_PATH</code> e <code>BLOG_UPLOAD_DIR</code> exigem reiniciar o servidor.</p>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <button class="btn" type="button" id="settings-save-btn">Salvar alterações</button>
+              <button class="btn outline" type="button" id="settings-reload-btn">Recarregar</button>
+            </div>
+            <p id="settings-status" class="sub"></p>
+            <form id="settings-form" autocomplete="off"></form>
+          </div>
+
+          <div class="card">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Senha do admin</h2>
+            <p class="sub">A senha fica em <code>ADMIN_PASSWORD</code> acima. Para usar uma nova senha sem editar o JSON, basta alterar o valor no campo "Senha Administrativa" e salvar.</p>
+          </div>
+
+          <div class="card">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">API Keys (sistemas externos)</h2>
+            <p class="sub" style="margin-bottom:12px">Gere chaves para que outros sistemas publiquem posts automaticamente. <a href="/api/docs/" target="_blank" rel="noopener">Ver documentação da API</a>.</p>
+            <div class="toolbar">
+              <input type="text" id="api-key-name" placeholder="Nome do sistema (ex: site institucional)">
+              <button class="btn" type="button" id="api-key-create-btn">Gerar nova chave</button>
+            </div>
+            <div id="api-key-new" class="message info hidden"></div>
+            <div id="api-key-list"></div>
+          </div>
+        </div>
+
+        <!-- Aba 4: Ajuda & Suporte -->
         <div id="tab-content-ajuda" class="tab-content hidden">
           <div class="tab-header">
             <h1>Ajuda & Suporte</h1>
