@@ -7,12 +7,37 @@ const ALLOWED_TAGS = [
   'hr', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
 ];
 
+const SAFE_STYLE_PATTERN = /^(color|background-color|background|font-family|font-size|font-weight|font-style|text-decoration|text-align|line-height|letter-spacing)(\s*:\s*[^;]+)?(;\s*(color|background-color|background|font-family|font-size|font-weight|font-style|text-decoration|text-align|line-height|letter-spacing)(\s*:\s*[^;]+)?)*\s*;?\s*$/i;
+
 const SANITIZE_OPTS = {
   allowedTags: ALLOWED_TAGS,
   allowedAttributes: {
     a: ['href', 'title', 'target', 'rel'],
     img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+    span: ['style'],
+    p: ['style'],
+    div: ['style'],
+    h2: ['style'],
+    h3: ['style'],
+    h4: ['style'],
+    li: ['style'],
+    blockquote: ['style'],
     '*': ['class', 'id'],
+  },
+  allowedStyles: {
+    '*': {
+      'color': [/^(transparent|#[0-9a-fA-F]{3,8}|rgba?\([0-9.,\s]+\)|[a-zA-Z]+)$/],
+      'background-color': [/^(transparent|#[0-9a-fA-F]{3,8}|rgba?\([0-9.,\s]+\)|[a-zA-Z]+)$/],
+      'background': [/^(transparent|#[0-9a-fA-F]{3,8}|rgba?\([0-9.,\s]+\)|[a-zA-Z]+)(?:\s+url\((?!javascript:|data:)[^)]*\))?$/],
+      'font-family': [/^[^;{}<>"]+$/],
+      'font-size': [/^\d+(?:\.\d+)?(?:px|pt|em|rem|%)$/],
+      'font-weight': [/^(normal|bold|bolder|lighter|\d{3})$/],
+      'font-style': [/^(normal|italic|oblique)$/],
+      'text-decoration': [/^(none|underline|line-through|overline)$/i],
+      'text-align': [/^(left|right|center|justify)$/],
+      'line-height': [/^\d+(?:\.\d+)?$/],
+      'letter-spacing': [/^-?\d+(?:\.\d+)?(?:px|em|rem)?$/],
+    },
   },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],
   allowedSchemesByTag: { img: ['http', 'https', 'data'] },

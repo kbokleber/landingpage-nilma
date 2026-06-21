@@ -23,6 +23,20 @@ const DEFAULTS = {
   INSTAGRAM_SYNC_INTERVAL_MIN: '30',
   INSTAGRAM_AUTO_IMPORT: '1',
   INSTAGRAM_AUTH_MODE: 'instagram',
+  EDITOR_FONTS: JSON.stringify([
+    'Poppins', 'Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma', 'Trebuchet MS',
+  ]),
+  EDITOR_FONT_DEFAULT: 'Poppins',
+  EDITOR_FONT_SIZES: JSON.stringify(['12', '14', '16', '18', '20', '24', '28', '32', '36', '42', '48']),
+  EDITOR_FONT_SIZE_DEFAULT: '16',
+  EDITOR_TEXT_COLORS: JSON.stringify([
+    '#333333', '#000000', '#7f4258', '#70354c', '#b3261e', '#1d6f42', '#1d4ed8', '#b45309', '#6b21a8', '#ffffff',
+  ]),
+  EDITOR_BG_COLORS: JSON.stringify([
+    'transparent', '#fff8e1', '#fde2e4', '#e0f2fe', '#dcfce7', '#fef3c7', '#ede9fe', '#f3f4f6', '#1f2937', '#000000',
+  ]),
+  EDITOR_TEXT_COLOR_DEFAULT: '#333333',
+  EDITOR_BG_COLOR_DEFAULT: 'transparent',
 };
 
 const ENV_KEYS = {
@@ -40,6 +54,14 @@ const ENV_KEYS = {
   INSTAGRAM_SYNC_INTERVAL_MIN: 'INSTAGRAM_SYNC_INTERVAL_MIN',
   INSTAGRAM_AUTO_IMPORT: 'INSTAGRAM_AUTO_IMPORT',
   INSTAGRAM_AUTH_MODE: 'INSTAGRAM_AUTH_MODE',
+  EDITOR_FONTS: 'EDITOR_FONTS',
+  EDITOR_FONT_DEFAULT: 'EDITOR_FONT_DEFAULT',
+  EDITOR_FONT_SIZES: 'EDITOR_FONT_SIZES',
+  EDITOR_FONT_SIZE_DEFAULT: 'EDITOR_FONT_SIZE_DEFAULT',
+  EDITOR_TEXT_COLORS: 'EDITOR_TEXT_COLORS',
+  EDITOR_BG_COLORS: 'EDITOR_BG_COLORS',
+  EDITOR_TEXT_COLOR_DEFAULT: 'EDITOR_TEXT_COLOR_DEFAULT',
+  EDITOR_BG_COLOR_DEFAULT: 'EDITOR_BG_COLOR_DEFAULT',
 };
 
 // ADMIN_PASSWORD fica em texto puro (para login funcionar sem dependência circular).

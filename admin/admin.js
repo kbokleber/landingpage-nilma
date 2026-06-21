@@ -398,6 +398,7 @@ const blogTitle = document.getElementById('blog-title');
 const blogAuthor = document.getElementById('blog-author');
 const blogExcerpt = document.getElementById('blog-excerpt');
 const blogContent = document.getElementById('blog-content');
+const blogToolbar = document.getElementById('blog-toolbar');
 const blogCover = document.getElementById('blog-cover');
 const blogCoverInput = document.getElementById('blog-cover-input');
 const blogCoverPreview = document.getElementById('blog-cover-preview');
@@ -444,10 +445,11 @@ function renderPendingCover(file) {
 }
 
 function readBlogForm() {
+  const contentHtml = window.BlogEditor ? window.BlogEditor.getHtml() : (blogContent.value || blogContent.innerHTML || '');
   return {
     title: blogTitle.value.trim(),
     excerpt: blogExcerpt.value.trim(),
-    contentHtml: blogContent.value,
+    contentHtml,
     coverImage: blogCover.value.trim(),
     author: blogAuthor.value.trim() || 'Dra. Nilma Alves',
     tags: blogTags.value.split(',').map((t) => t.trim()).filter(Boolean),
@@ -459,7 +461,11 @@ function fillBlogForm(post) {
   blogTitle.value = post.title || '';
   blogAuthor.value = post.author || 'Dra. Nilma Alves';
   blogExcerpt.value = post.excerpt || '';
-  blogContent.value = post.contentHtml || '';
+  if (window.BlogEditor) {
+    window.BlogEditor.setHtml(post.contentHtml || '<p></p>');
+  } else {
+    blogContent.value = post.contentHtml || '';
+  }
   blogCoverPendingFile = null;
   renderCoverPreview(post.coverImage || '');
   blogTags.value = (post.tags || []).join(', ');
@@ -882,6 +888,9 @@ document.querySelectorAll('.nav-item').forEach((item) => {
   item.addEventListener('click', () => {
     if (item.dataset.tab === 'blog') {
       loadBlogList();
+      if (window.BlogEditor && !window.BlogEditor._initialized) {
+        window.BlogEditor.init().then((ok) => { window.BlogEditor._initialized = ok; });
+      }
     }
   });
 });
@@ -911,6 +920,14 @@ const SETTINGS_LABELS = {
   INSTAGRAM_SYNC_INTERVAL_MIN: { group: 'instagram', label: 'Intervalo de sincronização (min)', help: 'Mínimo 5 minutos. Requer reiniciar o servidor para mudar.', type: 'number' },
   INSTAGRAM_AUTO_IMPORT: { group: 'instagram', label: 'Sincronização automática', help: '1 = ativa, 0 = apenas manual via botão "Sincronizar agora".', type: 'text' },
   INSTAGRAM_AUTH_MODE: { group: 'instagram', label: 'Método de login', help: 'instagram = login direto com @advnilmaalves (Business Login, mais simples). facebook = login via Facebook + Página vinculada.', type: 'text' },
+  EDITOR_FONTS: { group: 'site', label: 'Editor — Fontes disponíveis', help: 'Uma por linha. Define o que aparece no seletor de fonte.', type: 'list' },
+  EDITOR_FONT_DEFAULT: { group: 'site', label: 'Editor — Fonte padrão', help: 'Tem que estar na lista acima.', type: 'text' },
+  EDITOR_FONT_SIZES: { group: 'site', label: 'Editor — Tamanhos disponíveis (px)', help: 'Um por linha.', type: 'list' },
+  EDITOR_FONT_SIZE_DEFAULT: { group: 'site', label: 'Editor — Tamanho padrão (px)', help: 'Tem que estar na lista acima.', type: 'number' },
+  EDITOR_TEXT_COLORS: { group: 'site', label: 'Editor — Cores de texto', help: 'Hex (#rrggbb), uma por linha.', type: 'list' },
+  EDITOR_BG_COLORS: { group: 'site', label: 'Editor — Cores de fundo', help: 'Hex (#rrggbb) ou "transparent", uma por linha.', type: 'list' },
+  EDITOR_TEXT_COLOR_DEFAULT: { group: 'site', label: 'Editor — Cor de texto padrão', help: 'Hex (#rrggbb). Tem que estar na lista de cores.', type: 'text' },
+  EDITOR_BG_COLOR_DEFAULT: { group: 'site', label: 'Editor — Cor de fundo padrão', help: 'Hex (#rrggbb) ou "transparent".', type: 'text' },
 };
 
 let currentSettingsGroup = 'site';
@@ -956,6 +973,23 @@ function renderSettingsForm(items) {
           <button class="btn outline" type="button" data-action="toggle-mask" data-key="${escapeAttr(item.key)}" title="Mostrar/ocultar valor">👁</button>
         </div>
       `
+      : type === 'list'
+      ? (() => {
+          // Listas sao JSON no banco, mas no form aparecem como texto linha-a-linha
+          let pretty = storedValue;
+          try {
+            const arr = JSON.parse(storedValue);
+            if (Array.isArray(arr)) pretty = arr.join('\n');
+          } catch {}
+          return `
+            <textarea id="setting-${item.key}" name="${escapeAttr(item.key)}"
+              class="setting-list"
+              rows="6"
+              autocomplete="off"
+              data-original="${escapeAttr(storedValue)}"
+              placeholder="Um item por linha">${escapeHtml(pretty)}</textarea>
+          `;
+        })()
       : `
         <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
           type="${type === 'number' ? 'number' : 'text'}"
@@ -977,8 +1011,8 @@ function renderSettingsForm(items) {
       </div>
     `;
   }).join('');
-  settingsForm.querySelectorAll('input').forEach((input) => {
-    input.addEventListener('input', () => {
+  settingsForm.querySelectorAll('input, textarea').forEach((el) => {
+    el.addEventListener('input', () => {
       settingsDirty = true;
       setSettingsStatus('Há alterações não salvas.', 'warn');
     });
@@ -1036,14 +1070,27 @@ async function loadSettings() {
 }
 
 async function saveSettings() {
-  const inputs = settingsForm.querySelectorAll('input');
+  const inputs = settingsForm.querySelectorAll('input, textarea');
   const updates = [];
   inputs.forEach((input) => {
     const key = input.name;
     if (input.dataset.masked === '1') {
       if (input.value !== '') updates.push({ key, value: input.value });
-    } else if (input.value !== input.dataset.original) {
-      updates.push({ key, value: input.value });
+      return;
+    }
+    let newValue;
+    if (input.tagName === 'TEXTAREA' && input.classList.contains('setting-list')) {
+      newValue = JSON.stringify(
+        input.value
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      );
+    } else {
+      newValue = input.value;
+    }
+    if (newValue !== input.dataset.original) {
+      updates.push({ key, value: newValue });
     }
   });
   if (!updates.length) {

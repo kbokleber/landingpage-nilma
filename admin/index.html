@@ -166,7 +166,10 @@
             <label for="blog-excerpt">Resumo (excerpt)</label>
             <textarea id="blog-excerpt" rows="2" placeholder="Resumo curto que aparece na listagem"></textarea>
             <label for="blog-content">Conteúdo (HTML)</label>
-            <textarea id="blog-content" rows="14" placeholder="<p>Conteúdo do post...</p>"></textarea>
+            <div id="blog-editor-wrap" class="tiptap-wrap">
+              <div id="blog-toolbar" class="tiptap-toolbar"></div>
+              <div id="blog-content" class="tiptap-editor" data-placeholder="Comece a escrever o post..."></div>
+            </div>
             <div class="grid-2">
               <div>
                 <label for="blog-tags">Tags (separadas por vírgula)</label>
@@ -295,6 +298,18 @@
     </div>
   </section>
 
+  <!-- TipTap (editor rico) via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/core@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-link@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-underline@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-text-style@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-color@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-highlight@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-text-align@2.6.6/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2.6.6/dist/index.umd.min.js"></script>
+
+  <script src="tiptap.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

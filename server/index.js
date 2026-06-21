@@ -41,6 +41,7 @@ const adminSettingsRouter = require('./routes/admin-settings');
 const adminInstagramRouter = require('./routes/instagram');
 const publicInstagramRouter = require('./routes/instagram-public');
 const instagramCallbackRouter = require('./routes/instagram-callback');
+const editorConfigRouter = require('./routes/editor-config');
 const instagramSync = require('./lib/instagramSync');
 
 settings.ensureMigrated();
@@ -66,6 +67,7 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
 app.get('/api/docs/openapi.json', (req, res) => res.json(openapiSpec));
 app.use('/api/public', publicPostsRouter);
 app.use('/api/public', publicInstagramRouter);
+app.use('/api/public', editorConfigRouter);
 app.use('/api/v1', postsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
