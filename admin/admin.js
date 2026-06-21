@@ -895,6 +895,15 @@ document.querySelectorAll('.nav-item').forEach((item) => {
   });
 });
 
+// Inicializa o BlogEditor quando o modulo terminar de carregar (mesmo se a aba Blog ja for a ativa)
+if (window.BlogEditor) {
+  Promise.resolve().then(() => {
+    if (!window.BlogEditor._initialized) {
+      window.BlogEditor.init().then((ok) => { window.BlogEditor._initialized = ok; });
+    }
+  });
+}
+
 // ============== SETTINGS ==============
 const settingsForm = document.getElementById('settings-form');
 const settingsStatus = document.getElementById('settings-status');
