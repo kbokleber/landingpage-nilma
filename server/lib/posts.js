@@ -38,6 +38,35 @@ function sanitizeContent(html) {
   return sanitizeHtml(String(html || ''), SANITIZE_OPTS);
 }
 
+const BLOCK_TAG_RE = /<\s*(p|br|h[1-6]|ul|ol|li|blockquote|pre|div|hr|table|thead|tbody|tr|td|th|figure|figcaption|img)[^>]*>/i;
+
+function normalizeContent(input) {
+  const raw = String(input || '');
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (BLOCK_TAG_RE.test(trimmed)) {
+    return raw;
+  }
+  const decoded = trimmed
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n');
+  const paragraphs = decoded.split(/\n{2,}/);
+  return paragraphs
+    .map((para) => {
+      const lines = para.split('\n');
+      const withBreaks = lines.map(escapeHtmlText).join('<br>');
+      return `<p>${withBreaks}</p>`;
+    })
+    .join('');
+}
+
+function escapeHtmlText(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function uniqueSlug(base, ignoreId = null) {
   const db = getDb();
   const slug = base || 'post';
@@ -126,7 +155,7 @@ function createPost({ title, excerpt, contentHtml, coverImage, author, tags, sta
   const db = getDb();
   const baseSlug = slugify(title);
   const slug = uniqueSlug(baseSlug);
-  const safeContent = sanitizeContent(contentHtml);
+  const safeContent = sanitizeContent(normalizeContent(contentHtml));
   const tagsJson = JSON.stringify(parseTags(tags));
   const finalStatus = status === 'published' ? 'published' : 'draft';
   const publishedAt = finalStatus === 'published' ? new Date().toISOString() : null;
@@ -161,7 +190,7 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
     slug: newSlug,
     title: newTitle,
     excerpt: excerpt != null ? excerpt : existing.excerpt,
-    contentHtml: contentHtml != null ? sanitizeContent(contentHtml) : existing.contentHtml,
+    contentHtml: contentHtml != null ? sanitizeContent(normalizeContent(contentHtml)) : existing.contentHtml,
     coverImage: coverImage != null ? coverImage : existing.coverImage,
     author: author != null ? author : existing.author,
     tags: tags != null ? JSON.stringify(parseTags(tags)) : JSON.stringify(existing.tags),
@@ -236,6 +265,7 @@ function listTags() {
 module.exports = {
   slugify,
   sanitizeContent,
+  normalizeContent,
   listAllPosts,
   getPostBySlug,
   getPostById,

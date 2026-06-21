@@ -112,6 +112,34 @@ router.post('/posts/:id/publish', (req, res) => {
   res.json(post);
 });
 
+router.post('/posts/normalize-all', (_req, res) => {
+  try {
+    const { getDb } = require('../lib/db');
+    const { sanitizeContent, normalizeContent } = require('../lib/posts');
+    const db = getDb();
+    const rows = db.prepare("SELECT id, content_html FROM posts").all();
+    const update = db.prepare("UPDATE posts SET content_html = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+    let updated = 0;
+    let skipped = 0;
+    const tx = db.transaction((items) => {
+      for (const r of items) {
+        const original = r.content_html || '';
+        const normalized = sanitizeContent(normalizeContent(original));
+        if (normalized !== original) {
+          update.run(normalized, r.id);
+          updated += 1;
+        } else {
+          skipped += 1;
+        }
+      }
+    });
+    tx(rows);
+    res.json({ total: rows.length, updated, skipped });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/posts/:id', (req, res) => {
   const ok = deletePost(Number(req.params.id));
   if (!ok) return res.status(404).json({ error: 'Post não encontrado.' });
