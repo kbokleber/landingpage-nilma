@@ -356,6 +356,32 @@
       </div>
     </section>
 
+    <section class="section reviews" id="depoimentos">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="kicker">Depoimentos</span><h2>Histórias de quem confiou no trabalho.</h2></div>
+          <p class="section-intro">A confiança se constrói com tempo, escuta e resultado. Veja o que alguns clientes compartilham.</p>
+        </div>
+        <div class="reviews-list" id="nilma-reviews-list">
+          <article class="review-card"><blockquote>Eu estava numa situação difícil e a Dra. Nilma me acolheu com calma. Ela me explicou cada passo e me deixou segura.</blockquote><footer>— Maria A., Família</footer></article>
+          <article class="review-card"><blockquote>A Dra. Nilma é uma profissional que fala a verdade, sem prometer o que não pode. Confiei do começo ao fim.</blockquote><footer>— Carlos E., Imobiliário</footer></article>
+          <article class="review-card"><blockquote>Minha mãe faleceu e eu não sabia como fazer o inventário. Dra. Nilma guiou a família com respeito e organização.</blockquote><footer>— Ana B., Sucessões</footer></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section blog" id="blog">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="kicker">Blog</span><h2>Conteúdos para orientar sua decisão.</h2></div>
+          <p class="section-intro">Artigos informativos sobre temas recorrentes de família, sucessões e patrimônio.</p>
+        </div>
+        <div class="blog-list" id="nilma-blog-list">
+          <article class="blog-card"><small>Direito de Família</small><h3>Carregando artigos...</h3><p>Em breve, novos conteúdos publicados aqui.</p><a href="blog.html">Ver todos os artigos →</a></article>
+        </div>
+      </div>
+    </section>
+
     <section class="section process" id="faq">
       <div class="wrap faq-layout">
         <div><span class="kicker">Perguntas frequentes</span><h2>Respostas claras para as primeiras dúvidas.</h2><p class="section-intro">Cada situação tem particularidades. Estas respostas ajudam na orientação inicial antes do atendimento individual.</p></div>
@@ -418,9 +444,40 @@
         'Assunto: ' + assunto + '\n' +
         'Mensagem: ' + mensagem;
       window.open('https://wa.me/5513981124710?text=' + encodeURIComponent(texto), '_blank', 'noopener,noreferrer');
-      return false;
-    }
-  </script>
+            return false;
+          }
+
+          // Carregar depoimentos da API publica
+          fetch('/assets/reviews.json', { cache: 'no-store' })
+            .then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(data){
+              if (!data || !Array.isArray(data.items) || data.items.length === 0) return;
+              var list = document.getElementById('nilma-reviews-list');
+              if (!list) return;
+              list.innerHTML = data.items.slice(0, 6).map(function(it){
+                var nome = it.authorName || it.author || 'Cliente';
+                var area = it.area || '';
+                var texto = (it.text || '').replace(/</g, '&lt;');
+                return '<article class="review-card"><blockquote>' + texto + '</blockquote><footer>— ' + nome + (area ? ', ' + area : '') + '</footer></article>';
+              }).join('');
+            })
+            .catch(function(){ /* fallback visual já está presente */ });
+
+          // Carregar posts do blog da API publica
+          fetch('/api/public/posts?limit=3', { cache: 'no-store' })
+            .then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(data){
+              if (!data || !Array.isArray(data.items) || data.items.length === 0) return;
+              var list = document.getElementById('nilma-blog-list');
+              if (!list) return;
+              list.innerHTML = data.items.map(function(p){
+                var tag = (p.tags && p.tags[0]) || 'Artigo';
+                var resumo = (p.excerpt || p.subtitle || 'Leia o conteúdo completo no blog.').replace(/</g, '&lt;');
+                return '<article class="blog-card"><small>' + tag + '</small><h3>' + p.title + '</h3><p>' + resumo + '</p><a href="post.html?slug=' + encodeURIComponent(p.slug) + '">Ler artigo →</a></article>';
+              }).join('');
+            })
+            .catch(function(){ /* fallback visual já está presente */ });
+              </script>
 </div>
 </body>
 </html>
