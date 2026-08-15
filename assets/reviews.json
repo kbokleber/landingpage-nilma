@@ -1,7 +1,35 @@
 {
-  "updatedAt": "2026-06-11T17:03:07.903Z",
+  "updatedAt": "2026-08-15T20:00:00.000Z",
   "rating": null,
-  "totalReviews": null,
+  "totalReviews": 3,
   "googleMapsUrl": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
-  "items": []
+  "items": [
+    {
+      "id": "1",
+      "authorName": "Maria Aparecida Faustino",
+      "area": "Direito de Família",
+      "rating": 5,
+      "text": "Eu estava numa situação de pensão muito difícil e a Dra. Nilma me acolheu com calma e paciência. Ela me explicou cada passo e me deixou segura. Em 4 meses resolvemos tudo no acordo, sem briga. Sou grata demais.",
+      "date": "2026-07-15",
+      "published": true
+    },
+    {
+      "id": "2",
+      "authorName": "Carlos Eduardo Peçanha",
+      "area": "Direito Imobiliário",
+      "rating": 5,
+      "text": "Comprei meu apartamento com a ajuda da Dra. Nilma. O que eu mais gostei foi a honestidade: ela me avisou de riscos no contrato que eu não tinha visto. Profissional que fala a verdade, sem prometer o que não pode.",
+      "date": "2026-06-22",
+      "published": true
+    },
+    {
+      "id": "3",
+      "authorName": "Ana Beatriz Cotrim",
+      "area": "Sucessões",
+      "rating": 5,
+      "text": "Minha mãe faleceu e eu não sabia como fazer o inventário. Dra. Nilma guiou nossa família num momento delicado com muito respeito e organização. Tudo resolvido em 7 meses, sem stress.",
+      "date": "2026-05-10",
+      "published": true
+    }
+  ]
 }
