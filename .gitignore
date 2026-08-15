@@ -8,3 +8,6 @@ data/blog.db-wal
 data/uploads/
 client_secret*.json
 dev-server*.log
+
+# Working copies (originais em assets/)
+assets/photos/

@@ -623,7 +623,57 @@
       .ig-header{padding:16px}
       .ig-follow{margin-left:auto}
     }
-  </style>
+  
+    /* Form de contato v2 */
+    .contact-form .form-row{display:flex;gap:12px;margin-bottom:12px}
+    .contact-form .form-row-grid{grid-template-columns:1fr 1fr;display:grid;gap:12px}
+    .contact-form .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .contact-form .field>span{font-size:13px;font-weight:600;color:#334155}
+    .contact-form .field input,
+    .contact-form .field select,
+    .contact-form .field textarea{
+      padding:12px 14px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      background:#fff;
+      font:inherit;
+      font-size:14px;
+      color:#334155;
+      transition:border-color 120ms ease, box-shadow 120ms ease;
+      width:100%;
+      box-sizing:border-box;
+    }
+    .contact-form .field input:focus,
+    .contact-form .field select:focus,
+    .contact-form .field textarea:focus{
+      outline:none;
+      border-color:#2563eb;
+      box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+    }
+    .contact-form .field textarea{resize:vertical;font-family:inherit}
+    .contact-form .form-status{
+      min-height:24px;
+      margin:8px 0;
+      font-size:14px;
+      color:#334155;
+    }
+    .contact-form .form-status.success{color:#16a34a;font-weight:600}
+    .contact-form .form-status.error{color:#dc2626;font-weight:600}
+    .contact-form .form-note{
+      font-size:12px;
+      color:#64748b;
+      margin:8px 0 0;
+      text-align:center;
+    }
+    .send-btn{
+      width:100%;
+      margin-top:8px;
+    }
+    .send-btn[disabled]{opacity:0.6;cursor:not-allowed}
+    @media (max-width:600px){
+      .contact-form .form-row-grid{grid-template-columns:1fr}
+    }
+    </style>
 </head>
 <body>
   <header class="top">
@@ -806,13 +856,40 @@
             </div>
           </div>
         </div>
-        <form class="contact-form" action="#" method="post">
-          <input type="text" name="nome" placeholder="Nome completo" aria-label="Nome completo">
-          <input type="email" name="email" placeholder="e-mail" aria-label="E-mail">
-          <input type="text" name="whatsapp" placeholder="Whatsapp com DDD" aria-label="Whatsapp com DDD">
-          <textarea name="mensagem" placeholder="Descreva sua necessidade" aria-label="Descreva sua necessidade"></textarea>
-          <input type="text" name="assunto" placeholder="Assunto" aria-label="Assunto">
-          <button class="send-btn" type="submit">ENVIAR</button>
+        <form id="contact-form" class="contact-form" novalidate>
+          <div class="form-row">
+            <label class="field">
+              <span>Nome completo</span>
+              <input type="text" name="name" required placeholder="Seu nome" aria-label="Nome completo">
+            </label>
+          </div>
+          <div class="form-row form-row-grid">
+            <label class="field">
+              <span>E-mail</span>
+              <input type="email" name="email" placeholder="voce@email.com" aria-label="E-mail">
+            </label>
+            <label class="field">
+              <span>WhatsApp (com DDD)</span>
+              <input type="tel" name="phone" placeholder="(11) 99999-9999" aria-label="WhatsApp">
+            </label>
+          </div>
+          <label class="field">
+            <span>Área de atuação</span>
+            <select name="area" aria-label="Área de atuação">
+              <option value="">Selecione...</option>
+              <option value="familia">Direito de Família</option>
+              <option value="imobiliario">Direito Imobiliário</option>
+              <option value="sucessoes">Direito das Sucessões</option>
+              <option value="outro">Outro</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Mensagem</span>
+            <textarea name="message" required rows="5" placeholder="Descreva brevemente sua necessidade" aria-label="Mensagem"></textarea>
+          </label>
+          <div id="contact-status" class="form-status" role="status" aria-live="polite"></div>
+          <button class="send-btn" type="submit">ENVIAR MENSAGEM</button>
+          <p class="form-note">Ao enviar, você concorda em ser contactada. Seus dados estão seguros.</p>
         </form>
       </div>
       <div class="map-wrap">
@@ -940,3 +1017,72 @@
   </script>
 </body>
 </html>
+
+<script>
+(function () {
+  const form = document.getElementById('contact-form');
+  if (!form) return;
+  const status = document.getElementById('contact-status');
+  const btn = form.querySelector('button[type="submit"]');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    status.textContent = '';
+    status.className = 'form-status';
+    btn.disabled = true;
+    btn.textContent = 'ENVIANDO...';
+
+    const fd = new FormData(form);
+    const payload = {};
+    fd.forEach(function (v, k) { payload[k] = String(v || '').trim(); });
+
+    if (!payload.name || !payload.message) {
+      status.textContent = 'Por favor preencha nome e mensagem.';
+      status.className = 'form-status error';
+      btn.disabled = false;
+      btn.textContent = 'ENVIAR MENSAGEM';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        status.textContent = data.error || 'Falha ao enviar. Tente novamente.';
+        status.className = 'form-status error';
+        btn.disabled = false;
+        btn.textContent = 'ENVIAR MENSAGEM';
+        return;
+      }
+
+      // Sucesso: mostrar mensagem e redirecionar pra WhatsApp (se tiver)
+      status.textContent = 'Recebemos sua mensagem! Abrindo WhatsApp...';
+      status.className = 'form-status success';
+      form.reset();
+      btn.textContent = 'ENVIADO ✓';
+
+      if (data.whatsappLink) {
+        setTimeout(function () {
+          window.open(data.whatsappLink, '_blank', 'noopener,noreferrer');
+        }, 800);
+      }
+
+      setTimeout(function () {
+        btn.disabled = false;
+        btn.textContent = 'ENVIAR MENSAGEM';
+        status.textContent = '';
+        status.className = 'form-status';
+      }, 4000);
+    } catch (err) {
+      status.textContent = 'Erro de conexão. Tente novamente.';
+      status.className = 'form-status error';
+      btn.disabled = false;
+      btn.textContent = 'ENVIAR MENSAGEM';
+    }
+  });
+})();
+</script>

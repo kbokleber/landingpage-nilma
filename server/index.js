@@ -38,6 +38,7 @@ const publicPostsRouter = require('./routes/public-posts');
 const adminPostsRouter = require('./routes/admin-posts');
 const adminApiKeysRouter = require('./routes/admin-api-keys');
 const adminSettingsRouter = require('./routes/admin-settings');
+const contactRouter = require('./routes/contact');
 
 settings.ensureMigrated();
 getDb();
@@ -56,6 +57,7 @@ app.use('/api/v1', postsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
+app.use('/api', contactRouter);
 
 app.post('/api/auth/login', (req, res) => {
   const token = login(req.body?.password || '');
