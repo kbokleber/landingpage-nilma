@@ -76,10 +76,22 @@
       width:100%;
       margin:0 auto;
     }
+    .hero-art{
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-art::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(15,23,42,0.05) 0%,rgba(15,23,42,0.18) 50%,rgba(15,23,42,0.32) 100%);
+      pointer-events:none;
+    }
     .hero-art img{
       width:100%;
       height:auto;
       object-fit:cover;
+      display:block;
     }
 
     section{padding:56px 0}
@@ -635,7 +647,7 @@
         <img src="assets/logo.png" alt="Nilma Alves Advocacia">
       </div>
       <div class="hero-art">
-        <img src="assets/hero-novo.jpg" alt="Deusa da Justiça">
+        <img src="assets/hero-novo.jpg" alt="Dra. Nilma Alves, advogada de família, imobiliário e sucessões, sorrindo em seu escritório no Rio de Janeiro">
       </div>
     </section>
 
@@ -699,7 +711,7 @@
           </div>
         </div>
     <div class="about-right">
-        <img src="assets/dra-nilma-original.jpg" alt="Dra. Nilma Alves">
+        <img src="assets/sobre-01.jpg" alt="Dra. Nilma Alves">
         </div>
       </div>
     </section>
