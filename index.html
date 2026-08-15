@@ -5,8 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Dra. Nilma Alves — advocacia humanizada em Direito de Família, Sucessões e Imobiliário em Guarujá e online.">
   <title>Dra. Nilma Alves | Advocacia humanizada</title>
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#5b2131">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Dra. Nilma Alves | Advocacia humanizada">
+  <meta property="og:description" content="Advocacia humanizada em Direito de Família, Sucessões e Imobiliário em Guarujá. Atendimento presencial e online.">
+  <meta property="og:image" content="https://dev.nilmaalves.adv.br/assets/hero-novo.jpg">
+  <meta property="og:url" content="https://dev.nilmaalves.adv.br/">
+  <meta property="og:site_name" content="Nilma Alves Advocacia">
+  <meta property="og:locale" content="pt_BR">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dra. Nilma Alves | Advocacia humanizada">
+  <meta name="twitter:description" content="Advocacia humanizada em Direito de Família, Sucessões e Imobiliário.">
+  <meta name="twitter:image" content="https://dev.nilmaalves.adv.br/assets/hero-novo.jpg">
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LegalService",
+    "name": "Nilma Alves Advocacia",
+    "description": "Escritório de advocacia especializado em Direito de Família, Sucessões e Imobiliário.",
+    "url": "https://dev.nilmaalves.adv.br/",
+    "image": "https://dev.nilmaalves.adv.br/assets/hero-novo.jpg",
+    "telephone": "+55-13-98112-4710",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "R. Washington, 253, Centro",
+      "addressLocality": "Guarujá",
+      "addressRegion": "SP",
+      "postalCode": "11410-150",
+      "addressCountry": "BR"
+    },
+    "openingHoursSpecification": [
+      {"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}
+    ],
+    "priceRange": "$$",
+    "areaServed": [
+      {"@type":"City","name":"Guarujá"},
+      {"@type":"City","name":"Santos"},
+      {"@type":"City","name":"São Paulo"}
+    ]
+  }
+  </script>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://dev.nilmaalves.adv.br/">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/favicon.png">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
 <div id="nilma-home-preview">
   <style>
     html { scroll-behavior: smooth; background: #fbf8f2; }
@@ -30,6 +84,9 @@
       border-radius: 24px;
       box-shadow: 0 24px 70px rgba(50, 19, 29, 0.12);
     }
+    .skip-link{position:absolute;top:-100px;left:0;background:#5b2131;color:#fff;padding:12px 20px;z-index:9999;font-weight:600;text-decoration:none;border-radius:0 0 8px 0;transition:top .2s;font-size:14px}
+    .skip-link:focus{top:0;outline:3px solid #b4925f;outline-offset:2px}
+    *:focus-visible{outline:3px solid #5b2131;outline-offset:2px;border-radius:4px}
     #nilma-home-preview * { box-sizing: border-box; }
     #nilma-home-preview a { color: inherit; text-decoration: none; }
     #nilma-home-preview .serif { font-family: Georgia, "Times New Roman", serif; }
@@ -224,7 +281,7 @@
     <a class="button" href="https://wa.me/5513981124710?text=Ol%C3%A1%2C%20Dra.%20Nilma.%20Gostaria%20de%20agendar%20um%20atendimento." target="_blank" rel="noopener noreferrer">Agendar atendimento <span aria-hidden="true">↗</span></a>
   </header>
 
-  <main>
+  <main id="main-content">
     <section class="hero" id="inicio">
       <div class="wrap hero-grid">
         <div>
@@ -336,7 +393,7 @@
       </div>
     </section>
   </main>
-  <footer class="foot"><div class="wrap">© <span id="nilma-current-year"></span> Nilma Alves Advocacia • OAB/SP 268.128 - created by KBO Soluções</div></footer>
+  <footer class="foot" aria-label="Rodape"><div class="wrap">© <span id="nilma-current-year"></span> Nilma Alves Advocacia • OAB/SP 268.128 - created by KBO Soluções</div></footer>
   <script>
     document.getElementById('nilma-current-year').textContent = new Date().getFullYear();
 
