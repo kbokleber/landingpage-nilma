@@ -106,23 +106,18 @@
     #nilma-home-preview .button:hover { transform: translateY(-2px); background: var(--wine-deep); }
     #nilma-home-preview .button.light { background: #fff; color: var(--wine); box-shadow: none; }
     #nilma-home-preview .hero {
-          position: relative; min-height: 650px; overflow: hidden; color: #fff; isolation: isolate;
-          background: #0f1014 center/cover no-repeat url("assets/photos/hero-01.jpg");
-        }
-        #nilma-home-preview .hero::after {
-          content: ""; position: absolute; inset: 0; z-index: 0;
-          background: linear-gradient(90deg, rgba(15,16,20,.62) 0%, rgba(15,16,20,.36) 56%, rgba(15,16,20,.32) 100%);
-        }
-        #nilma-home-preview .hero::before {
-          content: ""; position: absolute; left: 52%; top: 11%; width: 300px; height: 300px; border: 1px solid rgba(180,146,95,.38); border-radius: 50%; z-index: 1;
-        }
+              position: relative; min-height: 650px; overflow: hidden; color: #211b1c; isolation: isolate;
+              background: var(--cream);
+            }
+            #nilma-home-preview .hero::before {
+              content: ""; position: absolute; left: 52%; top: 11%; width: 300px; height: 300px; border: 1px solid rgba(180,146,95,.38); border-radius: 50%; z-index: 1;
+            }
         #nilma-home-preview .hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.07fr .93fr; min-height: 650px; align-items: center; gap: 54px; }
         #nilma-home-preview .hero .eyebrow { color: var(--gold); }
         #nilma-home-preview .hero .eyebrow::before { background: var(--gold); }
-        #nilma-home-preview .hero h1 { color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.45); }
-        #nilma-home-preview .hero h1 em { color: #f0d8a3; font-weight: 400; }
-        #nilma-home-preview .hero .lead { color: rgba(255,255,255,.86); text-shadow: 0 2px 12px rgba(0,0,0,.4); }
-        #nilma-home-preview .hero .text-link { color: #f3dba8; border-bottom-color: rgba(243,219,168,.55); }
+        #nilma-home-preview .hero h1 { color: #211b1c; }
+                #nilma-home-preview .hero h1 em { color: #b4925f; font-weight: 400; }
+                                #nilma-home-preview .hero .lead { color: #6d6264; }
     #nilma-home-preview .hero-grid > *, #nilma-home-preview .section-head > *, #nilma-home-preview .process-grid > *, #nilma-home-preview .contact-grid > * { min-width: 0; }
     #nilma-home-preview .eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--wine); font-size: 11px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
     #nilma-home-preview .eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--gold); }
