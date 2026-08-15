@@ -761,9 +761,43 @@
       .gallery-grid{grid-template-columns:1fr;grid-auto-rows:200px}
       .gallery-item-large{grid-column:span 1;grid-row:span 1}
     }
+
+    /* Acessibilidade WCAG AA */
+    .skip-link{
+      position:absolute;
+      top:-100px;
+      left:0;
+      background:#2563eb;
+      color:#fff;
+      padding:12px 20px;
+      z-index:9999;
+      font-weight:600;
+      text-decoration:none;
+      border-radius:0 0 8px 0;
+      transition:top 120ms ease;
+    }
+    .skip-link:focus{
+      top:0;
+      outline:3px solid #f59e0b;
+      outline-offset:2px;
+    }
+    *:focus-visible{
+      outline:3px solid #2563eb;
+      outline-offset:2px;
+      border-radius:4px;
+    }
+    .gallery-item img:focus-visible{
+      outline:4px solid #2563eb;
+      outline-offset:4px;
+    }
+    /* Contraste melhorado */
+    :focus:not(:focus-visible){
+      outline:none;
+    }
 </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
   <header class="top">
     <div class="container">
       <nav class="menu" aria-label="Menu principal">
@@ -779,8 +813,8 @@
     </div>
   </header>
 
-  <main>
-    <section class="hero" id="home">
+  <main id="main-content" tabindex="-1">
+    <section class="hero" id="home" role="banner" aria-label="Apresentação" tabindex="-1">
       <div class="logo-wrap">
         <img src="assets/logo.png" alt="Nilma Alves Advocacia">
       </div>
@@ -789,9 +823,9 @@
       </div>
     </section>
 
-    <section id="quem-somos">
+    <section id="quem-somos" aria-labelledby="quem-somos-title" tabindex="-1">
       <div class="container who-wrap">
-        <h2 class="who-title">Quem Somos<span class="dot">.</span></h2>
+        <h2 class="who-title" id="quem-somos-title">Quem Somos<span class="dot">.</span></h2>
         <p class="who-text">Atuante aproximadamente 16 anos, contamos em nossa estrutura organizacional com uma equipe capacitada e comprometida em diversas áreas do Direito, porém com ênfase e especialização em Direito de Família, Sucessões e Imobiliário todas as atividades ligadas à advocacia preventiva, consultiva, extrajudicial e contenciosa, mantendo uma estrutura operacional que prioriza o contato personalizado e humanizado com os clientes e a qualidade dos serviços.</p>
         <p class="who-text">Temos como princípios fundamentais o compromisso com o trabalho honesto, a competência e a excelência na prestação de serviços, o escritório se diferencia, sobretudo, na constante busca de soluções jurídicas que priorizem a prevenção e a solução pacífica para seus clientes, observando o indispensável zelo profissional, respeito e ética, proporcionando desempenho altamente satisfatório, através da prestação de serviços advocatícios minuciosos e eficazes.</p>
         <p class="who-text">O crescimento dos últimos anos nos impõe a necessidade de buscar uma atuação mais próxima, para melhor atender nossos clientes, primando sempre pela competência técnica, mas também pelo atendimento ágil, diferenciado e pela transparência de nosso trabalho.</p>
@@ -800,9 +834,9 @@
       </div>
     </section>
 
-    <section id="areas" class="areas-section">
+    <section id="areas" class="areas-section" aria-labelledby="areas-title" tabindex="-1">
       <div class="container areas-wrap">
-        <h2 class="areas-heading">Áreas de atuação.</h2>
+        <h2 class="areas-heading" id="areas-title">Áreas de atuação.</h2>
         <div class="areas-grid">
           <article class="area-card">
             <img class="icon" src="assets/icon-familia.png" alt="Direito de Família">
@@ -826,10 +860,10 @@
       </div>
     </section>
 
-    <section id="sobre-mim" class="about-section">
+    <section id="sobre-mim" class="about-section" aria-labelledby="sobre-title" tabindex="-1">
       <div class="about-box">
         <div class="about-left">
-          <h2 class="about-title">Sobre mim<span class="dot">.</span></h2>
+          <h2 class="about-title" id="sobre-title">Sobre mim<span class="dot">.</span></h2>
           <p class="about-ident">Dra. Nilma Alves de Oliveira<br>OAB/SP nº 268.128</p>
           <p class="about-copy">Olá, meu nome é Nilma Alves de Oliveira, sou advogada (OAB/SP 268.128) desde 2007.</p>
           <p class="about-copy">Mas não sou só advogada, também sou esposa, mãe de dois filhos lindos, irmã, filha e amiga o que me ajuda a entender diversas situações apresentadas no escritório. Me formei em 2006 pela Universidade Santa Cecília – UNISANTA/SP, fiz Pós Graduação pela fundação Getúlio Vargas (FGV) e durante esses mais de 16 anos de advocacia, fiz diversos cursos e especializações e não paro de buscar conhecimento, pois o direito é isso, movimento, disciplina e evolução.</p>
@@ -854,9 +888,9 @@
       </div>
     </section>
 
-    <section id="depoimentos" class="reviews-section" hidden>
+    <section id="depoimentos" class="reviews-section" hidden aria-labelledby="depoimentos-title" tabindex="-1">
       <div class="container">
-        <h2 class="reviews-heading">Depoimentos<span class="dot">.</span></h2>
+        <h2 class="reviews-heading" id="depoimentos-title">Depoimentos<span class="dot">.</span></h2>
         <div class="reviews-summary" id="reviews-summary"></div>
         <div class="reviews-grid" id="reviews-grid" aria-live="polite"></div>
         <div class="reviews-pagination" id="reviews-pagination" hidden>
@@ -867,9 +901,9 @@
       </div>
     </section>
 
-    <section id="blog" class="blog-section">
+    <section id="blog" class="blog-section" aria-labelledby="conteudos-title" tabindex="-1">
       <div class="container">
-        <h2 class="blog-heading">Últimos conteúdos<span class="dot">.</span></h2>
+        <h2 class="blog-heading" id="conteudos-title">Últimos conteúdos<span class="dot">.</span></h2>
         <div class="ig-widget">
           <div class="ig-header">
             <img class="ig-avatar" src="assets/ig-avatar.jpg" alt="Foto de perfil @advnilmaalves">
@@ -908,10 +942,10 @@
       </div>
     </section>
 
-    <section class="contact" id="contato">
+    <section class="contact" id="contato" aria-labelledby="contato-title" tabindex="-1">
       <div class="contact-content">
         <div class="contact-left" id="redes">
-          <h2>Contato<span class="dot">.</span></h2>
+          <h2 id="contato-title">Contato<span class="dot">.</span></h2>
           <div class="contact-item">
             <span class="contact-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-10a7 7 0 1 0-14 0c0 5.5 7 10 7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
@@ -1104,11 +1138,11 @@
     })();
   </script>
 
-<section class="gallery-section" id="galeria">
+<section class="gallery-section" id="galeria" aria-labelledby="galeria-title" tabindex="-1">
   <div class="container">
     <header class="section-head">
       <span class="eyebrow">NOSSO ESCRITÓRIO</span>
-      <h2>Um ambiente dedicado a você<span class="dot">.</span></h2>
+      <h2 id="galeria-title">Um ambiente dedicado a você<span class="dot">.</span></h2>
       <p>Conforto, privacidade e profissionalismo em cada detalhe do nosso espaço.</p>
     </header>
     <div class="gallery-grid">
