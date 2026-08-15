@@ -8,3 +8,5 @@ data/blog.db-wal
 data/uploads/
 client_secret*.json
 dev-server*.log
+scripts/capture-hero.mjs
+docs/hero-rollout/

@@ -49,12 +49,23 @@
     #nilma-home-preview .button:hover { transform: translateY(-2px); background: var(--wine-deep); }
     #nilma-home-preview .button.light { background: #fff; color: var(--wine); box-shadow: none; }
     #nilma-home-preview .hero {
-      position: relative; min-height: 650px; background: linear-gradient(115deg, #f7f0e7 0%, #f7f0e7 57%, #ead9ca 57%, #efe5d9 100%);
-    }
-    #nilma-home-preview .hero::before {
-      content: ""; position: absolute; left: 52%; top: 11%; width: 300px; height: 300px; border: 1px solid rgba(180,146,95,.38); border-radius: 50%;
-    }
-    #nilma-home-preview .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.07fr .93fr; min-height: 650px; align-items: center; gap: 54px; }
+          position: relative; min-height: 650px; overflow: hidden; color: #fff; isolation: isolate;
+          background: #0f1014 center/cover no-repeat url("assets/photos/hero-01.jpg");
+        }
+        #nilma-home-preview .hero::after {
+          content: ""; position: absolute; inset: 0; z-index: 0;
+          background: linear-gradient(90deg, rgba(15,16,20,.62) 0%, rgba(15,16,20,.36) 56%, rgba(15,16,20,.32) 100%);
+        }
+        #nilma-home-preview .hero::before {
+          content: ""; position: absolute; left: 52%; top: 11%; width: 300px; height: 300px; border: 1px solid rgba(180,146,95,.38); border-radius: 50%; z-index: 1;
+        }
+        #nilma-home-preview .hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.07fr .93fr; min-height: 650px; align-items: center; gap: 54px; }
+        #nilma-home-preview .hero .eyebrow { color: var(--gold); }
+        #nilma-home-preview .hero .eyebrow::before { background: var(--gold); }
+        #nilma-home-preview .hero h1 { color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.45); }
+        #nilma-home-preview .hero h1 em { color: #f0d8a3; font-weight: 400; }
+        #nilma-home-preview .hero .lead { color: rgba(255,255,255,.86); text-shadow: 0 2px 12px rgba(0,0,0,.4); }
+        #nilma-home-preview .hero .text-link { color: #f3dba8; border-bottom-color: rgba(243,219,168,.55); }
     #nilma-home-preview .hero-grid > *, #nilma-home-preview .section-head > *, #nilma-home-preview .process-grid > *, #nilma-home-preview .contact-grid > * { min-width: 0; }
     #nilma-home-preview .eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--wine); font-size: 11px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
     #nilma-home-preview .eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--gold); }
@@ -178,14 +189,18 @@
       #nilma-home-preview .nav { min-height: 82px; }
       #nilma-home-preview .brand { flex-basis: 180px; }
       #nilma-home-preview .brand-logo { width: 168px; height: 58px; }
-      #nilma-home-preview .hero { background: linear-gradient(160deg, #f7f0e7 0 62%, #ead9ca 62%); }
-      #nilma-home-preview .hero-grid { min-height: auto; }
-      #nilma-home-preview h1 { max-width: 100%; font-size: clamp(36px, 10vw, 40px); overflow-wrap: anywhere; }
-      #nilma-home-preview .eyebrow { align-items: flex-start; max-width: 100%; line-height: 1.5; }
-      #nilma-home-preview .eyebrow::before { flex: 0 0 34px; margin-top: 8px; }
-      #nilma-home-preview .hero-actions { flex-direction: column; align-items: flex-start; }
-      #nilma-home-preview .portrait { min-height: 410px; }
-      #nilma-home-preview .portrait-card { height: 380px; }
+      #nilma-home-preview .hero {
+        background: #0f1014 center/cover no-repeat url("assets/photos/hero-01.jpg");
+      }
+      #nilma-home-preview .hero::after {
+        background: linear-gradient(180deg, rgba(15,16,20,.78) 0%, rgba(15,16,20,.55) 55%, rgba(15,16,20,.45) 100%);
+      }
+      #nilma-home-preview .hero-grid { min-height: auto; padding: 56px 0 24px; align-items: end; }
+      #nilma-home-preview .hero .eyebrow::before { flex: 0 0 34px; margin-top: 8px; }
+      #nilma-home-preview .hero .hero-actions { flex-direction: column; align-items: flex-start; }
+      #nilma-home-preview h1 { max-width: 100%; font-size: clamp(32px, 9vw, 40px); overflow-wrap: anywhere; color: #fff; }
+      #nilma-home-preview .hero .lead { color: rgba(255,255,255,.92); }
+      #nilma-home-preview .portrait { display: none; }
       #nilma-home-preview .trust-grid { grid-template-columns: 1fr 1fr; }
       #nilma-home-preview .trust-item { min-height: 105px; padding: 20px 16px; }
       #nilma-home-preview .trust-item:first-child { grid-column: 1 / -1; }
@@ -220,8 +235,8 @@
             <a class="text-link" href="#atuacao">Conheça as áreas de atuação</a>
           </div>
         </div>
-        <div class="portrait" aria-label="Espaço destinado à fotografia profissional da Dra. Nilma Alves">
-          <div class="portrait-card"><img src="assets/nilma-alves-retrato.png" alt="Retrato profissional da Dra. Nilma Alves" width="1080" height="1620"></div>
+                <div class="portrait" aria-label="Fotografia institucional em escritório">
+          <div class="portrait-card"><img src="assets/photos/hero-01.jpg" alt="Profissional em escritório, representando a advocacia da Dra. Nilma Alves" width="2400" height="1350" loading="eager" decoding="async"></div>
           <div class="portrait-label">Atendimento atento à história e às necessidades de cada cliente.</div>
         </div>
       </div>
