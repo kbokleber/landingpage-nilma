@@ -132,7 +132,7 @@ function readReviewForm() {
 
 function renderDraft() {
   if (!draft) return;
-  itemCount.textContent = String(draft.items.length);
+  if (itemCount) itemCount.textContent = String(draft.items.length);
 
   const filter = reviewStatusFilter ? reviewStatusFilter.value : '';
   let items = [...(draft.items || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
