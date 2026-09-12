@@ -5,12 +5,6 @@ const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
 const flash = document.getElementById('flash');
-const googleStatus = document.getElementById('google-status');
-const googleNextStep = document.getElementById('google-next-step');
-const connectGoogleBtn = document.getElementById('connect-google-btn');
-const discoverLocationsBtn = document.getElementById('discover-locations-btn');
-const locationPicker = document.getElementById('location-picker');
-const syncBtn = document.getElementById('sync-btn');
 const publishBtn = document.getElementById('publish-btn');
 const reviewList = document.getElementById('review-list');
 const itemCount = document.getElementById('item-count');
@@ -25,10 +19,6 @@ const reviewEditId = document.getElementById('review-edit-id');
 const reviewStatusFilter = document.getElementById('review-status-filter');
 const reviewFilterInfo = document.getElementById('review-filter-info');
 const reviewEditorStatus = document.getElementById('review-editor-status');
-const reviewNewBtn = document.getElementById('review-new-btn');
-const reviewSaveDraftBtn = document.getElementById('review-save-draft-btn');
-const reviewPublishBtn = document.getElementById('review-publish-btn');
-const reviewCancelBtn = document.getElementById('review-cancel-btn');
 const reviewDeleteBtn = document.getElementById('review-delete-btn');
 
 let draft = null;
@@ -76,9 +66,7 @@ function badgesForItem(item) {
   const siteStatus = siteStatusOf(item);
   badges.push(`<span class="blog-item-status ${siteStatus}">${siteStatus === 'published' ? 'publicado' : 'rascunho'}</span>`);
   if (item.source === 'manual' || item.source === 'api') badges.push('<span class="badge manual">Manual</span>');
-  if (item.source === 'google') badges.push('<span class="badge new">Google</span>');
   if (item.editedFields?.length) badges.push('<span class="badge edited">Editado</span>');
-  if (item.status === 'removed_from_google') badges.push('<span class="badge removed">Removido no Google</span>');
   return badges.join('');
 }
 
@@ -146,7 +134,7 @@ function renderDraft() {
   }
 
   if (!items.length) {
-    reviewList.innerHTML = '<p class="sub">Nenhum depoimento encontrado. Clique em «Novo depoimento» ou sincronize com o Google.</p>';
+    reviewList.innerHTML = '<p class="sub">Nenhum depoimento encontrado. Clique em «Novo depoimento».</p>';
     return;
   }
 
@@ -311,49 +299,13 @@ async function moveItem(id, direction) {
   renderDraft();
 }
 
-function formatApiError(message) {
-  const text = String(message || '');
-  if (text.includes('Quota exceeded') || text.includes('quota metric')) {
-    return 'A API ainda não liberou cota para este projeto (0 requisições/min). Isso é normal enquanto o Google não aprova o formulário de acesso ao Business Profile. Aguarde o e-mail de aprovação — pode levar dias. Evite clicar várias vezes em «Descobrir perfil». Enquanto isso, adicione depoimentos manualmente e publique. Após aprovar: Cloud Console → Cotas → mybusinessaccountmanagement deve mostrar 300 QPM (não 0).';
-  }
-  if (text.includes('has not been used in project') || text.includes('is disabled')) {
-    const match = text.match(/project (\d+)/);
-    const project = match ? match[1] : '198494063026';
-    return `Ative as APIs do Google Business no Cloud Console (projeto ${project}) e aguarde 2–5 minutos: Account Management, Business Information e Google My Business API.`;
-  }
-  return text;
-}
-
-async function loadGoogleStatus() {
-  const status = await api('/api/google/status');
-  googleStatus.innerHTML = `
-    <span>Credenciais OAuth: <strong>${status.oauthConfigured ? 'Sim' : 'Não'}</strong></span>
-    <span>Conectado: <strong>${status.connected ? 'Sim' : 'Não'}</strong></span>
-    <span>Perfil selecionado: <strong>${status.locationConfigured ? 'Sim' : 'Não'}</strong></span>
-    ${status.locationName ? `<span>Location: <code>${escapeHtml(status.locationName)}</code></span>` : ''}
-  `;
-  connectGoogleBtn.disabled = !status.oauthConfigured;
-  discoverLocationsBtn.disabled = !status.connected;
-  syncBtn.disabled = !status.connected || !status.locationConfigured;
-
-  if (status.connected && !status.locationConfigured) {
-    googleNextStep.textContent =
-      'Conectado ao Google. Quando a API for aprovada, use «Descobrir perfil» → escolha o escritório → «Sincronizar». Se aparecer erro de cota, aguarde aprovação do formulário (Project Number 198494063026).';
-    googleNextStep.classList.remove('hidden');
-  } else if (status.locationConfigured) {
-    googleNextStep.textContent = 'Perfil pronto. Use «Sincronizar todos» e depois «Publicar no site».';
-    googleNextStep.classList.remove('hidden');
-  } else {
-    googleNextStep.classList.add('hidden');
-  }
-}
-
-async function showPanel() {
+function showPanel() {
   loginView.classList.add('hidden');
   panelView.classList.remove('hidden');
-  draft = await api('/api/draft');
-  renderDraft();
-  await loadGoogleStatus();
+  return api('/api/draft').then((data) => {
+    draft = data;
+    renderDraft();
+  });
 }
 
 async function tryAutoLogin() {
@@ -398,77 +350,6 @@ logoutBtn.addEventListener('click', async () => {
   loginView.classList.remove('hidden');
 });
 
-connectGoogleBtn.addEventListener('click', async () => {
-  try {
-    const data = await api('/api/google/connect');
-    window.location.href = data.url;
-  } catch (err) {
-    showFlash(err.message, 'err');
-  }
-});
-
-discoverLocationsBtn.addEventListener('click', async () => {
-  discoverLocationsBtn.disabled = true;
-  locationPicker.classList.remove('hidden');
-  locationPicker.innerHTML = '<p class="sub">Buscando estabelecimentos...</p>';
-  try {
-    const data = await api('/api/google/locations');
-    if (!data.locations?.length) {
-      locationPicker.innerHTML = '<p class="sub">Nenhum estabelecimento encontrado para esta conta.</p>';
-      return;
-    }
-    locationPicker.innerHTML = data.locations.map((loc) => `
-      <button type="button" class="location-option" data-name="${escapeAttr(loc.name)}">
-        <strong>${escapeHtml(loc.title)}</strong>
-        ${loc.address ? `<span>${escapeHtml(loc.address)}</span>` : ''}
-      </button>
-    `).join('');
-
-    locationPicker.querySelectorAll('.location-option').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        try {
-          await api('/api/google/location', {
-            method: 'POST',
-            body: JSON.stringify({ locationName: btn.dataset.name }),
-          });
-          locationPicker.querySelectorAll('.location-option').forEach((el) => {
-            el.classList.remove('is-selected');
-          });
-          btn.classList.add('is-selected');
-          showFlash('Perfil selecionado. Agora você pode sincronizar.', 'ok');
-          await loadGoogleStatus();
-        } catch (err) {
-          showFlash(err.message, 'err');
-        }
-      });
-    });
-  } catch (err) {
-    locationPicker.innerHTML = `<p class="message err">${escapeHtml(formatApiError(err.message))}</p>`;
-  } finally {
-    discoverLocationsBtn.disabled = false;
-    loadGoogleStatus();
-  }
-});
-
-syncBtn.addEventListener('click', async () => {
-  syncBtn.disabled = true;
-  try {
-    const data = await api('/api/sync', { method: 'POST' });
-    draft = data.draft;
-    renderDraft();
-    const s = data.summary;
-    showFlash(
-      `Sync concluído: ${s.added} novos, ${s.updated} atualizados, ${s.preserved} preservados (editados), ${s.removedFromGoogle} removidos no Google.`,
-      'ok'
-    );
-  } catch (err) {
-    showFlash(err.message, 'err');
-  } finally {
-    syncBtn.disabled = false;
-    loadGoogleStatus();
-  }
-});
-
 publishBtn.addEventListener('click', async () => {
   publishBtn.disabled = true;
   try {
@@ -496,15 +377,6 @@ reviewDeleteBtn?.addEventListener('click', () => {
 });
 reviewStatusFilter?.addEventListener('change', renderDraft);
 
-const params = new URLSearchParams(window.location.search);
-if (params.get('google') === 'connected') {
-  showFlash('Google conectado. Agora clique em «Descobrir perfil» para escolher o escritório.', 'ok');
-  history.replaceState({}, '', '/admin/');
-} else if (params.get('google') === 'error') {
-  showFlash('Erro ao conectar Google Business. Verifique as credenciais.', 'err');
-  history.replaceState({}, '', '/admin/');
-}
-
 // Lógica de Navegação por Abas do Painel Admin
 const navItems = document.querySelectorAll('.nav-item');
 const tabContents = document.querySelectorAll('.tab-content');
@@ -512,12 +384,10 @@ const tabContents = document.querySelectorAll('.tab-content');
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
     const targetTab = item.dataset.tab;
-    
-    // Atualiza estado ativo dos botões do menu
+
     navItems.forEach((nav) => nav.classList.remove('active'));
     item.classList.add('active');
-    
-    // Alterna a exibição das abas de conteúdo
+
     tabContents.forEach((content) => {
       if (content.id === `tab-content-${targetTab}`) {
         content.classList.remove('hidden');
@@ -1058,25 +928,12 @@ const settingsStatus = document.getElementById('settings-status');
 
 const SETTINGS_GROUPS = {
   site: { label: 'Site', icon: '⚙️', help: 'Configurações gerais do servidor e da aplicação.' },
-  google: { label: 'Google', icon: '🔎', help: 'Credenciais da Google Business Profile API (avaliações do Google).' },
-  instagram: { label: 'Instagram', icon: '📸', help: 'Credenciais do app Meta para sincronização do Instagram.' },
 };
 
 const SETTINGS_LABELS = {
   PORT: { group: 'site', label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
   ADMIN_PASSWORD: { group: 'site', label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
   BLOG_UPLOAD_MAX_MB: { group: 'site', label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
-  GOOGLE_CLIENT_ID: { group: 'google', label: 'Google Client ID', help: 'OAuth 2.0 Client ID do Google Cloud.', type: 'text' },
-  GOOGLE_CLIENT_SECRET: { group: 'google', label: 'Google Client Secret', help: 'OAuth 2.0 Client Secret.', type: 'password' },
-  GOOGLE_REDIRECT_URI: { group: 'google', label: 'Google Redirect URI', help: 'URL de callback configurada no Google Cloud.', type: 'text' },
-  INSTAGRAM_APP_ID: { group: 'instagram', label: 'Instagram App ID', help: 'App ID do seu app em developers.facebook.com. Não é sensível.', type: 'text' },
-  INSTAGRAM_APP_SECRET: { group: 'instagram', label: 'Instagram App Secret', help: 'App Secret. Criptografado no banco. Use 👁 para revelar.', type: 'password' },
-  INSTAGRAM_REDIRECT_URI: { group: 'instagram', label: 'Instagram Redirect URI', help: 'Deve coincidir com o configurado no app do Facebook. Padrão: http://127.0.0.1:3001/api/instagram/callback', type: 'text' },
-  INSTAGRAM_PAGE_ID: { group: 'instagram', label: 'Instagram Page ID (vinculada)', help: 'Preenchido automaticamente após conectar. Não é sensível.', type: 'text' },
-  INSTAGRAM_IG_USER_ID: { group: 'instagram', label: 'Instagram Business User ID', help: 'Preenchido automaticamente após conectar.', type: 'text' },
-  INSTAGRAM_SYNC_INTERVAL_MIN: { group: 'instagram', label: 'Intervalo de sincronização (min)', help: 'Mínimo 5 minutos. Requer reiniciar o servidor para mudar.', type: 'number' },
-  INSTAGRAM_AUTO_IMPORT: { group: 'instagram', label: 'Sincronização automática', help: '1 = ativa, 0 = apenas manual via botão "Sincronizar agora".', type: 'text' },
-  INSTAGRAM_AUTH_MODE: { group: 'instagram', label: 'Método de login', help: 'instagram = login direto com @advnilmaalves (Business Login, mais simples). facebook = login via Facebook + Página vinculada.', type: 'text' },
   EDITOR_FONTS: { group: 'site', label: 'Editor — Fontes disponíveis', help: 'Uma por linha. Define o que aparece no seletor de fonte.', type: 'list' },
   EDITOR_FONT_DEFAULT: { group: 'site', label: 'Editor — Fonte padrão', help: 'Tem que estar na lista acima.', type: 'text' },
   EDITOR_FONT_SIZES: { group: 'site', label: 'Editor — Tamanhos disponíveis (px)', help: 'Um por linha.', type: 'list' },
@@ -1311,164 +1168,7 @@ document.querySelectorAll('.nav-item').forEach((item) => {
     if (item.dataset.tab === 'configuracoes') {
       loadSettings();
       loadApiKeys();
-      loadInstagramPanel();
     }
   });
 });
 
-// ============== INSTAGRAM ==============
-const igStatus = document.getElementById('ig-status');
-const igConnectBtn = document.getElementById('ig-connect-btn');
-const igSyncBtn = document.getElementById('ig-sync-btn');
-const igDisconnectBtn = document.getElementById('ig-disconnect-btn');
-const igPosts = document.getElementById('ig-posts');
-const igMessage = document.getElementById('ig-message');
-
-function igShowMessage(text, kind = 'info') {
-  igMessage.textContent = text;
-  igMessage.className = `message ${kind}`;
-  igMessage.classList.remove('hidden');
-}
-
-async function loadInstagramStatus() {
-  try {
-    const s = await api('/api/admin/instagram/status');
-    renderInstagramStatus(s);
-    return s;
-  } catch (err) {
-    igStatus.innerHTML = `<span class="err">${escapeHtml(err.message)}</span>`;
-    igConnectBtn.disabled = true;
-    igSyncBtn.disabled = true;
-    return null;
-  }
-}
-
-function renderInstagramStatus(s) {
-  if (!s) return;
-  const parts = [];
-  parts.push(`App ID configurado: <strong>${s.configured ? 'Sim' : 'Não'}</strong>`);
-  parts.push(`Conectado: <strong>${s.connected ? 'Sim' : 'Não'}</strong>`);
-  if (s.pageId) parts.push(`Página: <code>${escapeHtml(String(s.pageId))}</code>`);
-  if (s.igUserId) parts.push(`IG User: <code>${escapeHtml(String(s.igUserId))}</code>`);
-  parts.push(`Auto-sync: <strong>${s.autoImport === '0' ? 'Desligado' : `A cada ${s.intervalMin} min`}</strong>`);
-  if (s.lastSyncAt) {
-    const r = s.lastResult || {};
-    parts.push(`Última sync: ${new Date(s.lastSyncAt).toLocaleString('pt-BR')} — +${r.added || 0} novos, ~${r.updated || 0} atualizados`);
-  } else {
-    parts.push(`Última sync: <em>nunca</em>`);
-  }
-  igStatus.innerHTML = parts.map((p) => `<span>${p}</span>`).join('');
-  igConnectBtn.disabled = s.configured ? false : true;
-  igConnectBtn.textContent = s.connected ? 'Reconectar' : 'Conectar Instagram';
-  igSyncBtn.disabled = !s.connected;
-  igDisconnectBtn.hidden = !s.connected;
-  igSyncBtn.textContent = s.connected ? 'Sincronizar agora' : 'Sincronizar agora';
-}
-
-async function loadInstagramPosts() {
-  try {
-    const data = await api('/api/admin/instagram/posts?limit=12');
-    if (!data.items.length) {
-      igPosts.innerHTML = '<p class="sub">Nenhum post sincronizado ainda. Clique em "Sincronizar agora" após conectar.</p>';
-      return;
-    }
-    igPosts.innerHTML = data.items.map((it) => {
-      const media = it.localPath || it.thumbnailUrl || it.mediaUrl || '';
-      const ts = it.timestamp ? new Date(it.timestamp).toLocaleString('pt-BR') : '—';
-      const hiddenBadge = it.hidden ? '<span class="badge" style="background:#fff3cd;color:#856404">oculto</span>' : '';
-      return `
-        <div class="ig-card" data-id="${it.id}">
-          <a href="${escapeAttr(it.permalink)}" target="_blank" rel="noopener">
-            ${media ? `<img src="${escapeAttr(media)}" alt="" loading="lazy">` : '<div class="ig-empty">sem mídia</div>'}
-            <span class="ig-type">${escapeHtml(it.igMediaType || 'POST')}</span>
-            ${hiddenBadge}
-          </a>
-          <div class="ig-meta">
-            <span class="ig-caption">${escapeHtml((it.caption || '').slice(0, 80))}${(it.caption || '').length > 80 ? '…' : ''}</span>
-            <span class="ig-ts">${ts}</span>
-          </div>
-          <div class="ig-actions">
-            ${it.hidden
-              ? `<button class="btn outline" data-action="show" data-id="${it.id}">Mostrar</button>`
-              : `<button class="btn outline" data-action="hide" data-id="${it.id}">Ocultar</button>`}
-            <button class="btn outline danger" data-action="delete" data-id="${it.id}">Excluir</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-    igPosts.querySelectorAll('button[data-action]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-        if (action === 'hide') {
-          await api(`/api/admin/instagram/posts/${id}/hide`, { method: 'POST' });
-          igShowMessage('Post ocultado.', 'ok');
-        } else if (action === 'show') {
-          await api(`/api/admin/instagram/posts/${id}/show`, { method: 'POST' });
-          igShowMessage('Post visível novamente.', 'ok');
-        } else if (action === 'delete') {
-          if (!confirm('Excluir este post do cache local? (não afeta o Instagram)')) return;
-          await api(`/api/admin/instagram/posts/${id}`, { method: 'DELETE' });
-          igShowMessage('Post removido do cache.', 'ok');
-        }
-        loadInstagramPanel();
-      });
-    });
-  } catch (err) {
-    igPosts.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
-  }
-}
-
-async function loadInstagramPanel() {
-  await loadInstagramStatus();
-  await loadInstagramPosts();
-}
-
-igConnectBtn.addEventListener('click', async () => {
-  igShowMessage('Gerando URL de conexão...', 'info');
-  try {
-    const data = await api('/api/admin/instagram/connect');
-    window.open(data.url, '_blank', 'noopener');
-    igShowMessage('Autorize o app na nova aba. Após autorizar, você voltará para cá automaticamente.', 'ok');
-  } catch (err) {
-    igShowMessage(err.message, 'err');
-  }
-});
-
-igSyncBtn.addEventListener('click', async () => {
-  igSyncBtn.disabled = true;
-  igShowMessage('Sincronizando...', 'info');
-  try {
-    const result = await api('/api/admin/instagram/sync', {
-      method: 'POST',
-      body: JSON.stringify({ limit: 20 }),
-    });
-    igShowMessage(`+${result.added} novos, ~${result.updated} atualizados, ${result.skipped} sem mudança.${result.errors?.length ? ` ${result.errors.length} erros.` : ''}`, 'ok');
-    loadInstagramPanel();
-  } catch (err) {
-    igShowMessage(err.message, 'err');
-  } finally {
-    igSyncBtn.disabled = false;
-  }
-});
-
-igDisconnectBtn.addEventListener('click', async () => {
-  if (!confirm('Desconectar o Instagram? Posts já sincronizados continuam no banco, mas a sincronização automática para.')) return;
-  try {
-    await api('/api/admin/instagram/disconnect', { method: 'POST' });
-    igShowMessage('Instagram desconectado.', 'ok');
-    loadInstagramPanel();
-  } catch (err) {
-    igShowMessage(err.message, 'err');
-  }
-});
-
-// Mensagens da URL (após callback)
-const igParams = new URLSearchParams(window.location.search);
-if (igParams.get('instagram') === 'connected') {
-  showFlash('Instagram conectado com sucesso!', 'ok');
-  history.replaceState({}, '', '/admin/');
-} else if (igParams.get('instagram') === 'error') {
-  showFlash(`Erro ao conectar Instagram: ${decodeURIComponent(igParams.get('msg') || '')}`, 'err');
-  history.replaceState({}, '', '/admin/');
-}

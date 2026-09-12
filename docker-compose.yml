@@ -18,11 +18,10 @@ services:
       # Este volume cobre TUDO em /app/data:
       #   - blog.db (SQLite)
       #   - uploads/blog/ (capas e galeria dos posts)
-      #   - instagram-tokens.json (token OAuth do Instagram)
-      #   - instagram-sync-meta.json (controle da última sincronização)
+      #   - reviews-draft.json
       - nilma-data:/app/data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/public/instagram/recent"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/public/reviews"]
       interval: 30s
       timeout: 3s
       retries: 3

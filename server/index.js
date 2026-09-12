@@ -3,8 +3,8 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
-const { readDraft, writeDraft, writePublic, newId, writeGbpSettings } = require('./lib/storage');
-const { mergeGoogleReviews, markFieldEdited, buildPublicFromDraft } = require('./lib/merge');
+const { readDraft, writeDraft, writePublic, newId } = require('./lib/storage');
+const { markFieldEdited, buildPublicFromDraft } = require('./lib/merge');
 const {
   login,
   logout,
@@ -12,22 +12,6 @@ const {
   getTokenFromRequest,
   validateSession,
 } = require('./lib/auth');
-const {
-  getAuthUrl,
-  handleOAuthCallback,
-  fetchAllGoogleReviews,
-  listGoogleLocations,
-  getLocationName,
-  isOAuthConfigured,
-  isGoogleConfigured,
-  isGoogleConnected,
-} = require('./lib/google');
-
-const ROOT = path.join(__dirname, '..');
-const app = express();
-const PORT = (() => {
-  try { return Number(settings.get('PORT')) || 3001; } catch { return Number(process.env.PORT) || 3001; }
-})();
 
 const { getDb } = require('./lib/db');
 const settings = require('./lib/settings');
@@ -40,20 +24,21 @@ const publicReviewsRouter = require('./routes/public-reviews');
 const adminPostsRouter = require('./routes/admin-posts');
 const adminApiKeysRouter = require('./routes/admin-api-keys');
 const adminSettingsRouter = require('./routes/admin-settings');
-const adminInstagramRouter = require('./routes/instagram');
-const publicInstagramRouter = require('./routes/instagram-public');
-const instagramCallbackRouter = require('./routes/instagram-callback');
 const editorConfigRouter = require('./routes/editor-config');
-const instagramSync = require('./lib/instagramSync');
 
 settings.ensureMigrated();
 getDb();
+
+const ROOT = path.join(__dirname, '..');
+const app = express();
+const PORT = (() => {
+  try { return Number(settings.get('PORT')) || 3001; } catch { return Number(process.env.PORT) || 3001; }
+})();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(ROOT, {
   setHeaders: (res, filePath) => {
-    // HTML nunca deve ser cacheado (sempre pega versão nova)
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
@@ -70,14 +55,12 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
 }));
 app.use('/api/public', publicPostsRouter);
 app.use('/api/public', publicReviewsRouter);
-app.use('/api/public', publicInstagramRouter);
 app.use('/api/public', editorConfigRouter);
 app.use('/api/v1', postsApiRouter);
 app.use('/api/v1', reviewsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
-app.use('/api/admin', adminInstagramRouter);
 
 app.get('/api/admin/diag', authMiddleware, (req, res) => {
   const { dbPath } = require('./lib/db');
@@ -107,7 +90,6 @@ app.post('/api/admin/reset-password', (req, res) => {
     return res.status(400).json({ error: 'Nova senha deve ter pelo menos 4 caracteres.' });
   }
   try {
-    const { getDb } = require('./lib/db');
     const db = getDb();
     db.prepare(`
       INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -118,7 +100,6 @@ app.post('/api/admin/reset-password', (req, res) => {
     res.status(500).json({ error: 'Falha ao redefinir senha: ' + err.message });
   }
 });
-app.use('/api/instagram', instagramCallbackRouter);
 
 app.post('/api/auth/login', (req, res) => {
   const token = login(req.body?.password || '');
@@ -143,58 +124,6 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/me', (req, res) => {
   const token = getTokenFromRequest(req);
   res.json({ authenticated: validateSession(token) });
-});
-
-app.get('/api/google/status', authMiddleware, (_req, res) => {
-  const locationName = getLocationName();
-  res.json({
-    oauthConfigured: isOAuthConfigured(),
-    configured: isGoogleConfigured(),
-    connected: isGoogleConnected(),
-    locationName,
-    locationConfigured: Boolean(locationName),
-  });
-});
-
-app.get('/api/google/locations', authMiddleware, async (_req, res) => {
-  try {
-    const locations = await listGoogleLocations();
-    res.json({ locations });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/google/location', authMiddleware, (req, res) => {
-  const { locationName } = req.body || {};
-  if (!locationName?.trim()) {
-    return res.status(400).json({ error: 'Selecione um estabelecimento.' });
-  }
-  writeGbpSettings({ locationName: locationName.trim() });
-  res.json({ ok: true, locationName: locationName.trim() });
-});
-
-app.get('/api/google/connect', authMiddleware, (_req, res) => {
-  try {
-    res.json({ url: getAuthUrl() });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/google/callback', async (req, res) => {
-  const { code, error } = req.query;
-  if (error) {
-    return res.redirect('/admin/?google=error');
-  }
-  try {
-    await handleOAuthCallback(code);
-    res.redirect('/admin/?google=connected');
-  } catch (err) {
-    console.error(err);
-    res.redirect('/admin/?google=error');
-  }
 });
 
 app.get('/api/draft', authMiddleware, (_req, res) => {
@@ -239,7 +168,6 @@ app.post('/api/draft/items', authMiddleware, (req, res) => {
   writeDraft(draft);
 
   if (finalSiteStatus === 'published') {
-    const { buildPublicFromDraft } = require('./lib/merge');
     writePublic(buildPublicFromDraft(draft));
   }
 
@@ -289,7 +217,6 @@ app.patch('/api/draft/items/:id', authMiddleware, (req, res) => {
   writeDraft(draft);
 
   if (siteStatus === 'published' || siteStatus === 'draft') {
-    const { buildPublicFromDraft } = require('./lib/merge');
     writePublic(buildPublicFromDraft(draft));
   }
 
@@ -306,7 +233,6 @@ app.post('/api/draft/items/:id/publish', authMiddleware, (req, res) => {
   item.visible = true;
   item.publishedAt = item.publishedAt || new Date().toISOString().split('T')[0];
   writeDraft(draft);
-  const { buildPublicFromDraft } = require('./lib/merge');
   const publicData = buildPublicFromDraft(draft);
   writePublic(publicData);
   res.json({ draft, public: publicData });
@@ -320,7 +246,6 @@ app.post('/api/draft/items/:id/unpublish', authMiddleware, (req, res) => {
   }
   item.siteStatus = 'draft';
   writeDraft(draft);
-  const { buildPublicFromDraft } = require('./lib/merge');
   const publicData = buildPublicFromDraft(draft);
   writePublic(publicData);
   res.json({ draft, public: publicData });
@@ -334,22 +259,8 @@ app.delete('/api/draft/items/:id', authMiddleware, (req, res) => {
     return res.status(404).json({ error: 'Depoimento não encontrado.' });
   }
   writeDraft(draft);
-  const { buildPublicFromDraft } = require('./lib/merge');
   writePublic(buildPublicFromDraft(draft));
   res.json(draft);
-});
-
-app.post('/api/sync', authMiddleware, async (_req, res) => {
-  try {
-    const googlePayload = await fetchAllGoogleReviews();
-    const draft = readDraft();
-    const summary = mergeGoogleReviews(draft, googlePayload);
-    writeDraft(draft);
-    res.json({ draft, summary });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
 });
 
 app.post('/api/publish', authMiddleware, (_req, res) => {
@@ -369,11 +280,4 @@ app.listen(PORT, () => {
   console.log(`Servidor em http://localhost:${PORT}`);
   console.log(`Admin: http://localhost:${PORT}/admin/`);
   console.log(`Banco SQLite: ${dbPath}`);
-  // Cron do Instagram: sincroniza periodicamente se estiver conectado
-  try {
-    instagramSync.startInstagramSyncCron();
-    console.log(`[instagram] cron ativo (verifica a cada 60s)`);
-  } catch (err) {
-    console.warn(`[instagram] cron não pôde iniciar: ${err.message}`);
-  }
 });

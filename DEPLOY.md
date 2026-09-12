@@ -13,10 +13,7 @@ Todo o conteúdo mutável fica em **`/app/data`** dentro do container. Monte **u
 │   └── blog/                     # CAPAS E GALERIA DOS POSTS DO BLOG
 │       ├── <timestamp>-cover-<hash>.png
 │       └── ...
-├── instagram-tokens.json         # token OAuth do Instagram
-├── instagram-sync-meta.json      # controle de última sincronização
-├── oauth-tokens.json             # tokens Google (reviews)
-└── reviews-draft.json            # rascunhos de avaliações Google
+└── reviews-draft.json            # rascunhos de depoimentos
 ```
 
 ## Variáveis de ambiente relacionadas

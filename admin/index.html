@@ -70,7 +70,7 @@
         <div id="tab-content-depoimentos" class="tab-content">
           <div class="tab-header">
             <h1>Depoimentos</h1>
-            <p class="sub">Cadastre, edite e publique depoimentos no site. Também é possível sincronizar com o Google.</p>
+            <p class="sub">Cadastre, edite e publique depoimentos no site.</p>
           </div>
 
           <div class="card">
@@ -128,18 +128,6 @@
               <button class="btn outline danger" type="button" id="review-delete-btn" hidden>Excluir</button>
             </div>
             <p id="review-editor-status" class="sub"></p>
-          </div>
-
-          <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Google (opcional)</h2>
-            <div class="status-bar" id="google-status"></div>
-            <p id="google-next-step" class="sub hidden"></p>
-            <div class="toolbar">
-              <button class="btn secondary" type="button" id="connect-google-btn">Conectar Google</button>
-              <button class="btn outline" type="button" id="discover-locations-btn" disabled>Descobrir perfil</button>
-              <button class="btn outline" type="button" id="sync-btn" disabled>Sincronizar do Google</button>
-            </div>
-            <div id="location-picker" class="location-picker hidden"></div>
           </div>
         </div>
 
@@ -242,8 +230,6 @@
 
           <div class="settings-subtabs">
             <button class="settings-sub-tab active" data-group="site" type="button">⚙️ Site</button>
-            <button class="settings-sub-tab" data-group="google" type="button">🔎 Google</button>
-            <button class="settings-sub-tab" data-group="instagram" type="button">📸 Instagram</button>
           </div>
 
           <div class="card">
@@ -270,55 +256,24 @@
             <div id="api-key-new" class="message info hidden"></div>
             <div id="api-key-list"></div>
           </div>
-
-          <div class="card" data-group="instagram">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Instagram (sincronização automática)</h2>
-            <p class="sub" style="margin-bottom:12px">
-              Conecte o Instagram <strong>@advnilmaalves</strong> para puxar os últimos posts automaticamente.
-              Os posts ficam disponíveis na seção <strong>"Últimos Conteúdos"</strong> da home (separado do Blog).
-              Por padrão o login é <strong>direto com o Instagram</strong> (mais simples — não precisa de Página do Facebook).
-              Requer conta Business/Creator e um app em
-              <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> com o produto <em>Instagram Graph API</em>.
-            </p>
-            <div id="ig-status" class="status-bar">Carregando...</div>
-            <div class="toolbar">
-              <button class="btn" type="button" id="ig-connect-btn" disabled>Conectar Instagram</button>
-              <button class="btn outline" type="button" id="ig-sync-btn" disabled>Sincronizar agora</button>
-              <button class="btn outline danger" type="button" id="ig-disconnect-btn" hidden>Desconectar</button>
-              <a class="btn outline" id="ig-profile-link" href="https://www.instagram.com/advnilmaalves/" target="_blank" rel="noopener">Ver perfil</a>
-            </div>
-            <div id="ig-message" class="message hidden" role="status"></div>
-
-            <h3 style="font-size:1rem;font-weight:600;margin:16px 0 8px">Posts sincronizados</h3>
-            <div id="ig-posts" class="ig-posts-grid"></div>
-          </div>
         </div>
 
         <!-- Aba 4: Ajuda & Suporte -->
         <div id="tab-content-ajuda" class="tab-content hidden">
           <div class="tab-header">
             <h1>Ajuda & Suporte</h1>
-            <p class="sub">Guia rápido sobre sincronização e solução de problemas.</p>
+            <p class="sub">Guia rápido do painel administrativo.</p>
           </div>
           <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Sobre as cotas do Google Business API</h2>
-            <p style="margin-bottom:12px;font-size:0.95rem;line-height:1.6;">
-              A sincronização do Google Business depende da aprovação do seu formulário de acesso pelo Google. Enquanto a aprovação não ocorrer,
-              a cota do projeto será de 0 requisições, resultando em erros de "Quota exceeded".
-            </p>
-            <div class="message info" style="background:#fff8e1;color:#b78103;border:1px solid #ffe082;">
-              <strong>Passos para verificar a cota após a liberação do Google:</strong>
-              <ol style="margin-left:20px;margin-top:8px;font-size:0.9rem;line-height:1.6;">
-                <li>Acesse o painel do Google Cloud Console.</li>
-                <li>Habilite as APIs: <em>Google My Business API</em>, <em>My Business Business Information API</em> e <em>My Business Account Management API</em>.</li>
-                <li>Na seção "Cotas", certifique-se de que a cota para <code>mybusinessaccountmanagement</code> é de 300 requisições por minuto.</li>
-              </ol>
-            </div>
-          </div>
-          <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Cadastrar depoimentos manuais</h2>
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Depoimentos</h2>
             <p style="font-size:0.95rem;line-height:1.6;">
-              Caso queira incluir avaliações recebidas por WhatsApp ou outras plataformas, você pode cadastrá-los na aba <strong>Depoimentos</strong> usando o formulário manual. Após cadastrar ou editar, não se esqueça de clicar em <strong>"Publicar no site"</strong> para aplicar as mudanças à landing page pública.
+              Cadastre avaliações na aba <strong>Depoimentos</strong>. Use <strong>Salvar rascunho</strong> para guardar sem exibir no site, ou <strong>Publicar agora</strong> para aparecer na landing. Também é possível republicar a lista completa com <strong>Republicar lista no site</strong>.
+            </p>
+          </div>
+          <div class="card">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Blog</h2>
+            <p style="font-size:0.95rem;line-height:1.6;">
+              Crie posts na aba <strong>Blog</strong> com o mesmo fluxo de rascunho e publicação. Sistemas externos podem publicar via API Key (Configurações → API Keys).
             </p>
           </div>
         </div>
