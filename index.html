@@ -175,12 +175,11 @@
     #nilma-home-preview .step b { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--gold); border-radius: 50%; color: var(--wine); font: 500 14px Georgia, serif; }
     #nilma-home-preview .step h3 { margin: 0 0 5px; color: var(--wine-deep); font: 500 19px Georgia, serif; }
     #nilma-home-preview .step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
-    #nilma-home-preview .about { display: grid; grid-template-columns: .85fr 1.15fr; min-height: 520px; }
-    #nilma-home-preview .about-visual { position: relative; background: linear-gradient(145deg, #d8c4b7, #7b4654 58%, #3b1d26); overflow: hidden; }
-    #nilma-home-preview .about-visual::after { content: "N"; position: absolute; right: 20px; bottom: -55px; color: rgba(255,255,255,.12); font: 500 300px Georgia, serif; }
-    #nilma-home-preview .about-copy { padding: 72px clamp(38px, 7vw, 100px); background: #fff; display: flex; flex-direction: column; justify-content: center; }
-    #nilma-home-preview .about-copy p { color: var(--muted); font-size: 14px; line-height: 1.8; }
-    #nilma-home-preview .credentials { display: flex; flex-wrap: wrap; gap: 9px; margin: 18px 0 28px; }
+    #nilma-home-preview .about { display: flex; justify-content: center; background: #fff; padding: 72px 24px; }
+    #nilma-home-preview .about-copy { max-width: 720px; width: 100%; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    #nilma-home-preview .about-copy h2 { max-width: 28ch; }
+    #nilma-home-preview .about-copy p { color: var(--muted); font-size: 14px; line-height: 1.8; max-width: 52ch; }
+    #nilma-home-preview .credentials { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin: 18px 0 28px; }
     #nilma-home-preview .credentials span { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); font-size: 11px; }
     #nilma-home-preview .articles { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 18px; }
     #nilma-home-preview .reviews-list, #nilma-home-preview .blog-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
@@ -237,14 +236,13 @@
     #nilma-home-preview .foot { padding: 22px 0; background: #251116; color: rgba(255,255,255,.54); font-size: 11px; text-align: center; }
     @media (max-width: 900px) {
       #nilma-home-preview .links { display: none; }
-      #nilma-home-preview .hero-grid, #nilma-home-preview .section-head, #nilma-home-preview .process-grid, #nilma-home-preview .about, #nilma-home-preview .faq-layout, #nilma-home-preview .contact-grid { grid-template-columns: 1fr; }
+      #nilma-home-preview .hero-grid, #nilma-home-preview .section-head, #nilma-home-preview .process-grid, #nilma-home-preview .faq-layout, #nilma-home-preview .contact-grid { grid-template-columns: 1fr; }
       #nilma-home-preview .hero-grid { padding-top: 64px; gap: 25px; }
       #nilma-home-preview .portrait { min-height: 480px; }
       #nilma-home-preview .trust-grid { grid-template-columns: repeat(2, 1fr); }
       #nilma-home-preview .services { grid-template-columns: 1fr; }
       #nilma-home-preview .service { min-height: 260px; }
       #nilma-home-preview .icon { margin-bottom: 26px; }
-      #nilma-home-preview .about-visual { min-height: 380px; }
       #nilma-home-preview .articles { grid-template-columns: 1fr; }
       #nilma-home-preview .article, #nilma-home-preview .article:first-child { min-height: 250px; }
       #nilma-home-preview #atendimento .process-grid { padding: 42px; }
@@ -274,7 +272,7 @@
       #nilma-home-preview .section { padding: 68px 0; }
       #nilma-home-preview .promise { padding: 32px; }
       #nilma-home-preview #atendimento .process-grid { padding: 28px 18px; border-radius: 4px 24px 4px 4px; }
-      #nilma-home-preview .about-copy { padding: 54px 28px; }
+      #nilma-home-preview .about { padding: 54px 28px; }
       #nilma-home-preview .field-grid { grid-template-columns: 1fr; gap: 0; }
       #nilma-home-preview .contact-form { padding: 24px 18px; }
     }
@@ -348,9 +346,9 @@
     </section>
 
     <section class="about" id="sobre">
-      <div class="about-visual" role="img" aria-label="Espaço para fotografia institucional da Dra. Nilma Alves"></div>
       <div class="about-copy">
-        <span class="kicker">Sobre a advogada</span><h2>Conhecimento técnico com uma abordagem verdadeiramente humana.</h2>
+        <span class="kicker">Sobre a advogada</span>
+        <h2>Conhecimento técnico com uma abordagem verdadeiramente humana.</h2>
         <p>A Dra. Nilma Alves de Oliveira atua na orientação de famílias e na proteção de seus patrimônios, aliando preparo jurídico, escuta atenta e busca por soluções responsáveis.</p>
         <div class="credentials"><span>OAB/SP 268.128</span><span>Formação UNISANTA/SP</span><span>Pós-graduação FGV</span></div>
         <a class="text-link" href="#contato">Conheça a trajetória profissional</a>

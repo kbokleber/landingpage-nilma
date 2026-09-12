@@ -1,0 +1,184 @@
+{
+  "name": "Nilma Alves — Blog API (DEV)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "var-base",
+              "name": "BASE",
+              "value": "https://dev.nilmaalves.adv.br",
+              "type": "string"
+            },
+            {
+              "id": "var-key",
+              "name": "API_KEY",
+              "value": "nilma_181ecf8562366421a5734deedd949c7e15892b0512b968edfdd3cc537de998ce",
+              "type": "string"
+            },
+            {
+              "id": "var-title",
+              "name": "title",
+              "value": "Post via n8n",
+              "type": "string"
+            },
+            {
+              "id": "var-excerpt",
+              "name": "excerpt",
+              "value": "Criado automaticamente pelo n8n",
+              "type": "string"
+            },
+            {
+              "id": "var-html",
+              "name": "contentHtml",
+              "value": "<p>Conteúdo gerado pelo <strong>n8n</strong>.</p>",
+              "type": "string"
+            },
+            {
+              "id": "var-status",
+              "name": "status",
+              "value": "published",
+              "type": "string"
+            },
+            {
+              "id": "var-tags",
+              "name": "tags",
+              "value": "=[\"n8n\", \"automacao\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-vars",
+      "name": "Variáveis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.BASE }}/api/v1/posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "50" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-posts",
+      "name": "Listar posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.BASE }}/api/v1/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"excerpt\": {{ JSON.stringify($json.excerpt) }},\n  \"contentHtml\": {{ JSON.stringify($json.contentHtml) }},\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"status\": {{ JSON.stringify($json.status) }}\n}",
+        "options": {}
+      },
+      "id": "create-post",
+      "name": "Criar post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 420]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Variáveis').item.json.BASE }}/api/v1/posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "50" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $('Variáveis').item.json.API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-after-create",
+      "name": "Listar após criar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 420]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          { "node": "Variáveis", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Variáveis": {
+      "main": [
+        [
+          { "node": "Listar posts", "type": "main", "index": 0 },
+          { "node": "Criar post", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Criar post": {
+      "main": [
+        [
+          { "node": "Listar após criar", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1"
+}

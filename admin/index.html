@@ -70,24 +70,26 @@
         <div id="tab-content-depoimentos" class="tab-content">
           <div class="tab-header">
             <h1>Depoimentos</h1>
-            <p class="sub">Sincronize com o Google, edite e publique no site estático.</p>
+            <p class="sub">Cadastre, edite e publique depoimentos no site. Também é possível sincronizar com o Google.</p>
           </div>
 
           <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Google Business</h2>
-            <div class="status-bar" id="google-status"></div>
-            <p id="google-next-step" class="sub hidden"></p>
             <div class="toolbar">
-              <button class="btn secondary" type="button" id="connect-google-btn">Conectar Google</button>
-              <button class="btn outline" type="button" id="discover-locations-btn" disabled>Descobrir perfil</button>
-              <button class="btn" type="button" id="sync-btn" disabled>Sincronizar todos</button>
-              <button class="btn" type="button" id="publish-btn">Publicar no site</button>
+              <button class="btn" type="button" id="review-new-btn">Novo depoimento</button>
+              <select id="review-status-filter" class="select-inline">
+                <option value="">Todos</option>
+                <option value="draft">Rascunhos</option>
+                <option value="published">Publicados</option>
+              </select>
+              <button class="btn secondary" type="button" id="publish-btn">Republicar lista no site</button>
+              <span id="review-filter-info" class="sub" style="margin-left:auto"></span>
             </div>
-            <div id="location-picker" class="location-picker hidden"></div>
+            <div id="review-list"></div>
           </div>
 
-          <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Adicionar depoimento manual</h2>
+          <div id="review-editor" class="card hidden">
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px" id="review-editor-title">Novo depoimento</h2>
+            <input type="hidden" id="review-edit-id" value="">
             <div class="grid-2">
               <div>
                 <label for="manual-author">Autor</label>
@@ -104,14 +106,40 @@
                 </select>
               </div>
             </div>
+            <div class="grid-2">
+              <div>
+                <label for="manual-area">Área (opcional)</label>
+                <input type="text" id="manual-area" placeholder="Ex.: Direito de Família">
+              </div>
+              <div>
+                <label for="manual-site-status">Status</label>
+                <select id="manual-site-status">
+                  <option value="draft">Rascunho (não aparece no site)</option>
+                  <option value="published">Publicado (visível no site)</option>
+                </select>
+              </div>
+            </div>
             <label for="manual-text">Texto</label>
-            <textarea id="manual-text" placeholder="Texto do depoimento"></textarea>
-            <button class="btn secondary" type="button" id="add-manual-btn">Adicionar</button>
+            <textarea id="manual-text" rows="5" placeholder="Texto do depoimento"></textarea>
+            <div class="toolbar">
+              <button class="btn" type="button" id="review-save-draft-btn">Salvar rascunho</button>
+              <button class="btn secondary" type="button" id="review-publish-btn">Publicar agora</button>
+              <button class="btn outline" type="button" id="review-cancel-btn">Cancelar</button>
+              <button class="btn outline danger" type="button" id="review-delete-btn" hidden>Excluir</button>
+            </div>
+            <p id="review-editor-status" class="sub"></p>
           </div>
 
           <div class="card">
-            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Rascunho (<span id="item-count">0</span>)</h2>
-            <div id="review-list"></div>
+            <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px">Google (opcional)</h2>
+            <div class="status-bar" id="google-status"></div>
+            <p id="google-next-step" class="sub hidden"></p>
+            <div class="toolbar">
+              <button class="btn secondary" type="button" id="connect-google-btn">Conectar Google</button>
+              <button class="btn outline" type="button" id="discover-locations-btn" disabled>Descobrir perfil</button>
+              <button class="btn outline" type="button" id="sync-btn" disabled>Sincronizar do Google</button>
+            </div>
+            <div id="location-picker" class="location-picker hidden"></div>
           </div>
         </div>
 

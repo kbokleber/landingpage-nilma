@@ -17,9 +17,22 @@ const itemCount = document.getElementById('item-count');
 const manualAuthor = document.getElementById('manual-author');
 const manualRating = document.getElementById('manual-rating');
 const manualText = document.getElementById('manual-text');
-const addManualBtn = document.getElementById('add-manual-btn');
+const manualArea = document.getElementById('manual-area');
+const manualSiteStatus = document.getElementById('manual-site-status');
+const reviewEditor = document.getElementById('review-editor');
+const reviewEditorTitle = document.getElementById('review-editor-title');
+const reviewEditId = document.getElementById('review-edit-id');
+const reviewStatusFilter = document.getElementById('review-status-filter');
+const reviewFilterInfo = document.getElementById('review-filter-info');
+const reviewEditorStatus = document.getElementById('review-editor-status');
+const reviewNewBtn = document.getElementById('review-new-btn');
+const reviewSaveDraftBtn = document.getElementById('review-save-draft-btn');
+const reviewPublishBtn = document.getElementById('review-publish-btn');
+const reviewCancelBtn = document.getElementById('review-cancel-btn');
+const reviewDeleteBtn = document.getElementById('review-delete-btn');
 
 let draft = null;
+let reviewCurrentId = null;
 let token = localStorage.getItem('admin_token') || '';
 
 function showFlash(text, type = 'info') {
@@ -53,61 +66,216 @@ function stars(n) {
   return '★'.repeat(count) + '☆'.repeat(5 - count);
 }
 
+function siteStatusOf(item) {
+  if (item.siteStatus === 'draft' || item.siteStatus === 'published') return item.siteStatus;
+  return item.visible === false ? 'draft' : 'published';
+}
+
 function badgesForItem(item) {
   const badges = [];
-  if (item.source === 'manual') badges.push('<span class="badge manual">Manual</span>');
+  const siteStatus = siteStatusOf(item);
+  badges.push(`<span class="blog-item-status ${siteStatus}">${siteStatus === 'published' ? 'publicado' : 'rascunho'}</span>`);
+  if (item.source === 'manual' || item.source === 'api') badges.push('<span class="badge manual">Manual</span>');
+  if (item.source === 'google') badges.push('<span class="badge new">Google</span>');
   if (item.editedFields?.length) badges.push('<span class="badge edited">Editado</span>');
   if (item.status === 'removed_from_google') badges.push('<span class="badge removed">Removido no Google</span>');
-  if (item.visible === false) badges.push('<span class="badge hidden">Oculto</span>');
   return badges.join('');
+}
+
+function setReviewEditorStatus(text) {
+  if (reviewEditorStatus) reviewEditorStatus.textContent = text || '';
+}
+
+function resetReviewForm() {
+  reviewCurrentId = null;
+  if (reviewEditId) reviewEditId.value = '';
+  if (reviewEditorTitle) reviewEditorTitle.textContent = 'Novo depoimento';
+  manualAuthor.value = '';
+  manualText.value = '';
+  manualRating.value = '5';
+  if (manualArea) manualArea.value = '';
+  if (manualSiteStatus) manualSiteStatus.value = 'draft';
+  if (reviewDeleteBtn) reviewDeleteBtn.hidden = true;
+  setReviewEditorStatus('');
+}
+
+function openReviewEditor(item) {
+  if (!item) {
+    resetReviewForm();
+    reviewEditor.classList.remove('hidden');
+    manualAuthor.focus();
+    return;
+  }
+  reviewCurrentId = item.id;
+  if (reviewEditId) reviewEditId.value = item.id;
+  if (reviewEditorTitle) reviewEditorTitle.textContent = `Editar: ${item.author || 'depoimento'}`;
+  manualAuthor.value = item.author || '';
+  manualText.value = item.text || '';
+  manualRating.value = String(item.rating || 5);
+  if (manualArea) manualArea.value = item.area || '';
+  if (manualSiteStatus) manualSiteStatus.value = siteStatusOf(item);
+  if (reviewDeleteBtn) reviewDeleteBtn.hidden = false;
+  reviewEditor.classList.remove('hidden');
+  setReviewEditorStatus('Depoimento carregado.');
+  reviewEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function readReviewForm() {
+  return {
+    author: manualAuthor.value.trim(),
+    text: manualText.value.trim(),
+    rating: Number(manualRating.value) || 5,
+    area: manualArea ? manualArea.value.trim() : '',
+    siteStatus: manualSiteStatus ? manualSiteStatus.value : 'draft',
+  };
 }
 
 function renderDraft() {
   if (!draft) return;
   itemCount.textContent = String(draft.items.length);
 
-  if (!draft.items.length) {
-    reviewList.innerHTML = '<p class="sub">Nenhum depoimento no rascunho. Sincronize com o Google ou adicione manualmente.</p>';
+  const filter = reviewStatusFilter ? reviewStatusFilter.value : '';
+  let items = [...(draft.items || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+  if (filter === 'draft' || filter === 'published') {
+    items = items.filter((i) => siteStatusOf(i) === filter);
+  }
+
+  if (reviewFilterInfo) {
+    const filterTxt = filter ? ` (filtro: ${filter === 'draft' ? 'rascunhos' : 'publicados'})` : '';
+    reviewFilterInfo.textContent = `${items.length} depoimento${items.length === 1 ? '' : 's'}${filterTxt}`;
+  }
+
+  if (!items.length) {
+    reviewList.innerHTML = '<p class="sub">Nenhum depoimento encontrado. Clique em «Novo depoimento» ou sincronize com o Google.</p>';
     return;
   }
 
-  const sorted = [...draft.items].sort((a, b) => (a.order || 0) - (b.order || 0));
-
-  reviewList.innerHTML = sorted.map((item) => `
-    <article class="review-item ${item.visible === false ? 'is-hidden' : ''}" data-id="${item.id}">
-      <div class="review-head">
-        <strong>${escapeHtml(item.author)}</strong>
-        <span class="stars" aria-label="${item.rating} estrelas">${stars(item.rating)}</span>
-        ${badgesForItem(item)}
-        ${item.publishedAt ? `<span class="sub" style="margin:0">${item.publishedAt}</span>` : ''}
-      </div>
-      <textarea data-field="text" aria-label="Texto do depoimento">${escapeHtml(item.text)}</textarea>
-      <div class="grid-2">
-        <div>
-          <label>Autor</label>
-          <input type="text" data-field="author" value="${escapeAttr(item.author)}">
+  reviewList.innerHTML = items.map((item) => {
+    const status = siteStatusOf(item);
+    const preview = String(item.text || '').slice(0, 140);
+    return `
+    <div class="blog-item" data-id="${escapeAttr(item.id)}">
+      <div class="blog-item-info">
+        <div class="blog-item-title">${escapeHtml(item.author || '(sem nome)')}</div>
+        <div class="blog-item-meta">
+          ${badgesForItem(item)}
+          <span class="stars">${stars(item.rating)}</span>
+          ${item.area ? `<span>${escapeHtml(item.area)}</span>` : ''}
+          ${item.publishedAt ? `<span>${escapeHtml(item.publishedAt)}</span>` : ''}
         </div>
-        <div>
-          <label>Ordem</label>
-          <input type="number" data-field="order" min="1" value="${item.order || 1}">
-        </div>
+        <p class="sub" style="margin:6px 0 0">${escapeHtml(preview)}${(item.text || '').length > 140 ? '…' : ''}</p>
       </div>
-      <div class="review-actions">
-        <button class="btn secondary" type="button" data-action="save">Salvar alterações</button>
-        <button class="btn outline" type="button" data-action="toggle">${item.visible === false ? 'Exibir' : 'Ocultar'}</button>
-        <button class="btn outline" type="button" data-action="up" aria-label="Subir">↑</button>
-        <button class="btn outline" type="button" data-action="down" aria-label="Descer">↓</button>
+      <div class="blog-item-actions">
+        <button class="btn secondary" type="button" data-action="edit" data-id="${escapeAttr(item.id)}">Editar</button>
+        ${status !== 'published'
+          ? `<button class="btn" type="button" data-action="publish" data-id="${escapeAttr(item.id)}">Publicar</button>`
+          : `<button class="btn outline" type="button" data-action="unpublish" data-id="${escapeAttr(item.id)}">Voltar a rascunho</button>`}
+        <button class="btn outline" type="button" data-action="up" data-id="${escapeAttr(item.id)}" aria-label="Subir">↑</button>
+        <button class="btn outline" type="button" data-action="down" data-id="${escapeAttr(item.id)}" aria-label="Descer">↓</button>
+        <button class="btn outline danger" type="button" data-action="delete" data-id="${escapeAttr(item.id)}">Excluir</button>
       </div>
-    </article>
-  `).join('');
+    </div>`;
+  }).join('');
 
-  reviewList.querySelectorAll('.review-item').forEach((el) => {
-    const id = el.dataset.id;
-    el.querySelector('[data-action="save"]').addEventListener('click', () => saveItem(id, el));
-    el.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleVisible(id));
-    el.querySelector('[data-action="up"]').addEventListener('click', () => moveItem(id, -1));
-    el.querySelector('[data-action="down"]').addEventListener('click', () => moveItem(id, 1));
+  reviewList.querySelectorAll('button[data-action]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'edit') {
+        const item = draft.items.find((i) => i.id === id);
+        if (item) openReviewEditor(item);
+      } else if (action === 'publish') publishReviewItem(id);
+      else if (action === 'unpublish') unpublishReviewItem(id);
+      else if (action === 'delete') deleteReviewItem(id);
+      else if (action === 'up') moveItem(id, -1);
+      else if (action === 'down') moveItem(id, 1);
+    });
   });
+}
+
+async function saveReview({ publishNow = false } = {}) {
+  const payload = readReviewForm();
+  if (!payload.author || !payload.text) {
+    setReviewEditorStatus('Preencha autor e texto.');
+    return;
+  }
+  if (publishNow) payload.siteStatus = 'published';
+
+  try {
+    if (reviewCurrentId) {
+      draft = await api(`/api/draft/items/${reviewCurrentId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      if (publishNow) {
+        const data = await api(`/api/draft/items/${reviewCurrentId}/publish`, { method: 'POST' });
+        draft = data.draft || draft;
+      }
+    } else {
+      draft = await api('/api/draft/items', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const created = [...draft.items].sort((a, b) => (b.order || 0) - (a.order || 0))[0];
+      if (created) {
+        reviewCurrentId = created.id;
+        if (reviewEditId) reviewEditId.value = created.id;
+        if (reviewEditorTitle) reviewEditorTitle.textContent = `Editar: ${created.author}`;
+        if (reviewDeleteBtn) reviewDeleteBtn.hidden = false;
+        if (publishNow && siteStatusOf(created) !== 'published') {
+          const data = await api(`/api/draft/items/${created.id}/publish`, { method: 'POST' });
+          draft = data.draft || draft;
+        }
+      }
+    }
+    if (manualSiteStatus) manualSiteStatus.value = publishNow ? 'published' : payload.siteStatus;
+    const msg = publishNow || payload.siteStatus === 'published' ? 'Depoimento publicado.' : 'Rascunho salvo.';
+    setReviewEditorStatus(`Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`);
+    showFlash(msg, 'ok');
+    renderDraft();
+  } catch (err) {
+    setReviewEditorStatus(err.message);
+    showFlash(err.message, 'err');
+  }
+}
+
+async function publishReviewItem(id) {
+  if (!confirm('Publicar este depoimento no site agora?')) return;
+  try {
+    const data = await api(`/api/draft/items/${id}/publish`, { method: 'POST' });
+    draft = data.draft || draft;
+    showFlash('Depoimento publicado.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function unpublishReviewItem(id) {
+  if (!confirm('Voltar este depoimento para rascunho? Ele sairá do site.')) return;
+  try {
+    const data = await api(`/api/draft/items/${id}/unpublish`, { method: 'POST' });
+    draft = data.draft || draft;
+    showFlash('Depoimento voltou para rascunho.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function deleteReviewItem(id) {
+  if (!confirm('Excluir este depoimento?')) return;
+  try {
+    draft = await api(`/api/draft/items/${id}`, { method: 'DELETE' });
+    if (reviewCurrentId === id) {
+      reviewEditor.classList.add('hidden');
+      resetReviewForm();
+    }
+    showFlash('Depoimento excluído.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
 }
 
 function escapeHtml(str) {
@@ -120,30 +288,6 @@ function escapeHtml(str) {
 
 function escapeAttr(str) {
   return escapeHtml(str).replace(/'/g, '&#39;');
-}
-
-async function saveItem(id, el) {
-  const payload = {
-    author: el.querySelector('[data-field="author"]').value,
-    text: el.querySelector('[data-field="text"]').value,
-    order: Number(el.querySelector('[data-field="order"]').value),
-  };
-  draft = await api(`/api/draft/items/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
-  renderDraft();
-  showFlash('Depoimento atualizado.', 'ok');
-}
-
-async function toggleVisible(id) {
-  const item = draft.items.find((i) => i.id === id);
-  if (!item) return;
-  draft = await api(`/api/draft/items/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ visible: item.visible === false }),
-  });
-  renderDraft();
 }
 
 async function moveItem(id, direction) {
@@ -329,7 +473,7 @@ publishBtn.addEventListener('click', async () => {
   publishBtn.disabled = true;
   try {
     const data = await api('/api/publish', { method: 'POST' });
-    showFlash(`Publicado! ${data.public.items.length} depoimentos visíveis no site.`, 'ok');
+    showFlash(`Lista republicada! ${data.public.items.length} depoimento(s) publicado(s) no site.`, 'ok');
   } catch (err) {
     showFlash(err.message, 'err');
   } finally {
@@ -337,24 +481,20 @@ publishBtn.addEventListener('click', async () => {
   }
 });
 
-addManualBtn.addEventListener('click', async () => {
-  try {
-    draft = await api('/api/draft/items', {
-      method: 'POST',
-      body: JSON.stringify({
-        author: manualAuthor.value,
-        text: manualText.value,
-        rating: manualRating.value,
-      }),
-    });
-    manualAuthor.value = '';
-    manualText.value = '';
-    renderDraft();
-    showFlash('Depoimento manual adicionado.', 'ok');
-  } catch (err) {
-    showFlash(err.message, 'err');
-  }
+document.getElementById('review-new-btn')?.addEventListener('click', () => openReviewEditor(null));
+document.getElementById('review-save-draft-btn')?.addEventListener('click', () => {
+  if (manualSiteStatus) manualSiteStatus.value = 'draft';
+  saveReview({ publishNow: false });
 });
+document.getElementById('review-publish-btn')?.addEventListener('click', () => saveReview({ publishNow: true }));
+document.getElementById('review-cancel-btn')?.addEventListener('click', () => {
+  reviewEditor.classList.add('hidden');
+  resetReviewForm();
+});
+reviewDeleteBtn?.addEventListener('click', () => {
+  if (reviewCurrentId) deleteReviewItem(reviewCurrentId);
+});
+reviewStatusFilter?.addEventListener('change', renderDraft);
 
 const params = new URLSearchParams(window.location.search);
 if (params.get('google') === 'connected') {
@@ -885,11 +1025,19 @@ document.getElementById('api-key-create-btn').addEventListener('click', async ()
 });
 
 document.querySelectorAll('.nav-item').forEach((item) => {
-  item.addEventListener('click', () => {
+  item.addEventListener('click', async () => {
     if (item.dataset.tab === 'blog') {
       loadBlogList();
       if (window.BlogEditor && !window.BlogEditor._initialized) {
         window.BlogEditor.init().then((ok) => { window.BlogEditor._initialized = ok; });
+      }
+    }
+    if (item.dataset.tab === 'depoimentos') {
+      try {
+        draft = await api('/api/draft');
+        renderDraft();
+      } catch (err) {
+        showFlash(err.message, 'err');
       }
     }
   });

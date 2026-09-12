@@ -34,7 +34,9 @@ const settings = require('./lib/settings');
 const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./openapi');
 const postsApiRouter = require('./routes/posts');
+const reviewsApiRouter = require('./routes/reviews');
 const publicPostsRouter = require('./routes/public-posts');
+const publicReviewsRouter = require('./routes/public-reviews');
 const adminPostsRouter = require('./routes/admin-posts');
 const adminApiKeysRouter = require('./routes/admin-api-keys');
 const adminSettingsRouter = require('./routes/admin-settings');
@@ -61,14 +63,17 @@ app.use(express.static(ROOT, {
 }));
 app.use('/uploads/blog', express.static(path.join(ROOT, 'data', 'uploads', 'blog')));
 
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
-  customSiteTitle: 'Nilma Alves — Blog API',
-}));
 app.get('/api/docs/openapi.json', (req, res) => res.json(openapiSpec));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+  customSiteTitle: 'Nilma Alves — Blog & Depoimentos API',
+  swaggerOptions: { url: '/api/docs/openapi.json' },
+}));
 app.use('/api/public', publicPostsRouter);
+app.use('/api/public', publicReviewsRouter);
 app.use('/api/public', publicInstagramRouter);
 app.use('/api/public', editorConfigRouter);
 app.use('/api/v1', postsApiRouter);
+app.use('/api/v1', reviewsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
@@ -207,11 +212,12 @@ app.put('/api/draft', authMiddleware, (req, res) => {
 
 app.post('/api/draft/items', authMiddleware, (req, res) => {
   const draft = readDraft();
-  const { author, text, rating } = req.body || {};
+  const { author, text, rating, area, visible, siteStatus } = req.body || {};
   if (!author?.trim() || !text?.trim()) {
     return res.status(400).json({ error: 'Autor e texto são obrigatórios.' });
   }
 
+  const finalSiteStatus = siteStatus === 'published' ? 'published' : 'draft';
   const maxOrder = draft.items.reduce((max, item) => Math.max(max, item.order || 0), 0);
   draft.items.push({
     id: newId(),
@@ -221,14 +227,22 @@ app.post('/api/draft/items', authMiddleware, (req, res) => {
     rating: Number(rating) || 5,
     text: text.trim(),
     textOriginal: text.trim(),
+    area: area ? String(area).trim() : '',
     publishedAt: new Date().toISOString().split('T')[0],
-    visible: true,
+    visible: visible === undefined ? true : Boolean(visible),
+    siteStatus: finalSiteStatus,
     order: maxOrder + 1,
     editedFields: ['text', 'author'],
     status: 'active',
   });
 
   writeDraft(draft);
+
+  if (finalSiteStatus === 'published') {
+    const { buildPublicFromDraft } = require('./lib/merge');
+    writePublic(buildPublicFromDraft(draft));
+  }
+
   res.json(draft);
 });
 
@@ -239,7 +253,7 @@ app.patch('/api/draft/items/:id', authMiddleware, (req, res) => {
     return res.status(404).json({ error: 'Depoimento não encontrado.' });
   }
 
-  const { author, text, rating, visible, order } = req.body || {};
+  const { author, text, rating, visible, order, area, siteStatus } = req.body || {};
 
   if (author != null && author !== item.author) {
     item.author = author;
@@ -261,8 +275,67 @@ app.patch('/api/draft/items/:id', authMiddleware, (req, res) => {
     item.order = Number(order);
     markFieldEdited(item, 'order');
   }
+  if (area != null) {
+    item.area = String(area).trim();
+  }
+  if (siteStatus === 'draft' || siteStatus === 'published') {
+    item.siteStatus = siteStatus;
+    if (siteStatus === 'published') {
+      item.visible = true;
+      item.publishedAt = item.publishedAt || new Date().toISOString().split('T')[0];
+    }
+  }
 
   writeDraft(draft);
+
+  if (siteStatus === 'published' || siteStatus === 'draft') {
+    const { buildPublicFromDraft } = require('./lib/merge');
+    writePublic(buildPublicFromDraft(draft));
+  }
+
+  res.json(draft);
+});
+
+app.post('/api/draft/items/:id/publish', authMiddleware, (req, res) => {
+  const draft = readDraft();
+  const item = draft.items.find((i) => i.id === req.params.id);
+  if (!item) {
+    return res.status(404).json({ error: 'Depoimento não encontrado.' });
+  }
+  item.siteStatus = 'published';
+  item.visible = true;
+  item.publishedAt = item.publishedAt || new Date().toISOString().split('T')[0];
+  writeDraft(draft);
+  const { buildPublicFromDraft } = require('./lib/merge');
+  const publicData = buildPublicFromDraft(draft);
+  writePublic(publicData);
+  res.json({ draft, public: publicData });
+});
+
+app.post('/api/draft/items/:id/unpublish', authMiddleware, (req, res) => {
+  const draft = readDraft();
+  const item = draft.items.find((i) => i.id === req.params.id);
+  if (!item) {
+    return res.status(404).json({ error: 'Depoimento não encontrado.' });
+  }
+  item.siteStatus = 'draft';
+  writeDraft(draft);
+  const { buildPublicFromDraft } = require('./lib/merge');
+  const publicData = buildPublicFromDraft(draft);
+  writePublic(publicData);
+  res.json({ draft, public: publicData });
+});
+
+app.delete('/api/draft/items/:id', authMiddleware, (req, res) => {
+  const draft = readDraft();
+  const before = draft.items.length;
+  draft.items = draft.items.filter((i) => i.id !== req.params.id);
+  if (draft.items.length === before) {
+    return res.status(404).json({ error: 'Depoimento não encontrado.' });
+  }
+  writeDraft(draft);
+  const { buildPublicFromDraft } = require('./lib/merge');
+  writePublic(buildPublicFromDraft(draft));
   res.json(draft);
 });
 
