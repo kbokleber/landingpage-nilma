@@ -1,57 +1,8 @@
 {
-  "updatedAt": "2026-09-12T21:48:00.000Z",
+  "updatedAt": "2026-09-14T12:00:00.000Z",
   "rating": null,
-  "totalReviews": 3,
+  "totalReviews": null,
   "googleMapsUrl": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
   "editedFields": [],
-  "items": [
-    {
-      "id": "1",
-      "source": "manual",
-      "author": "Maria Aparecida Faustino",
-      "authorUrl": "",
-      "rating": 5,
-      "text": "Eu estava numa situação de pensão muito difícil e a Dra. Nilma me acolheu com calma e paciência. Ela me explicou cada passo e me deixou segura. Em 4 meses resolvemos tudo no acordo, sem briga. Sou grata demais.",
-      "textOriginal": "Eu estava numa situação de pensão muito difícil e a Dra. Nilma me acolheu com calma e paciência. Ela me explicou cada passo e me deixou segura. Em 4 meses resolvemos tudo no acordo, sem briga. Sou grata demais.",
-      "area": "Direito de Família",
-      "publishedAt": "2026-07-15",
-      "visible": true,
-      "siteStatus": "published",
-      "order": 1,
-      "editedFields": [],
-      "status": "active"
-    },
-    {
-      "id": "2",
-      "source": "manual",
-      "author": "Carlos Eduardo Peçanha",
-      "authorUrl": "",
-      "rating": 5,
-      "text": "Comprei meu apartamento com a ajuda da Dra. Nilma. O que eu mais gostei foi a honestidade: ela me avisou de riscos no contrato que eu não tinha visto. Profissional que fala a verdade, sem prometer o que não pode.",
-      "textOriginal": "Comprei meu apartamento com a ajuda da Dra. Nilma. O que eu mais gostei foi a honestidade: ela me avisou de riscos no contrato que eu não tinha visto. Profissional que fala a verdade, sem prometer o que não pode.",
-      "area": "Direito Imobiliário",
-      "publishedAt": "2026-06-22",
-      "visible": true,
-      "siteStatus": "published",
-      "order": 2,
-      "editedFields": [],
-      "status": "active"
-    },
-    {
-      "id": "3",
-      "source": "manual",
-      "author": "Ana Beatriz Cotrim",
-      "authorUrl": "",
-      "rating": 5,
-      "text": "Minha mãe faleceu e eu não sabia como fazer o inventário. Dra. Nilma guiou nossa família num momento delicado com muito respeito e organização. Tudo resolvido em 7 meses, sem stress.",
-      "textOriginal": "Minha mãe faleceu e eu não sabia como fazer o inventário. Dra. Nilma guiou nossa família num momento delicado com muito respeito e organização. Tudo resolvido em 7 meses, sem stress.",
-      "area": "Sucessões",
-      "publishedAt": "2026-05-10",
-      "visible": true,
-      "siteStatus": "published",
-      "order": 3,
-      "editedFields": [],
-      "status": "active"
-    }
-  ]
+  "items": []
 }

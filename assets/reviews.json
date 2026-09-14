@@ -1,44 +1,7 @@
 {
-  "updatedAt": "2026-08-15T20:00:00.000Z",
+  "updatedAt": "2026-09-14T12:00:00.000Z",
   "rating": null,
-  "totalReviews": 3,
+  "totalReviews": null,
   "googleMapsUrl": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
-  "items": [
-    {
-      "id": "1",
-      "author": "Maria Aparecida Faustino",
-      "authorName": "Maria Aparecida Faustino",
-      "authorUrl": "",
-      "area": "Direito de Família",
-      "rating": 5,
-      "text": "Eu estava numa situação de pensão muito difícil e a Dra. Nilma me acolheu com calma e paciência. Ela me explicou cada passo e me deixou segura. Em 4 meses resolvemos tudo no acordo, sem briga. Sou grata demais.",
-      "publishedAt": "2026-07-15",
-      "date": "2026-07-15",
-      "source": "manual"
-    },
-    {
-      "id": "2",
-      "author": "Carlos Eduardo Peçanha",
-      "authorName": "Carlos Eduardo Peçanha",
-      "authorUrl": "",
-      "area": "Direito Imobiliário",
-      "rating": 5,
-      "text": "Comprei meu apartamento com a ajuda da Dra. Nilma. O que eu mais gostei foi a honestidade: ela me avisou de riscos no contrato que eu não tinha visto. Profissional que fala a verdade, sem prometer o que não pode.",
-      "publishedAt": "2026-06-22",
-      "date": "2026-06-22",
-      "source": "manual"
-    },
-    {
-      "id": "3",
-      "author": "Ana Beatriz Cotrim",
-      "authorName": "Ana Beatriz Cotrim",
-      "authorUrl": "",
-      "area": "Sucessões",
-      "rating": 5,
-      "text": "Minha mãe faleceu e eu não sabia como fazer o inventário. Dra. Nilma guiou nossa família num momento delicado com muito respeito e organização. Tudo resolvido em 7 meses, sem stress.",
-      "publishedAt": "2026-05-10",
-      "date": "2026-05-10",
-      "source": "manual"
-    }
-  ]
+  "items": []
 }

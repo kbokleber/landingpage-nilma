@@ -237,7 +237,7 @@
         </div>
       </section>
 
-      <section class="section reviews" id="depoimentos">
+      <section class="section reviews" id="depoimentos" hidden>
         <div class="wrap">
           <div class="section-head">
             <div>
@@ -246,9 +246,7 @@
             </div>
             <p class="section-intro">Publicamos apenas depoimentos reais autorizados. A confiança se constrói com escuta, clareza e responsabilidade profissional.</p>
           </div>
-          <div class="reviews-list" id="nilma-reviews-list">
-            <p class="empty-note">Carregando avaliações de clientes…</p>
-          </div>
+          <div class="reviews-list" id="nilma-reviews-list"></div>
         </div>
       </section>
 
@@ -410,16 +408,20 @@
         return false;
       }
 
-      fetch('/assets/reviews.json', { cache: 'no-store' })
+      fetch('/api/public/reviews', { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
+          var section = document.getElementById('depoimentos');
           var list = document.getElementById('nilma-reviews-list');
-          if (!list) return;
-          if (!data || !Array.isArray(data.items) || data.items.length === 0) {
-            list.innerHTML = '<p class="empty-note">Avaliações de clientes serão exibidas aqui quando disponíveis.</p>';
+          if (!section || !list) return;
+          var items = (data && Array.isArray(data.items)) ? data.items : [];
+          if (!items.length) {
+            section.hidden = true;
+            list.innerHTML = '';
             return;
           }
-          list.innerHTML = data.items.slice(0, 6).map(function (it) {
+          section.hidden = false;
+          list.innerHTML = items.slice(0, 6).map(function (it) {
             var nome = it.authorName || it.author || 'Cliente';
             var area = it.area || it.areaDireito || '';
             var texto = (it.text || '').replace(/</g, '&lt;');
@@ -438,8 +440,8 @@
           }).join('');
         })
         .catch(function () {
-          var list = document.getElementById('nilma-reviews-list');
-          if (list) list.innerHTML = '<p class="empty-note">Avaliações de clientes serão exibidas aqui quando disponíveis.</p>';
+          var section = document.getElementById('depoimentos');
+          if (section) section.hidden = true;
         });
 
       fetch('/api/public/posts?limit=3', { cache: 'no-store' })
