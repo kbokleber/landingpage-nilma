@@ -1,201 +1,108 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conteúdos | Nilma Alves Advocacia</title>
-  <meta name="description" content="Artigos sobre Direito de Família, Sucessões e Planejamento Patrimonial.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --wine: #7f4258;
-      --wine-dark: #70354c;
-      --bg: #efefef;
-      --ink: #222;
-      --muted: #666;
-      --line: #e3e3e3;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Poppins', Arial, sans-serif;
-      background: #fff;
-      color: var(--ink);
-      line-height: 1.6;
-      font-weight: 300;
-    }
-    a { color: var(--wine-dark); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .top {
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-    }
-    .top .container {
-      width: min(1140px, 93%);
-      margin: 0 auto;
-      padding: 18px 0;
-    }
-    .menu {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
-    .menu a {
-      background: var(--wine-dark);
-      color: #fff;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 13px;
-      letter-spacing: 0.4px;
-      font-weight: 500;
-      line-height: 1;
-    }
-    .menu a:hover { filter: brightness(1.08); text-decoration: none; }
-
-    .page-header {
-      background: var(--bg);
-      padding: 50px 0;
-      text-align: center;
-    }
-    .page-header h1 {
-      font-size: 52px;
-      font-weight: 600;
-      color: var(--ink);
-    }
-    .page-header h1 .dot { color: var(--wine); }
-    .page-header p {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .container {
-      width: min(1140px, 93%);
-      margin: 0 auto;
-    }
-
-    .blog-grid {
-      padding: 60px 0 80px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 32px;
-    }
-
-    .post-card {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .post-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    .post-card-cover {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #ededed center/cover no-repeat;
-    }
-    .post-card-body {
-      padding: 20px 22px 24px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .post-card-date {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 6px;
-    }
-    .post-card-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--ink);
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
-    .post-card-excerpt {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 12px;
-      flex: 1;
-    }
-    .post-card-link {
-      font-size: 12px;
-      color: var(--wine-dark);
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    .empty-state, .error-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted);
-    }
-
-    footer.site-footer {
-      background: var(--bg);
-      padding: 24px 0;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    footer.site-footer a { color: var(--wine-dark); font-weight: 500; }
-
-    @media (max-width: 600px) {
-      .page-header h1 { font-size: 36px; }
-      .menu a { padding: 7px 12px; font-size: 10px; }
-      .blog-grid { padding: 32px 0 50px; gap: 20px; }
-    }
-  </style>
+  <title>Blog | Nilma Alves Advocacia</title>
+  <meta name="description" content="Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar.">
+  <meta name="theme-color" content="#5b2131">
+  <meta property="og:title" content="Blog | Nilma Alves Advocacia">
+  <meta property="og:description" content="Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar.">
+  <meta property="og:url" content="https://dev.nilmaalves.adv.br/blog.html">
+  <meta property="og:image" content="https://dev.nilmaalves.adv.br/assets/photos/hero-01.jpg">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://dev.nilmaalves.adv.br/blog.html">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="assets/site.css">
 </head>
-<body>
-  <header class="top">
-    <div class="container">
-      <nav class="menu" aria-label="Menu principal">
-        <a href="/">INÍCIO</a>
-        <a href="/#atuacao">ATUAÇÃO</a>
-        <a href="/planejamento-patrimonial.html">PLANEJAMENTO</a>
-        <a href="/sobre.html">SOBRE</a>
-        <a href="/blog.html">CONTEÚDOS</a>
-        <a href="/#contato">CONTATO</a>
+<body class="has-wa-fixed">
+  <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
+  <div class="site">
+    <div class="topline"></div>
+    <header class="wrap nav" aria-label="Navegação principal">
+      <a class="brand" href="index.html" aria-label="Nilma Alves Advocacia — início">
+        <img class="brand-logo" src="assets/nilma-alves-logo.png" alt="Nilma Alves Advocacia" width="400" height="179">
+      </a>
+      <nav class="links" aria-label="Menu">
+        <a href="index.html">Início</a>
+        <a href="index.html#atuacao">Atuação</a>
+        <a href="planejamento-patrimonial.html">Planejamento Patrimonial</a>
+        <a href="sobre.html">Sobre</a>
+        <a href="blog.html">Blog</a>
+        <a href="index.html#contato">Contato</a>
       </nav>
-    </div>
-  </header>
+      <a class="button" href="https://wa.me/5513981124710?text=Ol%C3%A1%2C%20Dra.%20Nilma.%20Vim%20pelo%20Blog%20e%20gostaria%20de%20agendar%20uma%20consulta." target="_blank" rel="noopener noreferrer">Agendar consulta <span aria-hidden="true">↗</span></a>
+    </header>
 
-  <section class="page-header">
-    <div class="container">
-      <h1>Conteúdos<span class="dot">.</span></h1>
-      <p>Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar.</p>
-    </div>
-  </section>
+    <main id="main-content">
+      <section class="page-hero">
+        <div class="wrap">
+          <nav class="breadcrumb" aria-label="Navegação estrutural">
+            <a href="index.html">Início</a><span aria-hidden="true">/</span><span>Blog</span>
+          </nav>
+          <p class="eyebrow">Informação para decisões conscientes</p>
+          <h1>Blog.</h1>
+          <p class="lead">Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar, em linguagem clara e responsável.</p>
+        </div>
+      </section>
 
-  <div class="container">
-    <div id="blog-grid" class="blog-grid">
-      <p class="empty-state">Carregando posts...</p>
-    </div>
+      <section class="section blog">
+        <div class="wrap">
+          <div id="blog-grid" class="blog-list" aria-live="polite">
+            <p class="empty-note">Carregando artigos…</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section complementary">
+        <div class="wrap">
+          <div>
+            <span class="kicker">Próximo passo</span>
+            <h2>Prefere orientação personalizada?</h2>
+            <p class="section-intro">Cada família tem uma história. Agende uma consulta para avaliar sua situação com clareza e estratégia.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="button" href="https://wa.me/5513981124710?text=Ol%C3%A1%2C%20Dra.%20Nilma.%20Vim%20pelo%20Blog%20e%20gostaria%20de%20agendar%20uma%20consulta." target="_blank" rel="noopener noreferrer">Agendar consulta pelo WhatsApp <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="index.html#atuacao">Conhecer a atuação</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot" aria-label="Rodapé">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div>
+            <div class="foot-brand">Nilma Alves Advocacia</div>
+            <p>Direito de Família, Sucessões e Planejamento Patrimonial. Atendimento em Guarujá/SP e online.</p>
+          </div>
+          <div class="foot-col">
+            <h3>Navegação</h3>
+            <a href="planejamento-patrimonial.html">Planejamento</a>
+            <a href="inventarios-sucessoes.html">Inventários</a>
+            <a href="direito-de-familia.html">Família</a>
+            <a href="blog.html">Blog</a>
+            <a href="index.html#contato">Contato</a>
+          </div>
+          <div class="foot-col">
+            <h3>Institucional</h3>
+            <a href="privacidade.html">Privacidade</a>
+            <a href="termos.html">Termos de uso</a>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <span>© <span class="nilma-year"></span> Nilma Alves Advocacia · OAB/SP 268.128</span>
+          <span>Criado por <a href="https://kbosolucoes.com.br" target="_blank" rel="noopener noreferrer">KBO Soluções</a></span>
+        </div>
+      </div>
+    </footer>
+    <a class="button wa-fixed" href="https://wa.me/5513981124710?text=Ol%C3%A1%2C%20Dra.%20Nilma.%20Vim%20pelo%20Blog%20e%20gostaria%20de%20agendar%20uma%20consulta." target="_blank" rel="noopener noreferrer">WhatsApp · Agendar consulta</a>
   </div>
 
-  <footer class="site-footer">
-    <div class="container">
-      © <span id="year"></span> Nilma Alves Advocacia
-      &nbsp;·&nbsp;
-      by <a href="https://kbosolucoes.com.br" target="_blank" rel="noreferrer noopener">KBO Soluções</a>
-    </div>
-  </footer>
-
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+    document.querySelectorAll('.nilma-year').forEach(function (el) {
+      el.textContent = new Date().getFullYear();
+    });
 
     function escapeHtml(str) {
       return String(str || '')
@@ -209,7 +116,9 @@
       if (!iso) return '';
       try {
         return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-      } catch { return ''; }
+      } catch {
+        return '';
+      }
     }
 
     async function loadPosts() {
@@ -217,27 +126,27 @@
       try {
         const res = await fetch('/api/public/posts?limit=50');
         if (res.status === 401) {
-          grid.innerHTML = '<p class="error-state">API do blog indisponível. Contate o administrador.</p>';
+          grid.innerHTML = '<p class="empty-note">Blog temporariamente indisponível. Tente novamente em breve.</p>';
           return;
         }
         const data = await res.json();
         if (!data.items || !data.items.length) {
-          grid.innerHTML = '<p class="empty-state">Nenhum post publicado ainda. Volte em breve!</p>';
+          grid.innerHTML = '<p class="empty-note">Nenhum artigo publicado ainda. Volte em breve.</p>';
           return;
         }
         grid.innerHTML = data.items.map((p) => `
-          <a class="post-card" href="/post.html?slug=${encodeURIComponent(p.slug)}">
-            <div class="post-card-cover" ${p.coverImage ? `style="background-image:url('${escapeHtml(p.coverImage)}')"` : ''}></div>
-            <div class="post-card-body">
-              <div class="post-card-date">${escapeHtml(formatDate(p.publishedAt))}</div>
-              <div class="post-card-title">${escapeHtml(p.title)}</div>
-              <div class="post-card-excerpt">${escapeHtml(p.excerpt || '')}</div>
-              <span class="post-card-link">Ler mais →</span>
+          <a class="blog-card" href="post.html?slug=${encodeURIComponent(p.slug)}">
+            <div class="blog-card-media"${p.coverImage ? ` style="background-image:url('${escapeHtml(p.coverImage)}')"` : ''}></div>
+            <div class="blog-card-body">
+              <small>${escapeHtml(formatDate(p.publishedAt) || 'Blog')}</small>
+              <h3>${escapeHtml(p.title)}</h3>
+              <p>${escapeHtml(p.excerpt || '')}</p>
+              <span class="blog-card-link">Ler mais →</span>
             </div>
           </a>
         `).join('');
       } catch (err) {
-        grid.innerHTML = '<p class="error-state">Erro ao carregar os posts. Tente novamente mais tarde.</p>';
+        grid.innerHTML = '<p class="empty-note">Erro ao carregar os artigos. Tente novamente mais tarde.</p>';
       }
     }
 
