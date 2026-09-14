@@ -19,7 +19,7 @@ router.put('/settings', (req, res) => {
 
 router.post('/settings/:key/reveal', (req, res) => {
   const { password } = req.body || {};
-  const result = revealSecret(req.params.key, password);
+  const result = revealSecret(req.params.key, password, req.user?.id);
   if (!result.ok) return res.status(401).json({ error: result.error });
   res.json({ key: result.key, value: result.value });
 });

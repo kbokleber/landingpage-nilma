@@ -1,5 +1,6 @@
 const loginView = document.getElementById('login-view');
 const panelView = document.getElementById('panel-view');
+const loginUsername = document.getElementById('login-username');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
@@ -23,6 +24,7 @@ const reviewDeleteBtn = document.getElementById('review-delete-btn');
 
 let draft = null;
 let reviewCurrentId = null;
+let currentUser = null;
 let token = localStorage.getItem('admin_token') || '';
 
 function showFlash(text, type = 'info') {
@@ -302,6 +304,10 @@ async function moveItem(id, direction) {
 function showPanel() {
   loginView.classList.add('hidden');
   panelView.classList.remove('hidden');
+  const welcome = document.querySelector('.welcome-text');
+  if (welcome && currentUser) {
+    welcome.textContent = `Olá, ${currentUser.name || currentUser.username}`;
+  }
   return api('/api/draft').then((data) => {
     draft = data;
     renderDraft();
@@ -312,11 +318,13 @@ async function tryAutoLogin() {
   try {
     const me = await api('/api/auth/me');
     if (me.authenticated) {
+      currentUser = me.user || null;
       await showPanel();
       return;
     }
   } catch {
     token = '';
+    currentUser = null;
     localStorage.removeItem('admin_token');
   }
 }
@@ -327,10 +335,15 @@ loginBtn.addEventListener('click', async () => {
   try {
     const data = await api('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ password: passwordInput.value }),
+      body: JSON.stringify({
+        username: (loginUsername && loginUsername.value.trim()) || 'admin',
+        password: passwordInput.value,
+      }),
     });
     token = data.token;
+    currentUser = data.user || null;
     localStorage.setItem('admin_token', token);
+    passwordInput.value = '';
     await showPanel();
   } catch (err) {
     loginError.textContent = err.message;
@@ -932,7 +945,6 @@ const SETTINGS_GROUPS = {
 
 const SETTINGS_LABELS = {
   PORT: { group: 'site', label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
-  ADMIN_PASSWORD: { group: 'site', label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
   BLOG_UPLOAD_MAX_MB: { group: 'site', label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
   EDITOR_FONTS: { group: 'site', label: 'Editor — Fontes disponíveis', help: 'Uma por linha. Define o que aparece no seletor de fonte.', type: 'list' },
   EDITOR_FONT_DEFAULT: { group: 'site', label: 'Editor — Fonte padrão', help: 'Tem que estar na lista acima.', type: 'text' },
@@ -1169,6 +1181,118 @@ document.querySelectorAll('.nav-item').forEach((item) => {
       loadSettings();
       loadApiKeys();
     }
+    if (item.dataset.tab === 'usuarios') {
+      loadUsersPanel();
+    }
   });
+});
+
+// ============== USUÁRIOS ==============
+const usersList = document.getElementById('users-list');
+
+async function loadUsersPanel() {
+  if (!usersList) return;
+  try {
+    const data = await api('/api/admin/users');
+    if (!data.items?.length) {
+      usersList.innerHTML = '<p class="sub">Nenhum usuário cadastrado.</p>';
+      return;
+    }
+    usersList.innerHTML = data.items.map((u) => `
+      <div class="blog-item" data-user-id="${u.id}">
+        <div class="blog-item-info">
+          <div class="blog-item-title">${escapeHtml(u.name || u.username)} <span class="sub">@${escapeHtml(u.username)}</span></div>
+          <div class="blog-item-meta">
+            <span class="blog-item-status ${u.active ? 'published' : 'draft'}">${u.active ? 'ativo' : 'inativo'}</span>
+            <span>${escapeHtml(u.role)}</span>
+            ${u.lastLoginAt ? `<span>Último login: ${new Date(u.lastLoginAt).toLocaleString('pt-BR')}</span>` : '<span>Nunca logou</span>'}
+          </div>
+        </div>
+        <div class="blog-item-actions">
+          <button class="btn outline" type="button" data-action="reset-pass" data-id="${u.id}">Redefinir senha</button>
+          ${u.id !== currentUser?.id ? `<button class="btn outline" type="button" data-action="toggle" data-id="${u.id}" data-active="${u.active ? '1' : '0'}">${u.active ? 'Desativar' : 'Ativar'}</button>` : ''}
+          ${u.id !== currentUser?.id ? `<button class="btn outline danger" type="button" data-action="delete" data-id="${u.id}">Excluir</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    usersList.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.id);
+        const action = btn.dataset.action;
+        try {
+          if (action === 'reset-pass') {
+            const newPassword = prompt('Nova senha (mín. 8 caracteres):');
+            if (!newPassword) return;
+            await api(`/api/admin/users/${id}/password`, {
+              method: 'POST',
+              body: JSON.stringify({ newPassword }),
+            });
+            showFlash('Senha redefinida.', 'ok');
+          } else if (action === 'toggle') {
+            const next = btn.dataset.active !== '1';
+            await api(`/api/admin/users/${id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ active: next }),
+            });
+            showFlash(next ? 'Usuário ativado.' : 'Usuário desativado.', 'ok');
+            loadUsersPanel();
+          } else if (action === 'delete') {
+            if (!confirm('Excluir este usuário?')) return;
+            await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+            showFlash('Usuário excluído.', 'ok');
+            loadUsersPanel();
+          }
+        } catch (err) {
+          showFlash(err.message, 'err');
+        }
+      });
+    });
+  } catch (err) {
+    usersList.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+document.getElementById('user-change-password-btn')?.addEventListener('click', async () => {
+  const status = document.getElementById('user-password-status');
+  const currentPassword = document.getElementById('user-current-password')?.value || '';
+  const newPassword = document.getElementById('user-new-password')?.value || '';
+  try {
+    await api('/api/admin/users/me/password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (status) status.textContent = 'Senha alterada. Faça login novamente.';
+    showFlash('Senha alterada. Entre novamente.', 'ok');
+    token = '';
+    currentUser = null;
+    localStorage.removeItem('admin_token');
+    panelView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+  } catch (err) {
+    if (status) status.textContent = err.message;
+    showFlash(err.message, 'err');
+  }
+});
+
+document.getElementById('user-create-btn')?.addEventListener('click', async () => {
+  try {
+    await api('/api/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: document.getElementById('user-new-username')?.value,
+        name: document.getElementById('user-new-name')?.value,
+        password: document.getElementById('user-create-password')?.value,
+        role: document.getElementById('user-new-role')?.value || 'admin',
+      }),
+    });
+    showFlash('Usuário criado.', 'ok');
+    document.getElementById('user-new-username').value = '';
+    document.getElementById('user-new-name').value = '';
+    document.getElementById('user-create-password').value = '';
+    loadUsersPanel();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
 });
 

@@ -4,14 +4,14 @@ const crypto = require('crypto');
 const { getDb } = require('./db');
 
 function adminPassword() {
-  // Lazy require para evitar ciclo (auth.js -> settings.js -> auth.js)
-  return require('./auth').getAdminPassword();
+  // Chave de criptografia de secrets (não é senha de login)
+  return require('./secrets').getSecretsKey();
 }
 
 const DEFAULTS = {
   PORT: '3001',
-  ADMIN_PASSWORD: 'nilma-admin',
   BLOG_UPLOAD_MAX_MB: '5',
+  SECRETS_KEY: '',
   EDITOR_FONTS: JSON.stringify([
     'Poppins', 'Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma', 'Trebuchet MS',
   ]),
@@ -30,8 +30,8 @@ const DEFAULTS = {
 
 const ENV_KEYS = {
   PORT: 'PORT',
-  ADMIN_PASSWORD: 'ADMIN_PASSWORD',
   BLOG_UPLOAD_MAX_MB: 'BLOG_UPLOAD_MAX_MB',
+  SECRETS_KEY: 'SECRETS_KEY',
   EDITOR_FONTS: 'EDITOR_FONTS',
   EDITOR_FONT_DEFAULT: 'EDITOR_FONT_DEFAULT',
   EDITOR_FONT_SIZES: 'EDITOR_FONT_SIZES',
@@ -42,7 +42,7 @@ const ENV_KEYS = {
   EDITOR_BG_COLOR_DEFAULT: 'EDITOR_BG_COLOR_DEFAULT',
 };
 
-// ADMIN_PASSWORD fica em texto puro (para login funcionar sem dependência circular).
+// SECRETS_KEY é ocultada na UI (filtro em getAll); armazenada em texto no DB.
 const SENSITIVE = new Set([]);
 const SECRETS_PREAMBLE = 'enc:v1:';
 
@@ -176,17 +176,24 @@ function get(key) {
   return DEFAULTS[key] ?? '';
 }
 
+/** Lê só o valor no banco, sem fallback de default/env. */
+function getRaw(key) {
+  const db = getDb();
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row && row.value != null ? row.value : null;
+}
+
 function getAll() {
   const db = getDb();
   const rows = db.prepare('SELECT key, value, updated_at FROM settings ORDER BY key').all();
   const env = { ...readDotEnv(path.join(__dirname, '..', '..', '.env')), ...process.env };
-  const items = Object.keys(DEFAULTS).map((key) => {
+  const HIDDEN = new Set(['SECRETS_KEY']);
+  const items = Object.keys(DEFAULTS).filter((key) => !HIDDEN.has(key)).map((key) => {
     const row = rows.find((r) => r.key === key);
     let value = '';
     let hasValue = false;
     if (row && row.value != null && row.value !== '') {
       hasValue = true;
-      // Para sensíveis, nunca devolver o valor em getAll (precisa do /reveal)
       if (SENSITIVE.has(key)) {
         value = '';
       } else {
@@ -230,12 +237,18 @@ function setMany(values) {
   tx(values);
 }
 
-function revealSecret(key, password) {
+function revealSecret(key, password, userId) {
   if (!SENSITIVE.has(key)) return { ok: false, error: 'Esta configuração não é sensível.' };
   if (typeof password !== 'string' || password === '') {
     return { ok: false, error: 'Senha é obrigatória.' };
   }
-  if (password !== adminPassword()) {
+  try {
+    const users = require('./users');
+    const userRow = users.findById(userId);
+    if (!userRow || !users.verifyPassword(password, userRow.password_hash)) {
+      return { ok: false, error: 'Senha incorreta.' };
+    }
+  } catch {
     return { ok: false, error: 'Senha incorreta.' };
   }
   const db = getDb();
@@ -247,7 +260,7 @@ function revealSecret(key, password) {
     const plain = isEncrypted(row.value) ? decryptSecret(row.value) : row.value;
     return { ok: true, key, value: plain };
   } catch (err) {
-    return { ok: false, error: 'Não foi possível revelar. A senha do admin pode ter sido alterada desde que o valor foi salvo.' };
+    return { ok: false, error: 'Não foi possível revelar o valor.' };
   }
 }
 
@@ -257,6 +270,7 @@ module.exports = {
   migrateFromEnv,
   ensureMigrated,
   get,
+  getRaw,
   getAll,
   setMany,
   revealSecret,

@@ -27,7 +27,7 @@ Por padrão o servidor sobe em `http://localhost:3001`.
 - **Painel admin:** http://localhost:3001/admin/
 - **Swagger (API):** http://localhost:3001/api/docs
 
-A senha admin padrão é `nilma-admin` — **troque na primeira execução** em `Configurações` → `Senha do admin`.
+Acesso ao admin: usuário/senha na tabela `users` (hash scrypt). No primeiro start o sistema cria `admin` (migra senha antiga ou gera senha aleatória no log). Troque em **Admin → Usuários**. Não há mais senha padrão chumbada no código.
 
 ---
 

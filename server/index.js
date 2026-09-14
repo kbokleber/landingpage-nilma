@@ -11,7 +11,9 @@ const {
   authMiddleware,
   getTokenFromRequest,
   validateSession,
+  getSession,
 } = require('./lib/auth');
+const users = require('./lib/users');
 
 const { getDb } = require('./lib/db');
 const settings = require('./lib/settings');
@@ -24,10 +26,14 @@ const publicReviewsRouter = require('./routes/public-reviews');
 const adminPostsRouter = require('./routes/admin-posts');
 const adminApiKeysRouter = require('./routes/admin-api-keys');
 const adminSettingsRouter = require('./routes/admin-settings');
+const adminUsersRouter = require('./routes/admin-users');
 const editorConfigRouter = require('./routes/editor-config');
 
 settings.ensureMigrated();
 getDb();
+users.ensureBootstrapAdmin();
+// Garante SECRETS_KEY persistida (criptografia de API keys)
+require('./lib/secrets').getSecretsKey();
 
 const ROOT = path.join(__dirname, '..');
 const app = express();
@@ -61,6 +67,7 @@ app.use('/api/v1', reviewsApiRouter);
 app.use('/api/admin', adminPostsRouter);
 app.use('/api/admin', adminApiKeysRouter);
 app.use('/api/admin', adminSettingsRouter);
+app.use('/api/admin', adminUsersRouter);
 
 app.get('/api/admin/diag', authMiddleware, (req, res) => {
   const { dbPath } = require('./lib/db');
@@ -80,21 +87,23 @@ app.post('/api/admin/reset-password', (req, res) => {
   const expected = process.env.ADMIN_RESET_TOKEN || '';
   const provided = String(req.body?.token || '');
   const newPassword = String(req.body?.newPassword || '');
+  const username = String(req.body?.username || 'admin').trim();
   if (!expected) {
     return res.status(503).json({ error: 'Reset desabilitado. Defina ADMIN_RESET_TOKEN no .env para habilitar.' });
   }
   if (!provided || provided !== expected) {
     return res.status(401).json({ error: 'Token inválido.' });
   }
-  if (!newPassword || newPassword.length < 4) {
-    return res.status(400).json({ error: 'Nova senha deve ter pelo menos 4 caracteres.' });
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ error: 'Nova senha deve ter pelo menos 8 caracteres.' });
   }
   try {
-    const db = getDb();
-    db.prepare(`
-      INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
-    `).run('ADMIN_PASSWORD', newPassword);
+    const row = users.findByUsername(username);
+    if (!row) {
+      users.createUser({ username, password: newPassword, name: 'Administrador', role: 'admin' });
+    } else {
+      users.updatePassword(row.id, newPassword);
+    }
     res.json({ ok: true, message: 'Senha redefinida com sucesso.' });
   } catch (err) {
     res.status(500).json({ error: 'Falha ao redefinir senha: ' + err.message });
@@ -102,16 +111,18 @@ app.post('/api/admin/reset-password', (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
-  const token = login(req.body?.password || '');
-  if (!token) {
-    return res.status(401).json({ error: 'Senha incorreta.' });
+  const username = req.body?.username || req.body?.user || 'admin';
+  const password = req.body?.password || '';
+  const result = login(username, password);
+  if (!result) {
+    return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
   }
-  res.cookie('admin_token', token, {
+  res.cookie('admin_token', result.token, {
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 12 * 60 * 60 * 1000,
   });
-  res.json({ ok: true, token });
+  res.json({ ok: true, token: result.token, user: result.user });
 });
 
 app.post('/api/auth/logout', (req, res) => {
@@ -123,7 +134,15 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/me', (req, res) => {
   const token = getTokenFromRequest(req);
-  res.json({ authenticated: validateSession(token) });
+  const session = getSession(token);
+  if (!session) {
+    return res.json({ authenticated: false });
+  }
+  const row = users.findById(session.userId);
+  res.json({
+    authenticated: true,
+    user: users.toPublicUser(row),
+  });
 });
 
 app.get('/api/draft', authMiddleware, (_req, res) => {
