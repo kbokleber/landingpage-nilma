@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
-const { readDraft, writeDraft, writePublic, newId } = require('./lib/storage');
+const { readDraft, writeDraft, writePublic, ensureReviewsSynced, newId } = require('./lib/storage');
 const { markFieldEdited, buildPublicFromDraft } = require('./lib/merge');
 const {
   login,
@@ -34,6 +34,8 @@ getDb();
 users.ensureBootstrapAdmin();
 // Garante SECRETS_KEY persistida (criptografia de API keys)
 require('./lib/secrets').getSecretsKey();
+// Reconcilia depoimentos: volume Docker (draft) ↔ JSON público (site)
+ensureReviewsSynced();
 
 const ROOT = path.join(__dirname, '..');
 const app = express();
@@ -146,7 +148,8 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 app.get('/api/draft', authMiddleware, (_req, res) => {
-  res.json(readDraft());
+  // Garante que itens publicados no site voltem a aparecer no admin
+  res.json(ensureReviewsSynced());
 });
 
 app.put('/api/draft', authMiddleware, (req, res) => {
