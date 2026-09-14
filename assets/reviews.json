@@ -1,7 +1,20 @@
 {
-  "updatedAt": "2026-09-14T12:00:00.000Z",
+  "updatedAt": "2026-09-14T12:27:06.757Z",
   "rating": null,
   "totalReviews": null,
   "googleMapsUrl": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
-  "items": []
+  "items": [
+    {
+      "id": "ec50ee89-4885-493c-ad40-8e819577d0bb",
+      "author": "Kleber",
+      "authorName": "Kleber",
+      "authorUrl": "",
+      "rating": 5,
+      "text": "Adorei o atendimento!!",
+      "area": "Direito de família",
+      "publishedAt": "2026-09-14",
+      "date": "2026-09-14",
+      "source": "manual"
+    }
+  ]
 }

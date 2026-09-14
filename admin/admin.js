@@ -336,7 +336,7 @@ loginBtn.addEventListener('click', async () => {
     const data = await api('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({
-        username: (loginUsername && loginUsername.value.trim()) || 'admin',
+        username: (loginUsername && loginUsername.value.trim()) || '',
         password: passwordInput.value,
       }),
     });

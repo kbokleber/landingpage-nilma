@@ -111,7 +111,7 @@ app.post('/api/admin/reset-password', (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
-  const username = req.body?.username || req.body?.user || 'admin';
+  const username = req.body?.username || req.body?.user || '';
   const password = req.body?.password || '';
   const result = login(username, password);
   if (!result) {
