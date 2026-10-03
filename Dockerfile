@@ -1,14 +1,12 @@
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
-# better-sqlite3 publica binário pronto para Node 20 em Debian (glibc).
-# Não instalamos gcc/Python: essa etapa é o que deixava o redeploy do Coolify lento.
+# better-sqlite3 12.11.1 só publica binário pronto a partir do Node 22.
+# No Node 20 o npm tenta compilar do zero e o deploy falha sem Python e gcc.
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
-  && rm -rf /var/lib/apt/lists/* \
-  && npm ci --omit=dev
+RUN npm ci --omit=dev
 
 # Código
 COPY . .
