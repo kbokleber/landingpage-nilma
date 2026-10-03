@@ -512,6 +512,15 @@ body {
   display: block; margin-bottom: 10px; color: rgba(255,255,255,.62); font-size: 13px;
 }
 .site .foot-col a:hover { color: #d9bd8f; }
+.site .foot-social { display: flex; gap: 10px; margin-top: 4px; }
+.site .foot-social a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; margin: 0;
+  border: 1px solid rgba(255,255,255,.28); border-radius: 8px;
+  color: rgba(255,255,255,.88);
+}
+.site .foot-social a:hover { color: #d9bd8f; border-color: #d9bd8f; }
+.site .foot-social svg { display: block; width: 18px; height: 18px; }
 .site .foot-bottom {
   padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1);
   display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;
