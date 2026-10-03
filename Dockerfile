@@ -1,22 +1,14 @@
 FROM node:20-bookworm-slim
 
-# better-sqlite3 precisa compilar a extensão nativa (node-gyp + Python + make + gcc).
-# Debian slim já tem a toolchain, então a build é mais confiável.
-# Após a instalação das deps, removemos a toolchain para reduzir o tamanho da imagem.
+# better-sqlite3 publica binário pronto para Node 20 em Debian (glibc).
+# Não instalamos gcc/Python: essa etapa é o que deixava o redeploy do Coolify lento.
 
 WORKDIR /app
 
-# Dependências de build (só necessárias na etapa de npm ci)
 COPY package*.json ./
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    make \
-    g++ \
-    ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && npm ci --omit=dev \
-  && apt-get purge -y --auto-remove python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
+  && npm ci --omit=dev
 
 # Código
 COPY . .
