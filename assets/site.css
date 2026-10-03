@@ -217,6 +217,14 @@ body {
 .site #atendimento { background: var(--cream); }
 .site #atendimento .process-grid {
   padding: 58px; border: 1px solid var(--line); border-radius: 6px 28px 6px 6px; background: var(--sand);
+  align-items: start;
+}
+.site #atendimento .conduct-col {
+  display: flex; flex-direction: column; gap: 28px; min-width: 0;
+}
+.site #atendimento .portrait-frame img {
+  width: 100%; height: 460px; max-height: 460px; aspect-ratio: auto;
+  object-fit: cover; object-position: top center;
 }
 .site .promise {
   position: relative; padding: 44px; background: var(--wine); color: #fff;
@@ -260,6 +268,36 @@ body {
   box-shadow: 16px 16px 0 rgba(180,146,95,.16);
 }
 .site .about-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+
+/* Moldura compartilhada das fotos institucionais (Sobre e Atendimento) */
+.site .portrait-frame {
+  position: relative; overflow: visible; aspect-ratio: auto;
+  margin: 0 16px 16px 0; border-radius: 0; box-shadow: none; background: transparent;
+}
+.site .portrait-frame::before {
+  content: ""; position: absolute; z-index: 0;
+  top: 14px; left: 14px; width: 100%; height: 100%;
+  border: 1px solid #5b2131; border-radius: 8px; pointer-events: none;
+}
+.site .portrait-frame img {
+  position: relative; z-index: 1; display: block;
+  width: 100%; height: auto; aspect-ratio: 800 / 1000;
+  object-fit: cover; object-position: top center; border-radius: 8px;
+}
+
+/* Home: Sobre Nilma Alves — foto 40% + texto 60%, alinhados ao título */
+.site #sobre .about-layout {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 56px;
+  row-gap: 14px;
+  align-items: start;
+  max-width: 1080px;
+}
+.site #sobre .kicker { grid-column: 2; grid-row: 1; margin: 0; }
+.site #sobre .about-photo { grid-column: 1; grid-row: 2; align-self: start; }
+.site #sobre .about-copy { grid-column: 2; grid-row: 2; }
+.site #sobre .about-copy h2 { margin-top: 0; max-width: 14ch; }
+.site #sobre .credentials { justify-content: flex-start; }
 
 /* Complementary (imobiliário) */
 .site .complementary {
@@ -501,6 +539,14 @@ body {
   .site .about-layout,
   .site .foot-grid,
   .site .feature-grid { grid-template-columns: 1fr; }
+  .site #sobre .about-layout { grid-template-columns: 1fr; }
+  .site #sobre .about-photo { grid-column: 1; grid-row: 1; margin-right: 14px; }
+  .site #sobre .kicker { grid-column: 1; grid-row: 2; }
+  .site #sobre .about-copy { grid-column: 1; grid-row: 3; }
+  .site #sobre .about-photo img {
+    width: 100%; height: 420px; max-height: 420px; aspect-ratio: auto;
+    object-fit: cover; object-position: top center;
+  }
   .site .hero-grid { padding-top: 64px; gap: 25px; }
   .site .portrait { min-height: 480px; }
   .site .trust-grid { grid-template-columns: repeat(2, 1fr); }
@@ -526,7 +572,7 @@ body {
   .site .brand { flex-basis: 180px; }
   .site .brand-logo { width: 168px; height: 58px; }
   .site .hero {
-    background: #0f1014 center/cover no-repeat url("photos/hero-01.jpg");
+    background: #0f1014 center/cover no-repeat url("photos/hero-02.jpg");
   }
   .site .hero::after {
     content: ""; position: absolute; inset: 0; z-index: 1;
