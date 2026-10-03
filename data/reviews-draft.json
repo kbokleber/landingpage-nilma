@@ -1,43 +1,26 @@
 {
-  "updatedAt": "2026-06-11T17:03:05.099Z",
+  "updatedAt": "2026-09-14T12:27:06.757Z",
   "rating": null,
   "totalReviews": null,
   "googleMapsUrl": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
   "editedFields": [],
   "items": [
     {
-      "id": "a0d2ed62-7b90-494c-aa48-a201b35e5d4b",
+      "id": "ec50ee89-4885-493c-ad40-8e819577d0bb",
       "source": "manual",
-      "author": "Maria S.",
+      "author": "Kleber",
       "authorUrl": "",
       "rating": 5,
-      "text": "Excelente advogada, muito atenciosa e competente.",
-      "textOriginal": "Excelente advogada, muito atenciosa e competente.",
-      "publishedAt": "2026-06-11",
-      "visible": false,
+      "text": "Adorei o atendimento!!",
+      "textOriginal": "Adorei o atendimento!!",
+      "area": "Direito de família",
+      "publishedAt": "2026-09-14",
+      "visible": true,
+      "siteStatus": "published",
       "order": 1,
       "editedFields": [
         "text",
-        "author",
-        "visible"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "e382d5fc-5f02-404d-b58c-270f611e8621",
-      "source": "manual",
-      "author": "teste",
-      "authorUrl": "",
-      "rating": 5,
-      "text": "teste",
-      "textOriginal": "teste",
-      "publishedAt": "2026-06-11",
-      "visible": false,
-      "order": 2,
-      "editedFields": [
-        "text",
-        "author",
-        "visible"
+        "author"
       ],
       "status": "active"
     }

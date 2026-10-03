@@ -27,19 +27,27 @@ router.get('/posts', (req, res) => {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const offset = Math.max(0, Number(req.query.offset) || 0);
   const tag = req.query.tag || null;
+  // status: published (padrão) | draft | archived | all
+  const statusRaw = String(req.query.status || 'published').toLowerCase();
+  const allowed = ['published', 'draft', 'archived', 'all'];
+  const status = allowed.includes(statusRaw) ? statusRaw : 'published';
   const { total, items } = listAllPosts({
-    status: 'published',
+    status: status === 'all' ? null : status,
     tag,
     limit,
     offset,
-    includeDrafts: false,
+    includeDrafts: status === 'all' || status === 'draft' || status === 'archived',
   });
-  res.json({ total, limit, offset, items });
+  res.json({ total, limit, offset, status, items });
 });
 
-router.get('/posts/:slug', (req, res) => {
-  const post = getPostBySlug(req.params.slug);
-  if (!post || post.status !== 'published') {
+router.get('/posts/:slugOrId', (req, res) => {
+  const param = req.params.slugOrId;
+  // Aceita ID numérico (qualquer status) ou slug (qualquer status — API autenticada)
+  const post = /^\d+$/.test(param)
+    ? getPostById(Number(param))
+    : getPostBySlug(param);
+  if (!post) {
     return res.status(404).json({ error: 'Post não encontrado.' });
   }
   const images = getPostImages(post.id);

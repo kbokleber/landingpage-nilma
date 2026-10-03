@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb } = require('./db');
-const { getAdminPassword } = require('./auth');
+const { getSecretsKey } = require('./secrets');
 
 const KEY_PREFIX = 'nilma_';
 
@@ -18,7 +18,7 @@ function deriveKey(password, salt) {
 }
 
 function encryptForAdmin(plaintext) {
-  const password = getAdminPassword();
+  const password = getSecretsKey();
   const salt = crypto.randomBytes(16);
   const key = deriveKey(password, salt);
   const iv = crypto.randomBytes(12);
@@ -29,7 +29,7 @@ function encryptForAdmin(plaintext) {
 }
 
 function decryptForAdmin(b64) {
-  const password = getAdminPassword();
+  const password = getSecretsKey();
   const buf = Buffer.from(String(b64 || ''), 'base64');
   if (buf.length < 16 + 12 + 16) throw new Error('ciphertext inválido');
   const salt = buf.subarray(0, 16);

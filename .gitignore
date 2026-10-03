@@ -5,9 +5,9 @@ data/oauth-tokens.json
 data/blog.db
 data/blog.db-shm
 data/blog.db-wal
+data/reviews.json
 data/uploads/
 client_secret*.json
 dev-server*.log
-
-# Working copies (originais em assets/)
-assets/photos/
+scripts/capture-hero.mjs
+docs/hero-rollout/

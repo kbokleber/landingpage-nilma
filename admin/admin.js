@@ -1,25 +1,30 @@
 const loginView = document.getElementById('login-view');
 const panelView = document.getElementById('panel-view');
+const loginUsername = document.getElementById('login-username');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
 const flash = document.getElementById('flash');
-const googleStatus = document.getElementById('google-status');
-const googleNextStep = document.getElementById('google-next-step');
-const connectGoogleBtn = document.getElementById('connect-google-btn');
-const discoverLocationsBtn = document.getElementById('discover-locations-btn');
-const locationPicker = document.getElementById('location-picker');
-const syncBtn = document.getElementById('sync-btn');
 const publishBtn = document.getElementById('publish-btn');
 const reviewList = document.getElementById('review-list');
 const itemCount = document.getElementById('item-count');
 const manualAuthor = document.getElementById('manual-author');
 const manualRating = document.getElementById('manual-rating');
 const manualText = document.getElementById('manual-text');
-const addManualBtn = document.getElementById('add-manual-btn');
+const manualArea = document.getElementById('manual-area');
+const manualSiteStatus = document.getElementById('manual-site-status');
+const reviewEditor = document.getElementById('review-editor');
+const reviewEditorTitle = document.getElementById('review-editor-title');
+const reviewEditId = document.getElementById('review-edit-id');
+const reviewStatusFilter = document.getElementById('review-status-filter');
+const reviewFilterInfo = document.getElementById('review-filter-info');
+const reviewEditorStatus = document.getElementById('review-editor-status');
+const reviewDeleteBtn = document.getElementById('review-delete-btn');
 
 let draft = null;
+let reviewCurrentId = null;
+let currentUser = null;
 let token = localStorage.getItem('admin_token') || '';
 
 function showFlash(text, type = 'info') {
@@ -53,61 +58,214 @@ function stars(n) {
   return '★'.repeat(count) + '☆'.repeat(5 - count);
 }
 
+function siteStatusOf(item) {
+  if (item.siteStatus === 'draft' || item.siteStatus === 'published') return item.siteStatus;
+  return item.visible === false ? 'draft' : 'published';
+}
+
 function badgesForItem(item) {
   const badges = [];
-  if (item.source === 'manual') badges.push('<span class="badge manual">Manual</span>');
+  const siteStatus = siteStatusOf(item);
+  badges.push(`<span class="blog-item-status ${siteStatus}">${siteStatus === 'published' ? 'publicado' : 'rascunho'}</span>`);
+  if (item.source === 'manual' || item.source === 'api') badges.push('<span class="badge manual">Manual</span>');
   if (item.editedFields?.length) badges.push('<span class="badge edited">Editado</span>');
-  if (item.status === 'removed_from_google') badges.push('<span class="badge removed">Removido no Google</span>');
-  if (item.visible === false) badges.push('<span class="badge hidden">Oculto</span>');
   return badges.join('');
+}
+
+function setReviewEditorStatus(text) {
+  if (reviewEditorStatus) reviewEditorStatus.textContent = text || '';
+}
+
+function resetReviewForm() {
+  reviewCurrentId = null;
+  if (reviewEditId) reviewEditId.value = '';
+  if (reviewEditorTitle) reviewEditorTitle.textContent = 'Novo depoimento';
+  manualAuthor.value = '';
+  manualText.value = '';
+  manualRating.value = '5';
+  if (manualArea) manualArea.value = '';
+  if (manualSiteStatus) manualSiteStatus.value = 'draft';
+  if (reviewDeleteBtn) reviewDeleteBtn.hidden = true;
+  setReviewEditorStatus('');
+}
+
+function openReviewEditor(item) {
+  if (!item) {
+    resetReviewForm();
+    reviewEditor.classList.remove('hidden');
+    manualAuthor.focus();
+    return;
+  }
+  reviewCurrentId = item.id;
+  if (reviewEditId) reviewEditId.value = item.id;
+  if (reviewEditorTitle) reviewEditorTitle.textContent = `Editar: ${item.author || 'depoimento'}`;
+  manualAuthor.value = item.author || '';
+  manualText.value = item.text || '';
+  manualRating.value = String(item.rating || 5);
+  if (manualArea) manualArea.value = item.area || '';
+  if (manualSiteStatus) manualSiteStatus.value = siteStatusOf(item);
+  if (reviewDeleteBtn) reviewDeleteBtn.hidden = false;
+  reviewEditor.classList.remove('hidden');
+  setReviewEditorStatus('Depoimento carregado.');
+  reviewEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function readReviewForm() {
+  return {
+    author: manualAuthor.value.trim(),
+    text: manualText.value.trim(),
+    rating: Number(manualRating.value) || 5,
+    area: manualArea ? manualArea.value.trim() : '',
+    siteStatus: manualSiteStatus ? manualSiteStatus.value : 'draft',
+  };
 }
 
 function renderDraft() {
   if (!draft) return;
-  itemCount.textContent = String(draft.items.length);
+  if (itemCount) itemCount.textContent = String(draft.items.length);
 
-  if (!draft.items.length) {
-    reviewList.innerHTML = '<p class="sub">Nenhum depoimento no rascunho. Sincronize com o Google ou adicione manualmente.</p>';
+  const filter = reviewStatusFilter ? reviewStatusFilter.value : '';
+  let items = [...(draft.items || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+  if (filter === 'draft' || filter === 'published') {
+    items = items.filter((i) => siteStatusOf(i) === filter);
+  }
+
+  if (reviewFilterInfo) {
+    const filterTxt = filter ? ` (filtro: ${filter === 'draft' ? 'rascunhos' : 'publicados'})` : '';
+    reviewFilterInfo.textContent = `${items.length} depoimento${items.length === 1 ? '' : 's'}${filterTxt}`;
+  }
+
+  if (!items.length) {
+    reviewList.innerHTML = '<p class="sub">Nenhum depoimento encontrado. Clique em «Novo depoimento».</p>';
     return;
   }
 
-  const sorted = [...draft.items].sort((a, b) => (a.order || 0) - (b.order || 0));
-
-  reviewList.innerHTML = sorted.map((item) => `
-    <article class="review-item ${item.visible === false ? 'is-hidden' : ''}" data-id="${item.id}">
-      <div class="review-head">
-        <strong>${escapeHtml(item.author)}</strong>
-        <span class="stars" aria-label="${item.rating} estrelas">${stars(item.rating)}</span>
-        ${badgesForItem(item)}
-        ${item.publishedAt ? `<span class="sub" style="margin:0">${item.publishedAt}</span>` : ''}
-      </div>
-      <textarea data-field="text" aria-label="Texto do depoimento">${escapeHtml(item.text)}</textarea>
-      <div class="grid-2">
-        <div>
-          <label>Autor</label>
-          <input type="text" data-field="author" value="${escapeAttr(item.author)}">
+  reviewList.innerHTML = items.map((item) => {
+    const status = siteStatusOf(item);
+    const preview = String(item.text || '').slice(0, 140);
+    return `
+    <div class="blog-item" data-id="${escapeAttr(item.id)}">
+      <div class="blog-item-info">
+        <div class="blog-item-title">${escapeHtml(item.author || '(sem nome)')}</div>
+        <div class="blog-item-meta">
+          ${badgesForItem(item)}
+          <span class="stars">${stars(item.rating)}</span>
+          ${item.area ? `<span>${escapeHtml(item.area)}</span>` : ''}
+          ${item.publishedAt ? `<span>${escapeHtml(item.publishedAt)}</span>` : ''}
         </div>
-        <div>
-          <label>Ordem</label>
-          <input type="number" data-field="order" min="1" value="${item.order || 1}">
-        </div>
+        <p class="sub" style="margin:6px 0 0">${escapeHtml(preview)}${(item.text || '').length > 140 ? '…' : ''}</p>
       </div>
-      <div class="review-actions">
-        <button class="btn secondary" type="button" data-action="save">Salvar alterações</button>
-        <button class="btn outline" type="button" data-action="toggle">${item.visible === false ? 'Exibir' : 'Ocultar'}</button>
-        <button class="btn outline" type="button" data-action="up" aria-label="Subir">↑</button>
-        <button class="btn outline" type="button" data-action="down" aria-label="Descer">↓</button>
+      <div class="blog-item-actions">
+        <button class="btn secondary" type="button" data-action="edit" data-id="${escapeAttr(item.id)}">Editar</button>
+        ${status !== 'published'
+          ? `<button class="btn" type="button" data-action="publish" data-id="${escapeAttr(item.id)}">Publicar</button>`
+          : `<button class="btn outline" type="button" data-action="unpublish" data-id="${escapeAttr(item.id)}">Voltar a rascunho</button>`}
+        <button class="btn outline" type="button" data-action="up" data-id="${escapeAttr(item.id)}" aria-label="Subir">↑</button>
+        <button class="btn outline" type="button" data-action="down" data-id="${escapeAttr(item.id)}" aria-label="Descer">↓</button>
+        <button class="btn outline danger" type="button" data-action="delete" data-id="${escapeAttr(item.id)}">Excluir</button>
       </div>
-    </article>
-  `).join('');
+    </div>`;
+  }).join('');
 
-  reviewList.querySelectorAll('.review-item').forEach((el) => {
-    const id = el.dataset.id;
-    el.querySelector('[data-action="save"]').addEventListener('click', () => saveItem(id, el));
-    el.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleVisible(id));
-    el.querySelector('[data-action="up"]').addEventListener('click', () => moveItem(id, -1));
-    el.querySelector('[data-action="down"]').addEventListener('click', () => moveItem(id, 1));
+  reviewList.querySelectorAll('button[data-action]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'edit') {
+        const item = draft.items.find((i) => i.id === id);
+        if (item) openReviewEditor(item);
+      } else if (action === 'publish') publishReviewItem(id);
+      else if (action === 'unpublish') unpublishReviewItem(id);
+      else if (action === 'delete') deleteReviewItem(id);
+      else if (action === 'up') moveItem(id, -1);
+      else if (action === 'down') moveItem(id, 1);
+    });
   });
+}
+
+async function saveReview({ publishNow = false } = {}) {
+  const payload = readReviewForm();
+  if (!payload.author || !payload.text) {
+    setReviewEditorStatus('Preencha autor e texto.');
+    return;
+  }
+  if (publishNow) payload.siteStatus = 'published';
+
+  try {
+    if (reviewCurrentId) {
+      draft = await api(`/api/draft/items/${reviewCurrentId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      if (publishNow) {
+        const data = await api(`/api/draft/items/${reviewCurrentId}/publish`, { method: 'POST' });
+        draft = data.draft || draft;
+      }
+    } else {
+      draft = await api('/api/draft/items', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const created = [...draft.items].sort((a, b) => (b.order || 0) - (a.order || 0))[0];
+      if (created) {
+        reviewCurrentId = created.id;
+        if (reviewEditId) reviewEditId.value = created.id;
+        if (reviewEditorTitle) reviewEditorTitle.textContent = `Editar: ${created.author}`;
+        if (reviewDeleteBtn) reviewDeleteBtn.hidden = false;
+        if (publishNow && siteStatusOf(created) !== 'published') {
+          const data = await api(`/api/draft/items/${created.id}/publish`, { method: 'POST' });
+          draft = data.draft || draft;
+        }
+      }
+    }
+    if (manualSiteStatus) manualSiteStatus.value = publishNow ? 'published' : payload.siteStatus;
+    const msg = publishNow || payload.siteStatus === 'published' ? 'Depoimento publicado.' : 'Rascunho salvo.';
+    setReviewEditorStatus(`Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`);
+    showFlash(msg, 'ok');
+    renderDraft();
+  } catch (err) {
+    setReviewEditorStatus(err.message);
+    showFlash(err.message, 'err');
+  }
+}
+
+async function publishReviewItem(id) {
+  if (!confirm('Publicar este depoimento no site agora?')) return;
+  try {
+    const data = await api(`/api/draft/items/${id}/publish`, { method: 'POST' });
+    draft = data.draft || draft;
+    showFlash('Depoimento publicado.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function unpublishReviewItem(id) {
+  if (!confirm('Voltar este depoimento para rascunho? Ele sairá do site.')) return;
+  try {
+    const data = await api(`/api/draft/items/${id}/unpublish`, { method: 'POST' });
+    draft = data.draft || draft;
+    showFlash('Depoimento voltou para rascunho.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+}
+
+async function deleteReviewItem(id) {
+  if (!confirm('Excluir este depoimento?')) return;
+  try {
+    draft = await api(`/api/draft/items/${id}`, { method: 'DELETE' });
+    if (reviewCurrentId === id) {
+      reviewEditor.classList.add('hidden');
+      resetReviewForm();
+    }
+    showFlash('Depoimento excluído.', 'ok');
+    renderDraft();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
 }
 
 function escapeHtml(str) {
@@ -120,30 +278,6 @@ function escapeHtml(str) {
 
 function escapeAttr(str) {
   return escapeHtml(str).replace(/'/g, '&#39;');
-}
-
-async function saveItem(id, el) {
-  const payload = {
-    author: el.querySelector('[data-field="author"]').value,
-    text: el.querySelector('[data-field="text"]').value,
-    order: Number(el.querySelector('[data-field="order"]').value),
-  };
-  draft = await api(`/api/draft/items/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
-  renderDraft();
-  showFlash('Depoimento atualizado.', 'ok');
-}
-
-async function toggleVisible(id) {
-  const item = draft.items.find((i) => i.id === id);
-  if (!item) return;
-  draft = await api(`/api/draft/items/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ visible: item.visible === false }),
-  });
-  renderDraft();
 }
 
 async function moveItem(id, direction) {
@@ -167,60 +301,30 @@ async function moveItem(id, direction) {
   renderDraft();
 }
 
-function formatApiError(message) {
-  const text = String(message || '');
-  if (text.includes('Quota exceeded') || text.includes('quota metric')) {
-    return 'A API ainda não liberou cota para este projeto (0 requisições/min). Isso é normal enquanto o Google não aprova o formulário de acesso ao Business Profile. Aguarde o e-mail de aprovação — pode levar dias. Evite clicar várias vezes em «Descobrir perfil». Enquanto isso, adicione depoimentos manualmente e publique. Após aprovar: Cloud Console → Cotas → mybusinessaccountmanagement deve mostrar 300 QPM (não 0).';
-  }
-  if (text.includes('has not been used in project') || text.includes('is disabled')) {
-    const match = text.match(/project (\d+)/);
-    const project = match ? match[1] : '198494063026';
-    return `Ative as APIs do Google Business no Cloud Console (projeto ${project}) e aguarde 2–5 minutos: Account Management, Business Information e Google My Business API.`;
-  }
-  return text;
-}
-
-async function loadGoogleStatus() {
-  const status = await api('/api/google/status');
-  googleStatus.innerHTML = `
-    <span>Credenciais OAuth: <strong>${status.oauthConfigured ? 'Sim' : 'Não'}</strong></span>
-    <span>Conectado: <strong>${status.connected ? 'Sim' : 'Não'}</strong></span>
-    <span>Perfil selecionado: <strong>${status.locationConfigured ? 'Sim' : 'Não'}</strong></span>
-    ${status.locationName ? `<span>Location: <code>${escapeHtml(status.locationName)}</code></span>` : ''}
-  `;
-  connectGoogleBtn.disabled = !status.oauthConfigured;
-  discoverLocationsBtn.disabled = !status.connected;
-  syncBtn.disabled = !status.connected || !status.locationConfigured;
-
-  if (status.connected && !status.locationConfigured) {
-    googleNextStep.textContent =
-      'Conectado ao Google. Quando a API for aprovada, use «Descobrir perfil» → escolha o escritório → «Sincronizar». Se aparecer erro de cota, aguarde aprovação do formulário (Project Number 198494063026).';
-    googleNextStep.classList.remove('hidden');
-  } else if (status.locationConfigured) {
-    googleNextStep.textContent = 'Perfil pronto. Use «Sincronizar todos» e depois «Publicar no site».';
-    googleNextStep.classList.remove('hidden');
-  } else {
-    googleNextStep.classList.add('hidden');
-  }
-}
-
-async function showPanel() {
+function showPanel() {
   loginView.classList.add('hidden');
   panelView.classList.remove('hidden');
-  draft = await api('/api/draft');
-  renderDraft();
-  await loadGoogleStatus();
+  const welcome = document.querySelector('.welcome-text');
+  if (welcome && currentUser) {
+    welcome.textContent = `Olá, ${currentUser.name || currentUser.username}`;
+  }
+  return api('/api/draft').then((data) => {
+    draft = data;
+    renderDraft();
+  });
 }
 
 async function tryAutoLogin() {
   try {
     const me = await api('/api/auth/me');
     if (me.authenticated) {
+      currentUser = me.user || null;
       await showPanel();
       return;
     }
   } catch {
     token = '';
+    currentUser = null;
     localStorage.removeItem('admin_token');
   }
 }
@@ -231,10 +335,15 @@ loginBtn.addEventListener('click', async () => {
   try {
     const data = await api('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ password: passwordInput.value }),
+      body: JSON.stringify({
+        username: (loginUsername && loginUsername.value.trim()) || '',
+        password: passwordInput.value,
+      }),
     });
     token = data.token;
+    currentUser = data.user || null;
     localStorage.setItem('admin_token', token);
+    passwordInput.value = '';
     await showPanel();
   } catch (err) {
     loginError.textContent = err.message;
@@ -254,82 +363,11 @@ logoutBtn.addEventListener('click', async () => {
   loginView.classList.remove('hidden');
 });
 
-connectGoogleBtn.addEventListener('click', async () => {
-  try {
-    const data = await api('/api/google/connect');
-    window.location.href = data.url;
-  } catch (err) {
-    showFlash(err.message, 'err');
-  }
-});
-
-discoverLocationsBtn.addEventListener('click', async () => {
-  discoverLocationsBtn.disabled = true;
-  locationPicker.classList.remove('hidden');
-  locationPicker.innerHTML = '<p class="sub">Buscando estabelecimentos...</p>';
-  try {
-    const data = await api('/api/google/locations');
-    if (!data.locations?.length) {
-      locationPicker.innerHTML = '<p class="sub">Nenhum estabelecimento encontrado para esta conta.</p>';
-      return;
-    }
-    locationPicker.innerHTML = data.locations.map((loc) => `
-      <button type="button" class="location-option" data-name="${escapeAttr(loc.name)}">
-        <strong>${escapeHtml(loc.title)}</strong>
-        ${loc.address ? `<span>${escapeHtml(loc.address)}</span>` : ''}
-      </button>
-    `).join('');
-
-    locationPicker.querySelectorAll('.location-option').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        try {
-          await api('/api/google/location', {
-            method: 'POST',
-            body: JSON.stringify({ locationName: btn.dataset.name }),
-          });
-          locationPicker.querySelectorAll('.location-option').forEach((el) => {
-            el.classList.remove('is-selected');
-          });
-          btn.classList.add('is-selected');
-          showFlash('Perfil selecionado. Agora você pode sincronizar.', 'ok');
-          await loadGoogleStatus();
-        } catch (err) {
-          showFlash(err.message, 'err');
-        }
-      });
-    });
-  } catch (err) {
-    locationPicker.innerHTML = `<p class="message err">${escapeHtml(formatApiError(err.message))}</p>`;
-  } finally {
-    discoverLocationsBtn.disabled = false;
-    loadGoogleStatus();
-  }
-});
-
-syncBtn.addEventListener('click', async () => {
-  syncBtn.disabled = true;
-  try {
-    const data = await api('/api/sync', { method: 'POST' });
-    draft = data.draft;
-    renderDraft();
-    const s = data.summary;
-    showFlash(
-      `Sync concluído: ${s.added} novos, ${s.updated} atualizados, ${s.preserved} preservados (editados), ${s.removedFromGoogle} removidos no Google.`,
-      'ok'
-    );
-  } catch (err) {
-    showFlash(err.message, 'err');
-  } finally {
-    syncBtn.disabled = false;
-    loadGoogleStatus();
-  }
-});
-
 publishBtn.addEventListener('click', async () => {
   publishBtn.disabled = true;
   try {
     const data = await api('/api/publish', { method: 'POST' });
-    showFlash(`Publicado! ${data.public.items.length} depoimentos visíveis no site.`, 'ok');
+    showFlash(`Lista republicada! ${data.public.items.length} depoimento(s) publicado(s) no site.`, 'ok');
   } catch (err) {
     showFlash(err.message, 'err');
   } finally {
@@ -337,33 +375,20 @@ publishBtn.addEventListener('click', async () => {
   }
 });
 
-addManualBtn.addEventListener('click', async () => {
-  try {
-    draft = await api('/api/draft/items', {
-      method: 'POST',
-      body: JSON.stringify({
-        author: manualAuthor.value,
-        text: manualText.value,
-        rating: manualRating.value,
-      }),
-    });
-    manualAuthor.value = '';
-    manualText.value = '';
-    renderDraft();
-    showFlash('Depoimento manual adicionado.', 'ok');
-  } catch (err) {
-    showFlash(err.message, 'err');
-  }
+document.getElementById('review-new-btn')?.addEventListener('click', () => openReviewEditor(null));
+document.getElementById('review-save-draft-btn')?.addEventListener('click', () => {
+  if (manualSiteStatus) manualSiteStatus.value = 'draft';
+  saveReview({ publishNow: false });
 });
-
-const params = new URLSearchParams(window.location.search);
-if (params.get('google') === 'connected') {
-  showFlash('Google conectado. Agora clique em «Descobrir perfil» para escolher o escritório.', 'ok');
-  history.replaceState({}, '', '/admin/');
-} else if (params.get('google') === 'error') {
-  showFlash('Erro ao conectar Google Business. Verifique as credenciais.', 'err');
-  history.replaceState({}, '', '/admin/');
-}
+document.getElementById('review-publish-btn')?.addEventListener('click', () => saveReview({ publishNow: true }));
+document.getElementById('review-cancel-btn')?.addEventListener('click', () => {
+  reviewEditor.classList.add('hidden');
+  resetReviewForm();
+});
+reviewDeleteBtn?.addEventListener('click', () => {
+  if (reviewCurrentId) deleteReviewItem(reviewCurrentId);
+});
+reviewStatusFilter?.addEventListener('change', renderDraft);
 
 // Lógica de Navegação por Abas do Painel Admin
 const navItems = document.querySelectorAll('.nav-item');
@@ -372,12 +397,10 @@ const tabContents = document.querySelectorAll('.tab-content');
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
     const targetTab = item.dataset.tab;
-    
-    // Atualiza estado ativo dos botões do menu
+
     navItems.forEach((nav) => nav.classList.remove('active'));
     item.classList.add('active');
-    
-    // Alterna a exibição das abas de conteúdo
+
     tabContents.forEach((content) => {
       if (content.id === `tab-content-${targetTab}`) {
         content.classList.remove('hidden');
@@ -398,6 +421,7 @@ const blogTitle = document.getElementById('blog-title');
 const blogAuthor = document.getElementById('blog-author');
 const blogExcerpt = document.getElementById('blog-excerpt');
 const blogContent = document.getElementById('blog-content');
+const blogToolbar = document.getElementById('blog-toolbar');
 const blogCover = document.getElementById('blog-cover');
 const blogCoverInput = document.getElementById('blog-cover-input');
 const blogCoverPreview = document.getElementById('blog-cover-preview');
@@ -417,6 +441,7 @@ const apiKeyNew = document.getElementById('api-key-new');
 const apiKeyList = document.getElementById('api-key-list');
 
 let blogCurrentId = null;
+let blogCoverPendingFile = null;
 
 function setBlogStatus(text) {
   blogEditorStatus.textContent = text || '';
@@ -433,11 +458,21 @@ function renderCoverPreview(url) {
   blogCover.value = url || '';
 }
 
+function renderPendingCover(file) {
+  if (!file) return;
+  const objectUrl = URL.createObjectURL(file);
+  blogCoverPreview.innerHTML = `<img src="${escapeAttr(objectUrl)}" alt="Capa selecionada (prévia)">`;
+  blogCoverRemove.hidden = false;
+  blogCover.dataset.pendingName = file.name;
+  blogCover.dataset.pendingSize = String(file.size);
+}
+
 function readBlogForm() {
+  const contentHtml = window.BlogEditor ? window.BlogEditor.getHtml() : (blogContent.value || blogContent.innerHTML || '');
   return {
     title: blogTitle.value.trim(),
     excerpt: blogExcerpt.value.trim(),
-    contentHtml: blogContent.value,
+    contentHtml,
     coverImage: blogCover.value.trim(),
     author: blogAuthor.value.trim() || 'Dra. Nilma Alves',
     tags: blogTags.value.split(',').map((t) => t.trim()).filter(Boolean),
@@ -449,7 +484,12 @@ function fillBlogForm(post) {
   blogTitle.value = post.title || '';
   blogAuthor.value = post.author || 'Dra. Nilma Alves';
   blogExcerpt.value = post.excerpt || '';
-  blogContent.value = post.contentHtml || '';
+  if (window.BlogEditor) {
+    window.BlogEditor.setHtml(post.contentHtml || '<p></p>');
+  } else {
+    blogContent.value = post.contentHtml || '';
+  }
+  blogCoverPendingFile = null;
   renderCoverPreview(post.coverImage || '');
   blogTags.value = (post.tags || []).join(', ');
   blogStatus.value = post.status || 'draft';
@@ -561,9 +601,27 @@ async function saveBlogPost({ publishNow = false } = {}) {
     setBlogStatus('Preencha título e conteúdo.');
     return;
   }
+  const useMultipart = !!blogCoverPendingFile;
   try {
     let post;
-    if (blogCurrentId) {
+    if (useMultipart) {
+      const fd = new FormData();
+      fd.append('title', payload.title);
+      fd.append('excerpt', payload.excerpt || '');
+      fd.append('contentHtml', payload.contentHtml || '');
+      fd.append('author', payload.author || 'Dra. Nilma Alves');
+      fd.append('tags', payload.tags.join(','));
+      fd.append('status', payload.status || 'draft');
+      fd.append('cover', blogCoverPendingFile, blogCoverPendingFile.name);
+      const url = blogCurrentId ? `/api/admin/posts/${blogCurrentId}` : '/api/admin/posts';
+      const method = blogCurrentId ? 'PUT' : 'POST';
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(url, { method, body: fd, credentials: 'include', headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar.');
+      post = data;
+    } else if (blogCurrentId) {
       post = await api(`/api/admin/posts/${blogCurrentId}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
@@ -573,9 +631,12 @@ async function saveBlogPost({ publishNow = false } = {}) {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+    }
+    if (!blogCurrentId) {
       blogCurrentId = post.id;
       blogEditorTitle.textContent = `Editar post #${post.id}`;
     }
+    blogCoverPendingFile = null;
     if (publishNow && post.status !== 'published') {
       post = await api(`/api/admin/posts/${blogCurrentId}/publish`, { method: 'POST' });
     }
@@ -648,37 +709,13 @@ if (blogFilterClearBtn) {
 blogCoverInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (!blogCurrentId) {
-    showFlash('Salve o rascunho antes de enviar a capa.', 'err');
-    blogCoverInput.value = '';
-    return;
-  }
-  const formData = new FormData();
-  formData.append('cover', file);
-  setBlogStatus('Enviando capa...');
-  try {
-    const headers = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/posts/${blogCurrentId}/cover`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-      headers,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro no upload');
-    renderCoverPreview(data.coverImage);
-    showFlash('Capa atualizada.', 'ok');
-    setBlogStatus(`Capa salva às ${new Date().toLocaleTimeString('pt-BR')}.`);
-  } catch (err) {
-    showFlash(err.message, 'err');
-    setBlogStatus(err.message);
-  } finally {
-    blogCoverInput.value = '';
-  }
+  blogCoverPendingFile = file;
+  renderPendingCover(file);
+  setBlogStatus(`Capa "${file.name}" selecionada. Será enviada ao clicar em Salvar.`);
 });
 
 blogCoverRemove.addEventListener('click', async () => {
+  blogCoverPendingFile = null;
   if (!blogCurrentId) {
     renderCoverPreview('');
     return;
@@ -871,28 +908,55 @@ document.getElementById('api-key-create-btn').addEventListener('click', async ()
 });
 
 document.querySelectorAll('.nav-item').forEach((item) => {
-  item.addEventListener('click', () => {
+  item.addEventListener('click', async () => {
     if (item.dataset.tab === 'blog') {
       loadBlogList();
+      if (window.BlogEditor && !window.BlogEditor._initialized) {
+        window.BlogEditor.init().then((ok) => { window.BlogEditor._initialized = ok; });
+      }
+    }
+    if (item.dataset.tab === 'depoimentos') {
+      try {
+        draft = await api('/api/draft');
+        renderDraft();
+      } catch (err) {
+        showFlash(err.message, 'err');
+      }
     }
   });
 });
+
+// Inicializa o BlogEditor quando o modulo terminar de carregar (mesmo se a aba Blog ja for a ativa)
+if (window.BlogEditor) {
+  Promise.resolve().then(() => {
+    if (!window.BlogEditor._initialized) {
+      window.BlogEditor.init().then((ok) => { window.BlogEditor._initialized = ok; });
+    }
+  });
+}
 
 // ============== SETTINGS ==============
 const settingsForm = document.getElementById('settings-form');
 const settingsStatus = document.getElementById('settings-status');
 
-const SETTINGS_LABELS = {
-  PORT: { label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
-  ADMIN_PASSWORD: { label: 'Senha Administrativa', help: 'Texto puro. Valide após salvar.', type: 'password' },
-  GOOGLE_CLIENT_ID: { label: 'Google Client ID', help: 'OAuth 2.0 Client ID do Google Cloud.', type: 'text' },
-  GOOGLE_CLIENT_SECRET: { label: 'Google Client Secret', help: 'OAuth 2.0 Client Secret.', type: 'password' },
-  GOOGLE_REDIRECT_URI: { label: 'Google Redirect URI', help: 'URL de callback configurada no Google Cloud.', type: 'text' },
-  GBP_LOCATION_NAME: { label: 'GBP Location Name', help: 'Resource name da localização (accounts/XXX/locations/YYY).', type: 'text' },
-  BLOG_DB_PATH: { label: 'Banco do Blog (caminho)', help: 'Caminho relativo ao projeto. Vazio = data/blog.db. Requer reiniciar.', type: 'text' },
-  BLOG_UPLOAD_DIR: { label: 'Diretório de uploads do Blog', help: 'Vazio = data/uploads/blog. Requer reiniciar.', type: 'text' },
-  BLOG_UPLOAD_MAX_MB: { label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
+const SETTINGS_GROUPS = {
+  site: { label: 'Site', icon: '⚙️', help: 'Configurações gerais do servidor e da aplicação.' },
 };
+
+const SETTINGS_LABELS = {
+  PORT: { group: 'site', label: 'Porta do Servidor', help: 'Requer reiniciar o servidor após salvar.', type: 'number' },
+  BLOG_UPLOAD_MAX_MB: { group: 'site', label: 'Tamanho máximo de upload (MB)', help: 'Padrão: 5 MB.', type: 'number' },
+  EDITOR_FONTS: { group: 'site', label: 'Editor — Fontes disponíveis', help: 'Uma por linha. Define o que aparece no seletor de fonte.', type: 'list' },
+  EDITOR_FONT_DEFAULT: { group: 'site', label: 'Editor — Fonte padrão', help: 'Tem que estar na lista acima.', type: 'text' },
+  EDITOR_FONT_SIZES: { group: 'site', label: 'Editor — Tamanhos disponíveis (px)', help: 'Um por linha.', type: 'list' },
+  EDITOR_FONT_SIZE_DEFAULT: { group: 'site', label: 'Editor — Tamanho padrão (px)', help: 'Tem que estar na lista acima.', type: 'number' },
+  EDITOR_TEXT_COLORS: { group: 'site', label: 'Editor — Cores de texto', help: 'Hex (#rrggbb), uma por linha.', type: 'list' },
+  EDITOR_BG_COLORS: { group: 'site', label: 'Editor — Cores de fundo', help: 'Hex (#rrggbb) ou "transparent", uma por linha.', type: 'list' },
+  EDITOR_TEXT_COLOR_DEFAULT: { group: 'site', label: 'Editor — Cor de texto padrão', help: 'Hex (#rrggbb). Tem que estar na lista de cores.', type: 'text' },
+  EDITOR_BG_COLOR_DEFAULT: { group: 'site', label: 'Editor — Cor de fundo padrão', help: 'Hex (#rrggbb) ou "transparent".', type: 'text' },
+};
+
+let currentSettingsGroup = 'site';
 
 let settingsDirty = false;
 
@@ -902,10 +966,64 @@ function setSettingsStatus(text, kind) {
 }
 
 function renderSettingsForm(items) {
-  settingsForm.innerHTML = items.map((item) => {
+  // Filtra só o grupo ativo
+  const filtered = items.filter((item) => {
+    const meta = SETTINGS_LABELS[item.key];
+    if (!meta) return true; // desconhecido: mostra em "site"
+    return meta.group === currentSettingsGroup;
+  });
+  if (filtered.length === 0) {
+    settingsForm.innerHTML = '<p class="sub" style="padding:16px 0">Nenhuma configuração neste grupo.</p>';
+    return;
+  }
+  settingsForm.innerHTML = filtered.map((item) => {
     const meta = SETTINGS_LABELS[item.key] || { label: item.key };
     const type = meta.type || 'text';
-    const safeValue = type === 'password' ? '' : escapeAttr(item.value || '');
+    const isMasked = type === 'password' || !!item.sensitive;
+    const storedValue = item.value || '';
+    const safeValue = isMasked ? '' : escapeAttr(storedValue);
+    const placeholder = isMasked
+      ? (item.hasValue ? '(clique no 👁 para revelar)' : '(vazio)')
+      : '';
+    const inputHtml = isMasked
+      ? `
+        <div class="setting-secret">
+          <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
+            type="password"
+            value=""
+            autocomplete="new-password"
+            placeholder="${placeholder}"
+            data-masked="1"
+            data-stored-value="${escapeAttr(storedValue)}"
+            data-original="">
+          <button class="btn outline" type="button" data-action="toggle-mask" data-key="${escapeAttr(item.key)}" title="Mostrar/ocultar valor">👁</button>
+        </div>
+      `
+      : type === 'list'
+      ? (() => {
+          // Listas sao JSON no banco, mas no form aparecem como texto linha-a-linha
+          let pretty = storedValue;
+          try {
+            const arr = JSON.parse(storedValue);
+            if (Array.isArray(arr)) pretty = arr.join('\n');
+          } catch {}
+          return `
+            <textarea id="setting-${item.key}" name="${escapeAttr(item.key)}"
+              class="setting-list"
+              rows="6"
+              autocomplete="off"
+              data-original="${escapeAttr(storedValue)}"
+              placeholder="Um item por linha">${escapeHtml(pretty)}</textarea>
+          `;
+        })()
+      : `
+        <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
+          type="${type === 'number' ? 'number' : 'text'}"
+          value="${safeValue}"
+          autocomplete="off"
+          placeholder=""
+          data-original="${safeValue}">
+      `;
     return `
       <div class="setting-row">
         <label for="setting-${item.key}">
@@ -913,23 +1031,57 @@ function renderSettingsForm(items) {
           <code class="setting-key">${escapeHtml(item.key)}</code>
           ${item.sensitive ? '<span class="setting-sensitive">sensível</span>' : ''}
         </label>
-        <input id="setting-${item.key}" name="${escapeAttr(item.key)}"
-          type="${type === 'password' ? 'password' : (type === 'number' ? 'number' : 'text')}"
-          value="${safeValue}"
-          autocomplete="new-password"
-          placeholder="${type === 'password' ? '(mantenha em branco para não alterar)' : ''}"
-          data-original="${safeValue}">
+        ${inputHtml}
         ${meta.help ? `<small class="setting-help">${escapeHtml(meta.help)}</small>` : ''}
         <small class="setting-source">Origem: ${item.source} · Atualizado: ${item.updatedAt || '—'}</small>
       </div>
     `;
   }).join('');
-  settingsForm.querySelectorAll('input').forEach((input) => {
-    input.addEventListener('input', () => {
+  settingsForm.querySelectorAll('input, textarea').forEach((el) => {
+    el.addEventListener('input', () => {
       settingsDirty = true;
       setSettingsStatus('Há alterações não salvas.', 'warn');
     });
   });
+  settingsForm.querySelectorAll('button[data-action="toggle-mask"]').forEach((btn) => {
+    btn.addEventListener('click', () => toggleSettingMask(btn.dataset.key));
+  });
+}
+
+async function toggleSettingMask(key) {
+  const input = settingsForm.querySelector(`input[name="${key}"]`);
+  if (!input) return;
+  const isPasswordType = input.type === 'password';
+
+  if (!isPasswordType) {
+    // Está visível → oculta
+    input.type = 'password';
+    input.value = '';
+    return;
+  }
+
+  if (input.dataset.masked === '1' && input.value === '') {
+    if (input.dataset.sensitive === '1') {
+      // Sensível criptografado → precisa confirmar senha do admin via backend
+      const password = prompt('Confirme sua senha de administrador para revelar este valor:');
+      if (!password) return;
+      try {
+        const result = await api(`/api/admin/settings/${encodeURIComponent(key)}/reveal`, {
+          method: 'POST',
+          body: JSON.stringify({ password }),
+        });
+        input.value = result.value;
+        input.dataset.storedValue = result.value;
+        input.type = 'text';
+      } catch (err) {
+        showFlash(err.message, 'err');
+      }
+    } else {
+      // Não sensível, valor já veio em getAll
+      input.value = input.dataset.storedValue || '';
+      input.type = 'text';
+    }
+  }
 }
 
 async function loadSettings() {
@@ -944,14 +1096,27 @@ async function loadSettings() {
 }
 
 async function saveSettings() {
-  const inputs = settingsForm.querySelectorAll('input');
+  const inputs = settingsForm.querySelectorAll('input, textarea');
   const updates = [];
   inputs.forEach((input) => {
     const key = input.name;
-    if (input.type === 'password') {
+    if (input.dataset.masked === '1') {
       if (input.value !== '') updates.push({ key, value: input.value });
-    } else if (input.value !== input.dataset.original) {
-      updates.push({ key, value: input.value });
+      return;
+    }
+    let newValue;
+    if (input.tagName === 'TEXTAREA' && input.classList.contains('setting-list')) {
+      newValue = JSON.stringify(
+        input.value
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      );
+    } else {
+      newValue = input.value;
+    }
+    if (newValue !== input.dataset.original) {
+      updates.push({ key, value: newValue });
     }
   });
   if (!updates.length) {
@@ -980,11 +1145,154 @@ document.getElementById('settings-reload-btn').addEventListener('click', () => {
   loadSettings();
 });
 
+// Sub-abas dentro de Configurações
+function switchSettingsGroup(group) {
+  if (!SETTINGS_GROUPS[group]) return;
+  if (settingsDirty && !confirm('Descartar alterações não salvas?')) return;
+  currentSettingsGroup = group;
+  document.querySelectorAll('.settings-sub-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.group === group);
+  });
+  // Esconde/mostra os cards auxiliares pelo data-group
+  document.querySelectorAll('#tab-content-configuracoes .card[data-group]').forEach((card) => {
+    card.classList.toggle('hidden', card.dataset.group !== group);
+  });
+  loadSettings();
+}
+
+// Ao abrir a aba Configurações, aplica o filtro de cards auxiliares para o grupo atual
+document.querySelectorAll('.nav-item').forEach((item) => {
+  item.addEventListener('click', () => {
+    if (item.dataset.tab === 'configuracoes') {
+      document.querySelectorAll('#tab-content-configuracoes .card[data-group]').forEach((card) => {
+        card.classList.toggle('hidden', card.dataset.group !== currentSettingsGroup);
+      });
+    }
+  });
+});
+
+document.querySelectorAll('.settings-sub-tab').forEach((btn) => {
+  btn.addEventListener('click', () => switchSettingsGroup(btn.dataset.group));
+});
+
 document.querySelectorAll('.nav-item').forEach((item) => {
   item.addEventListener('click', () => {
     if (item.dataset.tab === 'configuracoes') {
       loadSettings();
       loadApiKeys();
     }
+    if (item.dataset.tab === 'usuarios') {
+      loadUsersPanel();
+    }
   });
 });
+
+// ============== USUÁRIOS ==============
+const usersList = document.getElementById('users-list');
+
+async function loadUsersPanel() {
+  if (!usersList) return;
+  try {
+    const data = await api('/api/admin/users');
+    if (!data.items?.length) {
+      usersList.innerHTML = '<p class="sub">Nenhum usuário cadastrado.</p>';
+      return;
+    }
+    usersList.innerHTML = data.items.map((u) => `
+      <div class="blog-item" data-user-id="${u.id}">
+        <div class="blog-item-info">
+          <div class="blog-item-title">${escapeHtml(u.name || u.username)} <span class="sub">@${escapeHtml(u.username)}</span></div>
+          <div class="blog-item-meta">
+            <span class="blog-item-status ${u.active ? 'published' : 'draft'}">${u.active ? 'ativo' : 'inativo'}</span>
+            <span>${escapeHtml(u.role)}</span>
+            ${u.lastLoginAt ? `<span>Último login: ${new Date(u.lastLoginAt).toLocaleString('pt-BR')}</span>` : '<span>Nunca logou</span>'}
+          </div>
+        </div>
+        <div class="blog-item-actions">
+          <button class="btn outline" type="button" data-action="reset-pass" data-id="${u.id}">Redefinir senha</button>
+          ${u.id !== currentUser?.id ? `<button class="btn outline" type="button" data-action="toggle" data-id="${u.id}" data-active="${u.active ? '1' : '0'}">${u.active ? 'Desativar' : 'Ativar'}</button>` : ''}
+          ${u.id !== currentUser?.id ? `<button class="btn outline danger" type="button" data-action="delete" data-id="${u.id}">Excluir</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    usersList.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.id);
+        const action = btn.dataset.action;
+        try {
+          if (action === 'reset-pass') {
+            const newPassword = prompt('Nova senha (mín. 8 caracteres):');
+            if (!newPassword) return;
+            await api(`/api/admin/users/${id}/password`, {
+              method: 'POST',
+              body: JSON.stringify({ newPassword }),
+            });
+            showFlash('Senha redefinida.', 'ok');
+          } else if (action === 'toggle') {
+            const next = btn.dataset.active !== '1';
+            await api(`/api/admin/users/${id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ active: next }),
+            });
+            showFlash(next ? 'Usuário ativado.' : 'Usuário desativado.', 'ok');
+            loadUsersPanel();
+          } else if (action === 'delete') {
+            if (!confirm('Excluir este usuário?')) return;
+            await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+            showFlash('Usuário excluído.', 'ok');
+            loadUsersPanel();
+          }
+        } catch (err) {
+          showFlash(err.message, 'err');
+        }
+      });
+    });
+  } catch (err) {
+    usersList.innerHTML = `<p class="message err">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+document.getElementById('user-change-password-btn')?.addEventListener('click', async () => {
+  const status = document.getElementById('user-password-status');
+  const currentPassword = document.getElementById('user-current-password')?.value || '';
+  const newPassword = document.getElementById('user-new-password')?.value || '';
+  try {
+    await api('/api/admin/users/me/password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (status) status.textContent = 'Senha alterada. Faça login novamente.';
+    showFlash('Senha alterada. Entre novamente.', 'ok');
+    token = '';
+    currentUser = null;
+    localStorage.removeItem('admin_token');
+    panelView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+  } catch (err) {
+    if (status) status.textContent = err.message;
+    showFlash(err.message, 'err');
+  }
+});
+
+document.getElementById('user-create-btn')?.addEventListener('click', async () => {
+  try {
+    await api('/api/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: document.getElementById('user-new-username')?.value,
+        name: document.getElementById('user-new-name')?.value,
+        password: document.getElementById('user-create-password')?.value,
+        role: document.getElementById('user-new-role')?.value || 'admin',
+      }),
+    });
+    showFlash('Usuário criado.', 'ok');
+    document.getElementById('user-new-username').value = '';
+    document.getElementById('user-new-name').value = '';
+    document.getElementById('user-create-password').value = '';
+    loadUsersPanel();
+  } catch (err) {
+    showFlash(err.message, 'err');
+  }
+});
+

@@ -1,32 +1,88 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { getDb } = require('./db');
+
+function adminPassword() {
+  // Chave de criptografia de secrets (não é senha de login)
+  return require('./secrets').getSecretsKey();
+}
 
 const DEFAULTS = {
   PORT: '3001',
-  ADMIN_PASSWORD: 'nilma-admin',
-  GOOGLE_CLIENT_ID: '',
-  GOOGLE_CLIENT_SECRET: '',
-  GOOGLE_REDIRECT_URI: 'http://127.0.0.1:3001/api/google/callback',
-  GBP_LOCATION_NAME: '',
-  BLOG_DB_PATH: '',
-  BLOG_UPLOAD_DIR: '',
   BLOG_UPLOAD_MAX_MB: '5',
+  SECRETS_KEY: '',
+  EDITOR_FONTS: JSON.stringify([
+    'Poppins', 'Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma', 'Trebuchet MS',
+  ]),
+  EDITOR_FONT_DEFAULT: 'Poppins',
+  EDITOR_FONT_SIZES: JSON.stringify(['12', '14', '16', '18', '20', '24', '28', '32', '36', '42', '48']),
+  EDITOR_FONT_SIZE_DEFAULT: '16',
+  EDITOR_TEXT_COLORS: JSON.stringify([
+    '#333333', '#000000', '#7f4258', '#70354c', '#b3261e', '#1d6f42', '#1d4ed8', '#b45309', '#6b21a8', '#ffffff',
+  ]),
+  EDITOR_BG_COLORS: JSON.stringify([
+    'transparent', '#fff8e1', '#fde2e4', '#e0f2fe', '#dcfce7', '#fef3c7', '#ede9fe', '#f3f4f6', '#1f2937', '#000000',
+  ]),
+  EDITOR_TEXT_COLOR_DEFAULT: '#333333',
+  EDITOR_BG_COLOR_DEFAULT: 'transparent',
 };
 
 const ENV_KEYS = {
   PORT: 'PORT',
-  ADMIN_PASSWORD: 'ADMIN_PASSWORD',
-  GOOGLE_CLIENT_ID: 'GOOGLE_CLIENT_ID',
-  GOOGLE_CLIENT_SECRET: 'GOOGLE_CLIENT_SECRET',
-  GOOGLE_REDIRECT_URI: 'GOOGLE_REDIRECT_URI',
-  GBP_LOCATION_NAME: 'GBP_LOCATION_NAME',
-  BLOG_DB_PATH: 'BLOG_DB_PATH',
-  BLOG_UPLOAD_DIR: 'BLOG_UPLOAD_DIR',
   BLOG_UPLOAD_MAX_MB: 'BLOG_UPLOAD_MAX_MB',
+  SECRETS_KEY: 'SECRETS_KEY',
+  EDITOR_FONTS: 'EDITOR_FONTS',
+  EDITOR_FONT_DEFAULT: 'EDITOR_FONT_DEFAULT',
+  EDITOR_FONT_SIZES: 'EDITOR_FONT_SIZES',
+  EDITOR_FONT_SIZE_DEFAULT: 'EDITOR_FONT_SIZE_DEFAULT',
+  EDITOR_TEXT_COLORS: 'EDITOR_TEXT_COLORS',
+  EDITOR_BG_COLORS: 'EDITOR_BG_COLORS',
+  EDITOR_TEXT_COLOR_DEFAULT: 'EDITOR_TEXT_COLOR_DEFAULT',
+  EDITOR_BG_COLOR_DEFAULT: 'EDITOR_BG_COLOR_DEFAULT',
 };
 
-const SENSITIVE = new Set(['ADMIN_PASSWORD', 'GOOGLE_CLIENT_SECRET']);
+// SECRETS_KEY é ocultada na UI (filtro em getAll); armazenada em texto no DB.
+const SENSITIVE = new Set([]);
+const SECRETS_PREAMBLE = 'enc:v1:';
+
+function deriveKey(password, salt) {
+  return crypto.scryptSync(String(password || ''), salt, 32, { N: 16384, r: 8, p: 1 });
+}
+
+function encryptSecret(plain) {
+  if (plain == null) plain = '';
+  const password = adminPassword();
+  const salt = crypto.randomBytes(16);
+  const key = deriveKey(password, salt);
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const ciphertext = Buffer.concat([cipher.update(String(plain), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return SECRETS_PREAMBLE + Buffer.concat([salt, iv, tag, ciphertext]).toString('base64');
+}
+
+function decryptSecret(stored) {
+  if (typeof stored !== 'string' || !stored.startsWith(SECRETS_PREAMBLE)) {
+    throw new Error('valor não está criptografado');
+  }
+  const buf = Buffer.from(stored.slice(SECRETS_PREAMBLE.length), 'base64');
+  if (buf.length < 16 + 12 + 16) throw new Error('ciphertext inválido');
+  const salt = buf.subarray(0, 16);
+  const iv = buf.subarray(16, 28);
+  const tag = buf.subarray(28, 44);
+  const ciphertext = buf.subarray(44);
+  const password = adminPassword();
+  const key = deriveKey(password, salt);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  return plaintext.toString('utf8');
+}
+
+function isEncrypted(stored) {
+  return typeof stored === 'string' && stored.startsWith(SECRETS_PREAMBLE);
+}
 
 function readDotEnv(envPath) {
   const map = {};
@@ -63,7 +119,32 @@ function migrateFromEnv() {
       if (exists) continue;
       let value = env[envKey];
       if (value == null || value === '') value = DEFAULTS[dbKey] ?? '';
-      insert.run({ key: dbKey, value: String(value) });
+      const stored = SENSITIVE.has(dbKey) ? encryptSecret(value) : String(value);
+      insert.run({ key: dbKey, value: stored });
+    }
+  });
+  tx();
+}
+
+function migrateExistingPlaintextSecrets() {
+  const db = getDb();
+  const update = db.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?');
+  const decrypt = db.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?');
+  const tx = db.transaction(() => {
+    for (const key of SENSITIVE) {
+      const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+      if (row && row.value && !isEncrypted(row.value)) {
+        update.run(encryptSecret(row.value), key);
+      }
+    }
+    // Correção: se ADMIN_PASSWORD foi criptografado por engano em alguma versão,
+    // descriptografa e mantém em texto puro.
+    const ap = db.prepare("SELECT value FROM settings WHERE key = 'ADMIN_PASSWORD'").get();
+    if (ap && ap.value && isEncrypted(ap.value)) {
+      try {
+        const plain = decryptSecret(ap.value);
+        if (plain) decrypt.run(plain, 'ADMIN_PASSWORD');
+      } catch {}
     }
   });
   tx();
@@ -73,28 +154,62 @@ function ensureMigrated() {
   const db = getDb();
   const row = db.prepare('SELECT COUNT(*) AS c FROM settings').get();
   if (row.c === 0) migrateFromEnv();
-  else migrateFromEnv();
+  migrateExistingPlaintextSecrets();
 }
 
 function get(key) {
   const db = getDb();
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
-  if (row && row.value !== null && row.value !== '') return row.value;
+  if (row && row.value != null && row.value !== '') {
+    if (SENSITIVE.has(key)) {
+      try {
+        if (isEncrypted(row.value)) return decryptSecret(row.value);
+        return row.value;
+      } catch {
+        return '';
+      }
+    }
+    return row.value;
+  }
   const envVal = process.env[ENV_KEYS[key]];
   if (envVal != null && envVal !== '') return envVal;
   return DEFAULTS[key] ?? '';
+}
+
+/** Lê só o valor no banco, sem fallback de default/env. */
+function getRaw(key) {
+  const db = getDb();
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row && row.value != null ? row.value : null;
 }
 
 function getAll() {
   const db = getDb();
   const rows = db.prepare('SELECT key, value, updated_at FROM settings ORDER BY key').all();
   const env = { ...readDotEnv(path.join(__dirname, '..', '..', '.env')), ...process.env };
-  const items = Object.keys(DEFAULTS).map((key) => {
+  const HIDDEN = new Set(['SECRETS_KEY']);
+  const items = Object.keys(DEFAULTS).filter((key) => !HIDDEN.has(key)).map((key) => {
     const row = rows.find((r) => r.key === key);
-    const value = row ? row.value : (env[ENV_KEYS[key]] || DEFAULTS[key] || '');
+    let value = '';
+    let hasValue = false;
+    if (row && row.value != null && row.value !== '') {
+      hasValue = true;
+      if (SENSITIVE.has(key)) {
+        value = '';
+      } else {
+        value = row.value;
+      }
+    } else if (env[ENV_KEYS[key]]) {
+      hasValue = true;
+      value = SENSITIVE.has(key) ? '' : env[ENV_KEYS[key]];
+    } else if (DEFAULTS[key]) {
+      hasValue = true;
+      value = SENSITIVE.has(key) ? '' : DEFAULTS[key];
+    }
     return {
       key,
-      value: value || '',
+      value,
+      hasValue,
       source: row ? 'database' : (env[ENV_KEYS[key]] ? 'env' : 'default'),
       sensitive: SENSITIVE.has(key),
       updatedAt: row ? row.updated_at : null,
@@ -114,14 +229,39 @@ function setMany(values) {
   const tx = db.transaction((entries) => {
     for (const { key, value } of entries) {
       if (!allowed.has(key)) continue;
-      update.run({ key, value: value == null ? '' : String(value) });
+      const raw = value == null ? '' : String(value);
+      const stored = SENSITIVE.has(key) ? encryptSecret(raw) : raw;
+      update.run({ key, value: stored });
     }
   });
   tx(values);
 }
 
-function getSecret(key) {
-  return get(key);
+function revealSecret(key, password, userId) {
+  if (!SENSITIVE.has(key)) return { ok: false, error: 'Esta configuração não é sensível.' };
+  if (typeof password !== 'string' || password === '') {
+    return { ok: false, error: 'Senha é obrigatória.' };
+  }
+  try {
+    const users = require('./users');
+    const userRow = users.findById(userId);
+    if (!userRow || !users.verifyPassword(password, userRow.password_hash)) {
+      return { ok: false, error: 'Senha incorreta.' };
+    }
+  } catch {
+    return { ok: false, error: 'Senha incorreta.' };
+  }
+  const db = getDb();
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  if (!row || !row.value) {
+    return { ok: false, error: 'Não há valor salvo para esta configuração.' };
+  }
+  try {
+    const plain = isEncrypted(row.value) ? decryptSecret(row.value) : row.value;
+    return { ok: true, key, value: plain };
+  } catch (err) {
+    return { ok: false, error: 'Não foi possível revelar o valor.' };
+  }
 }
 
 module.exports = {
@@ -130,8 +270,9 @@ module.exports = {
   migrateFromEnv,
   ensureMigrated,
   get,
+  getRaw,
   getAll,
   setMany,
-  getSecret,
+  revealSecret,
   SENSITIVE,
 };

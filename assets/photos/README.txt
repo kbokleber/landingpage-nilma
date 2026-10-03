@@ -1,0 +1,1 @@
+Foto utilizada como hero da landing page. Antes de publicar em produção, confirme com a cliente que a pessoa retratada é a Dra. Nilma Alves. O alt text foi escrito de forma neutra ("Profissional em escritório, representando a advocacia da Dra. Nilma Alves") para evitar afirmar identidade visual.

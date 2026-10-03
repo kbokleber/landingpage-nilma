@@ -1,119 +1,136 @@
 # API do Blog — Dra. Nilma Alves
 
-API REST para criar, listar e gerenciar posts do blog. Pensada para ser usada por sistemas externos (CRM, geradores de conteúdo, etc.) através de **API Keys**.
+Documento para o time/software externo que vai **alimentar o blog** (criar, atualizar e publicar posts).
 
-## Sumário
+---
 
-- [Autenticação](#autenticação)
-- [Documentação interativa](#documentação-interativa)
-- [Endpoints](#endpoints)
-- [Exemplos de uso](#exemplos-de-uso)
+## O que você precisa receber
+
+| Item | Valor |
+|---|---|
+| **Base URL (local)** | `http://127.0.0.1:3001` |
+| **Base URL (produção)** | `https://SEU_DOMINIO` ← substituir |
+| **Prefixo da API de escrita** | `/api/v1` |
+| **Header de autenticação** | `X-API-Key: <chave>` |
+| **Docs interativas (Swagger)** | `{BASE}/api/docs/` |
+| **OpenAPI JSON** | `{BASE}/api/docs/openapi.json` |
+
+A chave é gerada no painel admin:
+
+1. Acesse `{BASE}/admin/`
+2. Login com a senha administrativa
+3. Aba **Configurações** → **Site** → card **API Keys (sistemas externos)**
+4. Digite um nome (ex.: `Sistema de conteúdo`) e clique em **Gerar nova chave**
+5. **Copie a chave imediatamente** — ela só aparece uma vez
+
+---
+
+## Fluxo recomendado para o outro software
+
+```
+1. POST /api/v1/posts          → cria o post (draft ou published)
+2. POST /api/v1/posts/{id}/cover   → (opcional) envia a capa
+3. POST /api/v1/posts/{id}/images  → (opcional) envia imagens da galeria
+4. POST /api/v1/posts/{id}/publish → publica (se criou como draft)
+```
+
+Se o conteúdo já estiver revisado no sistema de origem, pode criar direto com `"status": "published"` no passo 1 e pular o passo 4.
 
 ---
 
 ## Autenticação
 
-Todas as requisições à API de gerenciamento `/api/v1/*` exigem o header:
+Todas as rotas `/api/v1/*` exigem:
 
-```
+```http
 X-API-Key: nilma_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Content-Type: application/json
 ```
 
-> A API de leitura pública `/api/public/*` (usada pelas páginas `blog.html` e `post.html` do site) **não exige** autenticação e só retorna posts com `status: "published"`.
+Respostas comuns de erro:
 
-### Como obter uma chave
+| HTTP | Significado |
+|---|---|
+| `401` | Chave ausente ou inválida |
+| `400` | Payload inválido |
+| `404` | Post não encontrado |
+| `429` | Rate limit (60 req/min por IP) |
 
-1. Acesse o painel admin: http://127.0.0.1:3001/admin/
-2. Faça login com a senha administrativa
-3. Vá na aba **Blog**
-4. No card "API Keys (sistemas externos)", digite um nome (ex: "Site institucional") e clique em **Gerar nova chave**
-5. Copie a chave retornada — **ela só é exibida uma única vez**
-
-Se a chave for comprometida, clique em **Revogar** na lista de chaves. Sistemas externos deixarão de funcionar imediatamente.
-
----
-
-## Documentação interativa
-
-Acesse http://127.0.0.1:3001/api/docs/ para testar todos os endpoints direto no navegador (Swagger UI).
-
-A especificação OpenAPI 3.0 está em http://127.0.0.1:3001/api/docs/openapi.json.
+A API pública `/api/public/*` (só leitura de posts **publicados**, usada pelo site) **não** exige chave.
 
 ---
 
-## Endpoints
-
-### API pública (sem autenticação)
-
-Usada pelas páginas `blog.html` e `post.html` do site. Retorna apenas posts publicados.
+## Endpoints de gerenciamento (`X-API-Key`)
 
 | Método | Rota | Descrição |
 |---|---|---|
-| `GET` | `/api/public/posts` | Listar posts publicados (suporta `?limit`, `?offset`, `?tag`) |
-| `GET` | `/api/public/posts/:slug` | Detalhe de um post publicado por slug |
-| `GET` | `/api/public/tags` | Listar tags únicas usadas nos posts |
-
-### API de gerenciamento (requer `X-API-Key`)
-
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/api/v1/posts` | Listar posts publicados (suporta `?limit`, `?offset`, `?tag`) |
-| `GET` | `/api/v1/posts/:slug` | Detalhe de um post publicado por slug |
-| `GET` | `/api/v1/tags` | Listar tags únicas usadas nos posts |
-| `POST` | `/api/v1/posts` | Criar post (opcionalmente já publicado via `status`) |
-| `PUT` | `/api/v1/posts/:id` | Atualizar post (inclui `status`) |
+| `GET` | `/api/v1/posts` | Listar posts (`?limit`, `?offset`, `?tag`, `?status`) |
+| `GET` | `/api/v1/posts/:slugOrId` | Detalhe por **slug** ou **ID** (qualquer status) |
+| `POST` | `/api/v1/posts` | Criar post |
+| `PUT` | `/api/v1/posts/:id` | Atualizar post |
 | `DELETE` | `/api/v1/posts/:id` | Remover post |
-| `POST` | `/api/v1/posts/:id/publish` | Publicar (status → `published`, seta `publishedAt`) |
-| `POST` | `/api/v1/posts/:id/unpublish` | Voltar para rascunho (status → `draft`) |
-| `POST` | `/api/v1/posts/:id/archive` | Arquivar (status → `archived`) |
-| `POST` | `/api/v1/posts/:id/images` | Upload de imagem (multipart) |
+| `POST` | `/api/v1/posts/:id/publish` | Publicar |
+| `POST` | `/api/v1/posts/:id/unpublish` | Voltar para rascunho |
+| `POST` | `/api/v1/posts/:id/archive` | Arquivar |
+| `POST` | `/api/v1/posts/:id/cover` | Upload da capa (`multipart`, campo `cover`) |
+| `POST` | `/api/v1/posts/:id/images` | Upload de imagem (`multipart`, campo `image`) |
+| `GET` | `/api/v1/tags` | Listar tags |
 
-> O `POST /api/v1/posts` aceita o campo `status` opcional. Se omitido, o post é criado como rascunho (`draft`). Sistemas externos podem enviar `"status": "published"` para criar o post já público (ex.: após uma revisão interna). Valores aceitos: `draft`, `published`, `archived`. Da mesma forma, o `PUT /api/v1/posts/:id` aceita `status` para alterar o estado. Os endpoints dedicados `/publish`, `/unpublish` e `/archive` continuam disponíveis para transições explícitas.
+### Query `status` em `GET /api/v1/posts`
 
-### Rate limit
-
-60 requisições por minuto por IP. Se exceder, a API retorna `429`.
-
-### Limites
-
-- Tamanho máximo de imagem: **5 MB** (configurável via `BLOG_UPLOAD_MAX_MB`)
-- Formatos aceitos: JPEG, PNG, WebP
+| Valor | Resultado |
+|---|---|
+| `published` (padrão) | Só publicados |
+| `draft` | Só rascunhos |
+| `archived` | Só arquivados |
+| `all` | Todos |
 
 ---
 
-## Exemplos de uso
+## Contrato do payload (criar / atualizar)
 
-### Listar posts publicados
+Campos do body JSON:
 
-```bash
-curl -X GET "http://127.0.0.1:3001/api/v1/posts?limit=10" \
-  -H "X-API-Key: nilma_sua_chave_aqui"
-```
+| Campo | Tipo | Obrigatório | Notas |
+|---|---|---|---|
+| `title` | string | **sim** | Gera o `slug` automaticamente |
+| `contentHtml` | string | **sim** | HTML sanitizado no servidor |
+| `excerpt` | string | não | Resumo da listagem |
+| `author` | string | não | Padrão: Dra. Nilma Alves |
+| `tags` | string[] | não | Ex.: `["imobiliario","familia"]` |
+| `coverImage` | string | não | URL relativa após upload |
+| `status` | string | não | `draft` (padrão), `published`, `archived` |
+
+Exemplo de resposta `201` / `200`:
 
 ```json
 {
-  "total": 3,
-  "limit": 10,
-  "offset": 0,
-  "items": [
-    {
-      "id": 1,
-      "slug": "novidades-direito-imobiliario-2026",
-      "title": "Novidades do direito imobiliário em 2026",
-      "excerpt": "Resumo curto do post...",
-      "coverImage": "/uploads/blog/capa-123.jpg",
-      "author": "Dra. Nilma Alves",
-      "tags": ["imobiliario", "2026"],
-      "status": "published",
-      "publishedAt": "2026-06-20T18:30:00.000Z",
-      "createdAt": "2026-06-20T18:30:00.000Z",
-      "updatedAt": "2026-06-20T18:30:00.000Z"
-    }
-  ]
+  "id": 12,
+  "slug": "novidades-direito-imobiliario-2026",
+  "title": "Novidades do direito imobiliário em 2026",
+  "excerpt": "Confira as principais mudanças...",
+  "contentHtml": "<p>Conteúdo...</p>",
+  "coverImage": "/uploads/blog/capa-123.jpg",
+  "author": "Dra. Nilma Alves",
+  "tags": ["imobiliario", "2026"],
+  "status": "published",
+  "publishedAt": "2026-09-11T21:00:00.000Z",
+  "createdAt": "2026-09-11T21:00:00.000Z",
+  "updatedAt": "2026-09-11T21:00:00.000Z"
 }
 ```
 
-### Criar post e publicar
+O post publicado fica disponível no site em:
+
+- Listagem: `{BASE}/blog.html`
+- Detalhe: `{BASE}/post.html?slug={slug}`
+- API pública: `GET {BASE}/api/public/posts` e `GET {BASE}/api/public/posts/{slug}`
+
+---
+
+## Exemplos prontos para colar
+
+### Criar já publicado
 
 ```bash
 curl -X POST "http://127.0.0.1:3001/api/v1/posts" \
@@ -122,65 +139,54 @@ curl -X POST "http://127.0.0.1:3001/api/v1/posts" \
   -d '{
     "title": "Novidades do direito imobiliário em 2026",
     "excerpt": "Confira as principais mudanças legislativas...",
-    "contentHtml": "<p>Conteúdo completo do post com <strong>HTML</strong> permitido.</p><h2>Subtítulo</h2><p>Mais texto...</p>",
-    "coverImage": "/uploads/blog/capa.jpg",
+    "contentHtml": "<p>Conteúdo completo do post com <strong>HTML</strong>.</p>",
     "tags": ["imobiliario", "2026"],
     "status": "published"
   }'
 ```
 
-### Criar como rascunho
+### Criar como rascunho e publicar depois
 
 ```bash
+# 1) cria
 curl -X POST "http://127.0.0.1:3001/api/v1/posts" \
   -H "X-API-Key: nilma_sua_chave_aqui" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Post em rascunho",
+    "title": "Post em revisão",
     "contentHtml": "<p>Conteúdo...</p>"
   }'
-```
 
-### Publicar um rascunho
-
-```bash
-curl -X POST "http://127.0.0.1:3001/api/v1/posts/5/publish" \
+# 2) publica (troque 12 pelo id retornado)
+curl -X POST "http://127.0.0.1:3001/api/v1/posts/12/publish" \
   -H "X-API-Key: nilma_sua_chave_aqui"
 ```
 
-### Atualizar post
+### Upload de capa
 
 ```bash
-curl -X PUT "http://127.0.0.1:3001/api/v1/posts/5" \
+curl -X POST "http://127.0.0.1:3001/api/v1/posts/12/cover" \
   -H "X-API-Key: nilma_sua_chave_aqui" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Título atualizado",
-    "tags": ["imobiliario", "atualizado"]
-  }'
+  -F "cover=@/caminho/para/capa.jpg"
 ```
 
-### Upload de imagem para um post
+### Upload de imagem da galeria
 
 ```bash
-curl -X POST "http://127.0.0.1:3001/api/v1/posts/5/images" \
+curl -X POST "http://127.0.0.1:3001/api/v1/posts/12/images" \
   -H "X-API-Key: nilma_sua_chave_aqui" \
   -F "image=@/caminho/para/foto.jpg" \
   -F "alt=Descrição da imagem"
 ```
 
-Resposta:
+### Listar todos os posts (qualquer status)
 
-```json
-{
-  "id": 12,
-  "url": "/uploads/blog/1234567890-foto-abc123.jpg",
-  "alt": "Descrição da imagem",
-  "position": 1718906543210
-}
+```bash
+curl -X GET "http://127.0.0.1:3001/api/v1/posts?status=all&limit=50" \
+  -H "X-API-Key: nilma_sua_chave_aqui"
 ```
 
-### Exemplo em JavaScript (fetch)
+### JavaScript (fetch)
 
 ```javascript
 const API_KEY = 'nilma_sua_chave_aqui';
@@ -196,21 +202,21 @@ async function createPost(post) {
     body: JSON.stringify(post),
   });
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Erro ao criar post');
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
   }
   return res.json();
 }
 
 await createPost({
-  title: 'Post via JS',
+  title: 'Post via integração',
   contentHtml: '<p>Conteúdo...</p>',
-  tags: ['js', 'automacao'],
+  tags: ['automacao'],
   status: 'published',
 });
 ```
 
-### Exemplo em Python (requests)
+### Python (requests)
 
 ```python
 import requests
@@ -231,29 +237,115 @@ payload = {
     "status": "published",
 }
 
-response = requests.post(f"{BASE}/posts", json=payload, headers=headers)
-response.raise_for_status()
-print(response.json())
+r = requests.post(f"{BASE}/posts", json=payload, headers=headers)
+r.raise_for_status()
+print(r.json())
 ```
 
 ---
 
-## Segurança
+## Limites e segurança
 
-- HTML do conteúdo é **sanitizado** (tags perigosas, event handlers e `javascript:` são removidos) via `sanitize-html` no servidor
-- O front ainda aplica `DOMPurify` ao renderizar, em camadas
-- API Keys são armazenadas com **hash SHA-256** — a chave pura só é mostrada na criação
-- Rate limit em memória: 60 req/min por IP
-- Imagens validadas por MIME type e tamanho
+- **Rate limit:** 60 requisições/minuto por IP
+- **Imagens:** até **5 MB** (JPEG, PNG, WebP) — configurável via `BLOG_UPLOAD_MAX_MB`
+- **HTML:** sanitizado no servidor (`sanitize-html`); scripts e event handlers são removidos
+- **API Keys:** armazenadas com hash SHA-256; a chave pura só aparece na criação
+- Se a chave vazar: revogue no admin e gere outra
 
 ---
 
-## Esquema do banco
+## Checklist para o time integrador
 
-As tabelas ficam em `data/blog.db` (SQLite). Estrutura:
+- [ ] Recebeu a **Base URL** de produção
+- [ ] Recebeu a **API Key** (header `X-API-Key`)
+- [ ] Consegue abrir `{BASE}/api/docs/` (Swagger)
+- [ ] Testou `POST /api/v1/posts` com `status: "published"`
+- [ ] Confirmou o post em `{BASE}/blog.html` e no admin → Blog
+- [ ] (Opcional) Testou upload de capa e imagens
 
-- `posts` (id, slug, title, excerpt, content_html, cover_image, author, tags, status, published_at, created_at, updated_at)
-- `post_images` (id, post_id, url, alt, position)
-- `api_keys` (id, name, key_hash, prefix, created_at, last_used_at, revoked)
+---
 
-O arquivo é criado automaticamente ao iniciar o servidor.
+## API pública (somente leitura — site)
+
+| Método | Rota | Auth |
+|---|---|---|
+| `GET` | `/api/public/posts` | não |
+| `GET` | `/api/public/posts/:slug` | não |
+| `GET` | `/api/public/tags` | não |
+
+Use essas rotas só se o outro software precisar **ler** o que já está publicado no site. Para **escrever**, use sempre `/api/v1` com a API Key.
+
+---
+
+# API de Depoimentos — Dra. Nilma Alves
+
+Mesma autenticação (`X-API-Key`). Fluxo igual ao blog: **rascunho** → **publicar**.
+
+## Fluxo recomendado
+
+```
+1. POST /api/v1/reviews              → cria (draft por padrão)
+2. POST /api/v1/reviews/{id}/publish → publica no site
+```
+
+Ou crie já publicado com `"publish": true` / `"siteStatus": "published"`.
+
+## Endpoints
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/v1/reviews` | Listar (`?status=all\|draft\|published`) |
+| `GET` | `/api/v1/reviews/:id` | Detalhe |
+| `POST` | `/api/v1/reviews` | Criar |
+| `PUT` | `/api/v1/reviews/:id` | Atualizar |
+| `DELETE` | `/api/v1/reviews/:id` | Remover |
+| `POST` | `/api/v1/reviews/:id/publish` | Publicar |
+| `POST` | `/api/v1/reviews/:id/unpublish` | Voltar a rascunho |
+| `POST` | `/api/v1/reviews/publish` | Republicar lista completa no site |
+| `GET` | `/api/public/reviews` | Só publicados (sem chave) |
+
+## Payload (criar / atualizar)
+
+| Campo | Tipo | Obrigatório | Notas |
+|---|---|---|---|
+| `author` / `authorName` | string | **sim** (criar) | Nome do cliente |
+| `text` | string | **sim** | Texto do depoimento |
+| `rating` | int 1–5 | não | Padrão: 5 |
+| `area` | string | não | Ex.: Direito de Família |
+| `siteStatus` / `status` | string | não | `draft` (padrão) ou `published` |
+| `publish` | boolean | não | Se `true`, publica imediatamente |
+
+### Criar como rascunho e publicar depois
+
+```bash
+# 1) cria rascunho
+curl -X POST "http://127.0.0.1:3001/api/v1/reviews" \
+  -H "X-API-Key: nilma_sua_chave_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "author": "Maria S.",
+    "text": "Atendimento excelente e humano.",
+    "rating": 5,
+    "area": "Direito de Família"
+  }'
+
+# 2) publica (troque o id)
+curl -X POST "http://127.0.0.1:3001/api/v1/reviews/UUID_AQUI/publish" \
+  -H "X-API-Key: nilma_sua_chave_aqui"
+```
+
+### Criar já publicado
+
+```bash
+curl -X POST "http://127.0.0.1:3001/api/v1/reviews" \
+  -H "X-API-Key: nilma_sua_chave_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "author": "João P.",
+    "text": "Resolução rápida e clara.",
+    "rating": 5,
+    "publish": true
+  }'
+```
+
+No admin: aba **Depoimentos** → **Novo depoimento** → **Salvar rascunho** ou **Publicar agora**.

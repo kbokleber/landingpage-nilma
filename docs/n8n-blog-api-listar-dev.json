@@ -1,0 +1,91 @@
+{
+  "name": "Nilma Alves — Listar posts (DEV)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "var-base",
+              "name": "BASE",
+              "value": "https://dev.nilmaalves.adv.br",
+              "type": "string"
+            },
+            {
+              "id": "var-key",
+              "name": "API_KEY",
+              "value": "nilma_181ecf8562366421a5734deedd949c7e15892b0512b968edfdd3cc537de998ce",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-vars",
+      "name": "Variáveis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.BASE }}/api/v1/posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "50" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-posts",
+      "name": "Listar posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          { "node": "Variáveis", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Variáveis": {
+      "main": [
+        [
+          { "node": "Listar posts", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1"
+}

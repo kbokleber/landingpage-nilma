@@ -1,0 +1,12 @@
+.git/
+node_modules/
+data/
+.vscode/
+*.log
+.env
+.env.local
+dev-server*.log
+site-original.html
+commit-msg.txt
+assets/uploads/
+agent-tools/

@@ -18,10 +18,51 @@ function resolveMaxMb() {
   let configured = '';
   try { configured = require('./settings').get('BLOG_UPLOAD_MAX_MB') || ''; } catch {}
   if (!configured && process.env.BLOG_UPLOAD_MAX_MB) configured = process.env.BLOG_UPLOAD_MAX_MB;
-  return Number(configured || 5);
+  return Number(configured || 10);
 }
 
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_MIMES = new Set([
+  'image/jpeg', 'image/jpg', 'image/pjpeg',
+  'image/png', 'image/x-png',
+  'image/webp', 'image/x-webp',
+  'image/gif',
+  'image/bmp', 'image/x-bmp',
+  'image/tiff', 'image/tif',
+  'image/svg+xml',
+  'image/avif', 'image/x-avif',
+  'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence',
+  'image/x-icon', 'image/vnd.microsoft.icon',
+  'image/apng',
+]);
+
+const ALLOWED_EXTS = new Set([
+  '.jpg', '.jpeg', '.jfif',
+  '.png',
+  '.webp',
+  '.gif',
+  '.bmp',
+  '.tif', '.tiff',
+  '.svg',
+  '.avif',
+  '.heic', '.heif',
+  '.ico',
+  '.apng',
+]);
+
+function getExt(filename) {
+  return path.extname(String(filename || '')).toLowerCase().replace(/[^.]/g, '');
+}
+
+function isImageFile(file) {
+  if (!file) return false;
+  const mime = String(file.mimetype || '').toLowerCase();
+  const ext = getExt(file.originalname);
+  if (ALLOWED_MIMES.has(mime)) return true;
+  if (mime.startsWith('image/')) return true;
+  if (mime === 'application/octet-stream' && ALLOWED_EXTS.has(ext)) return true;
+  if (!mime && ALLOWED_EXTS.has(ext)) return true;
+  return false;
+}
 
 let UPLOAD_DIR = null;
 let MAX_MB = null;
@@ -46,7 +87,7 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename(req, file, cb) {
-    const ext = path.extname(file.originalname || '').toLowerCase().replace(/[^.]/g, '') || '.jpg';
+    const ext = getExt(file.originalname) || '.jpg';
     const base = sanitizeName(path.basename(file.originalname, path.extname(file.originalname || '')));
     const id = crypto.randomBytes(6).toString('hex');
     cb(null, `${Date.now()}-${base}-${id}${ext}`);
@@ -54,17 +95,25 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (!ALLOWED_MIMES.has(file.mimetype)) {
-    return cb(new Error('Tipo de arquivo não permitido. Use JPEG, PNG ou WebP.'));
+  if (!isImageFile(file)) {
+    const ext = getExt(file.originalname);
+    const extLabel = ext ? ext.replace(/^\./, '').toUpperCase() : 'sem extensão';
+    return cb(new Error(`Tipo de arquivo não permitido (.${extLabel}). Formatos aceitos: JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, AVIF, HEIC/HEIF, ICO.`));
   }
   cb(null, true);
 };
 
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: MAX_MB * 1024 * 1024 },
-});
+function buildUpload() {
+  const mb = resolveMaxMb();
+  const maxBytes = mb * 1024 * 1024;
+  return multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: maxBytes, files: 6 },
+  });
+}
+
+const upload = buildUpload();
 
 function getUploadDir() {
   if (!UPLOAD_DIR) { UPLOAD_DIR = resolveUploadDir(); ensureDir(); }
@@ -72,12 +121,18 @@ function getUploadDir() {
 }
 
 function getMaxMb() {
-  if (!MAX_MB) MAX_MB = resolveMaxMb();
+  if (MAX_MB == null) MAX_MB = resolveMaxMb();
   return MAX_MB;
+}
+
+function getAllowedFormats() {
+  return Array.from(ALLOWED_EXTS).map((e) => e.replace(/^\./, '').toUpperCase()).join(', ');
 }
 
 module.exports = {
   upload,
   get getUploadDir() { return getUploadDir(); },
   get getMaxMb() { return getMaxMb(); },
+  getAllowedFormats,
+  isImageFile,
 };
