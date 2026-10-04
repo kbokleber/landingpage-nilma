@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dev.nilmaalves.adv.br/sitemap.xml
+Sitemap: https://nilmaalves.adv.br/sitemap.xml

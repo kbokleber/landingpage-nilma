@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
@@ -16,6 +17,7 @@ const {
 const users = require('./lib/users');
 
 const { getDb } = require('./lib/db');
+const { getPostBySlug } = require('./lib/posts');
 const settings = require('./lib/settings');
 const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./openapi');
@@ -38,10 +40,104 @@ require('./lib/secrets').getSecretsKey();
 ensureReviewsSynced();
 
 const ROOT = path.join(__dirname, '..');
+const SITE_ORIGIN = 'https://nilmaalves.adv.br';
+const POST_SEO_RE = /<!-- post-seo -->[\s\S]*?<!-- \/post-seo -->/;
 const app = express();
 const PORT = (() => {
   try { return Number(settings.get('PORT')) || 3001; } catch { return Number(process.env.PORT) || 3001; }
 })();
+
+function requestHost(req) {
+  const raw = req.headers['x-forwarded-host'] || req.headers.host || '';
+  return String(raw).split(',')[0].trim().split(':')[0].toLowerCase();
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function stripHtml(html) {
+  return String(html || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function metaDescription(post) {
+  const text = stripHtml(post.excerpt) || stripHtml(post.contentHtml) || 'Artigo do blog Nilma Alves Advocacia.';
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 157);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 80 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
+
+function absoluteAssetUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('//')) return `https:${value}`;
+  return `${SITE_ORIGIN}${value.startsWith('/') ? '' : '/'}${value}`;
+}
+
+function renderPostSeo(post, slug) {
+  const title = `${post.title} | Nilma Alves Advocacia`;
+  const description = metaDescription(post);
+  const pageUrl = `${SITE_ORIGIN}/post.html?slug=${encodeURIComponent(slug)}`;
+  const image = absoluteAssetUrl(post.coverImage);
+  const imageTag = image ? `\n  <meta property="og:image" content="${escapeHtml(image)}">` : '';
+  return `<!-- post-seo -->
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Nilma Alves Advocacia">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">${imageTag}
+  <meta property="og:url" content="${escapeHtml(pageUrl)}">
+  <link rel="canonical" href="${escapeHtml(pageUrl)}">
+  <!-- /post-seo -->`;
+}
+
+app.use((req, res, next) => {
+  if (requestHost(req) !== 'dev.nilmaalves.adv.br') return next();
+  res.redirect(301, `${SITE_ORIGIN}${req.originalUrl || '/'}`);
+});
+
+app.get('/post.html', (req, res, next) => {
+  const slug = String(req.query.slug || '').trim();
+  let html;
+  try {
+    html = fs.readFileSync(path.join(ROOT, 'post.html'), 'utf8');
+  } catch (err) {
+    return next(err);
+  }
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  if (!slug) return res.send(html);
+  try {
+    const post = getPostBySlug(slug);
+    if (!post || post.status !== 'published') {
+      res.status(404);
+      return res.send(html);
+    }
+    if (!POST_SEO_RE.test(html)) return res.send(html);
+    return res.send(html.replace(POST_SEO_RE, renderPostSeo(post, slug)));
+  } catch (err) {
+    return next(err);
+  }
+});
 
 app.use(express.json());
 app.use(cookieParser());
