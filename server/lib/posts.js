@@ -277,6 +277,16 @@ function deletePostImage(imageId) {
   return info.changes > 0;
 }
 
+function listPublishedSitemapEntries() {
+  const db = getDb();
+  return db.prepare(`
+    SELECT slug, COALESCE(updated_at, published_at, created_at) AS updatedAt
+    FROM posts
+    WHERE status = 'published'
+    ORDER BY COALESCE(published_at, created_at) DESC
+  `).all();
+}
+
 function listTags() {
   const db = getDb();
   const rows = db.prepare("SELECT tags FROM posts WHERE tags IS NOT NULL AND tags != ''").all();
@@ -302,4 +312,5 @@ module.exports = {
   addPostImage,
   deletePostImage,
   listTags,
+  listPublishedSitemapEntries,
 };

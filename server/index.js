@@ -17,7 +17,8 @@ const {
 const users = require('./lib/users');
 
 const { getDb } = require('./lib/db');
-const { getPostBySlug } = require('./lib/posts');
+const { getPostBySlug, listPublishedSitemapEntries } = require('./lib/posts');
+const uploads = require('./lib/upload');
 const settings = require('./lib/settings');
 const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./openapi');
@@ -38,6 +39,10 @@ users.ensureBootstrapAdmin();
 require('./lib/secrets').getSecretsKey();
 // Reconcilia depoimentos: volume Docker (draft) ↔ JSON público (site)
 ensureReviewsSynced();
+const repairedCovers = uploads.repairStoredImages(getDb());
+if (repairedCovers.length) {
+  console.log(`Capas do blog renomeadas com extensão: ${repairedCovers.length}`);
+}
 
 const ROOT = path.join(__dirname, '..');
 const SITE_ORIGIN = 'https://nilmaalves.adv.br';
@@ -139,6 +144,28 @@ app.get('/post.html', (req, res, next) => {
   }
 });
 
+function xmlEscape(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+app.get('/sitemap.xml', (req, res) => {
+  const base = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
+  const articles = listPublishedSitemapEntries().map((entry) => {
+    const loc = `${SITE_ORIGIN}/post.html?slug=${encodeURIComponent(entry.slug)}`;
+    const day = String(entry.updatedAt || '').slice(0, 10);
+    const lastmod = /^\d{4}-\d{2}-\d{2}$/.test(day) ? `\n    <lastmod>${day}</lastmod>` : '';
+    return `  <url>\n    <loc>${xmlEscape(loc)}</loc>${lastmod}\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
+  }).join('\n');
+  const xml = articles ? base.replace('</urlset>', `${articles}\n</urlset>`) : base;
+  res.type('application/xml');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.send(xml);
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(ROOT, {
@@ -150,7 +177,25 @@ app.use(express.static(ROOT, {
     }
   },
 }));
-app.use('/uploads/blog', express.static(path.join(ROOT, 'data', 'uploads', 'blog')));
+app.use('/uploads/blog', (req, res, next) => {
+  let rel = '';
+  try { rel = decodeURIComponent(req.path).replace(/^\/+/, ''); } catch { return next(); }
+  if (!rel || rel.includes('..') || uploads.extensionFromName(rel)) return next();
+  const dir = uploads.getUploadDir;
+  const stem = rel.endsWith('.') ? rel.slice(0, -1) : rel;
+  for (const ext of ['.jpg', '.png', '.webp', '.gif']) {
+    if (fs.existsSync(path.join(dir, `${stem}${ext}`))) {
+      return res.redirect(301, `/uploads/blog/${stem}${ext}`);
+    }
+  }
+  next();
+});
+app.use('/uploads/blog', express.static(uploads.getUploadDir, {
+  setHeaders(res, filePath) {
+    const type = uploads.contentTypeForFile(filePath);
+    if (type) res.setHeader('Content-Type', type);
+  },
+}));
 
 app.get('/api/docs/openapi.json', (req, res) => res.json(openapiSpec));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
