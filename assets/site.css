@@ -581,28 +581,50 @@ body {
   .site .brand { flex-basis: 180px; }
   .site .brand-logo { width: 168px; height: 58px; }
   .site .hero {
-    min-height: min(100svh, 760px);
-    background: #0f1014 center top / cover no-repeat url("photos/hero-02.jpg");
+    min-height: 0;
+    background: var(--cream);
   }
-  .site .hero::before { display: none; }
-  .site .hero::after {
-    content: ""; position: absolute; inset: 0; z-index: 1;
-    background:
-      linear-gradient(180deg, rgba(15,16,20,.28) 0%, rgba(15,16,20,.12) 32%, rgba(15,16,20,.55) 58%, rgba(15,16,20,.88) 100%);
-  }
+  .site .hero::before,
+  .site .hero::after { display: none; }
   .site .hero-grid {
-    min-height: min(100svh, 760px);
-    padding: 28px 0 36px;
-    align-items: end;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    gap: 0;
   }
-  .site .hero .eyebrow { color: #e8d5b0; margin-bottom: 14px; }
-  .site .hero .eyebrow::before { flex: 0 0 34px; margin-top: 8px; background: #e8d5b0; }
+  .site .hero-grid > :first-child {
+    order: 2;
+    padding: 28px 15px 36px;
+  }
+  .site .portrait {
+    display: block;
+    order: 1;
+    align-self: stretch;
+    min-height: 0;
+    background: #1a1214;
+  }
+  .site .portrait-card {
+    width: 100%;
+    height: min(62vh, 520px);
+    border-radius: 0;
+    box-shadow: none;
+    background: #1a1214;
+  }
+  .site .portrait-card img {
+    object-position: 50% 18%;
+    filter: none;
+  }
+  .site .portrait-label { display: none; }
+  .site .hero .eyebrow { color: var(--wine); margin-bottom: 14px; }
+  .site .hero .eyebrow::before { flex: 0 0 34px; margin-top: 8px; background: var(--gold); }
   .site .hero .hero-actions { flex-direction: column; align-items: flex-start; }
   .site h1 { max-width: 100%; font-size: clamp(30px, 8.4vw, 38px); overflow-wrap: anywhere; }
-  .site .hero h1 { color: #fff; text-shadow: 0 1px 18px rgba(0,0,0,.35); }
-  .site .hero .lead { margin: 16px 0 22px; color: rgba(255,255,255,.92); }
-  .site .hero .text-link { color: #fff; border-bottom-color: var(--gold); }
-  .site .portrait { display: none; }
+  .site .hero h1 { color: var(--wine-deep); text-shadow: none; }
+  .site .hero .lead { margin: 16px 0 22px; color: var(--muted); }
+  .site .hero .text-link { color: var(--wine); border-bottom-color: var(--gold); }
   .site .trust-grid { grid-template-columns: 1fr 1fr; }
   .site .trust-item { min-height: 105px; padding: 20px 16px; }
   .site .trust-item:first-child { grid-column: 1 / -1; }
