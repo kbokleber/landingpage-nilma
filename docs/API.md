@@ -28,13 +28,15 @@ A chave é gerada no painel admin:
 ## Fluxo recomendado para o outro software
 
 ```
-1. POST /api/v1/posts          → cria o post (draft ou published)
+1. POST /api/v1/posts          → cria o post (draft, published ou scheduled)
 2. POST /api/v1/posts/{id}/cover   → (opcional) envia a capa
 3. POST /api/v1/posts/{id}/images  → (opcional) envia imagens da galeria
-4. POST /api/v1/posts/{id}/publish → publica (se criou como draft)
+4. POST /api/v1/posts/{id}/publish → publica agora (se criou como draft/scheduled)
 ```
 
 Se o conteúdo já estiver revisado no sistema de origem, pode criar direto com `"status": "published"` no passo 1 e pular o passo 4.
+
+Para publicar em um horário futuro sem manter o PC ligado, crie com `"status": "scheduled"` e `"publishAt"` (ISO 8601). O servidor no Coolify libera o post sozinho quando o horário chegar.
 
 ---
 
@@ -82,6 +84,7 @@ A API pública `/api/public/*` (só leitura de posts **publicados**, usada pelo 
 |---|---|
 | `published` (padrão) | Só publicados |
 | `draft` | Só rascunhos |
+| `scheduled` | Só agendados |
 | `archived` | Só arquivados |
 | `all` | Todos |
 
@@ -99,7 +102,15 @@ Campos do body JSON:
 | `author` | string | não | Padrão: Dra. Nilma Alves |
 | `tags` | string[] | não | Ex.: `["imobiliario","familia"]` |
 | `coverImage` | string | não | URL relativa após upload |
-| `status` | string | não | `draft` (padrão), `published`, `archived` |
+| `status` | string | não | `draft` (padrão), `published`, `scheduled`, `archived` |
+| `publishAt` | string | não | ISO 8601. Se for no futuro, o post fica `scheduled` até o horário |
+
+Regras de agendamento:
+
+- `publishAt` no futuro → `status = scheduled` (não aparece no site ainda)
+- `publishAt` no passado/agora → publica imediatamente
+- `status: draft` → ignora `publishAt`
+- O servidor verifica a cada 60s e publica os posts vencidos
 
 Exemplo de resposta `201` / `200`:
 
@@ -113,10 +124,11 @@ Exemplo de resposta `201` / `200`:
   "coverImage": "/uploads/blog/capa-123.jpg",
   "author": "Dra. Nilma Alves",
   "tags": ["imobiliario", "2026"],
-  "status": "published",
-  "publishedAt": "2026-09-11T21:00:00.000Z",
-  "createdAt": "2026-09-11T21:00:00.000Z",
-  "updatedAt": "2026-09-11T21:00:00.000Z"
+  "status": "scheduled",
+  "publishedAt": null,
+  "publishAt": "2026-10-15T12:00:00.000Z",
+  "createdAt": "2026-10-12T21:00:00.000Z",
+  "updatedAt": "2026-10-12T21:00:00.000Z"
 }
 ```
 
@@ -142,6 +154,22 @@ curl -X POST "http://127.0.0.1:3001/api/v1/posts" \
     "contentHtml": "<p>Conteúdo completo do post com <strong>HTML</strong>.</p>",
     "tags": ["imobiliario", "2026"],
     "status": "published"
+  }'
+```
+
+### Criar agendado (publica sozinho no horário)
+
+```bash
+curl -X POST "http://127.0.0.1:3001/api/v1/posts" \
+  -H "X-API-Key: nilma_sua_chave_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Post agendado para amanhã",
+    "excerpt": "Este post sobe sozinho no horário marcado.",
+    "contentHtml": "<p>Conteúdo completo.</p>",
+    "tags": ["familia"],
+    "status": "scheduled",
+    "publishAt": "2026-10-15T09:00:00-03:00"
   }'
 ```
 

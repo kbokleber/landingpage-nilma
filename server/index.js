@@ -19,6 +19,7 @@ const users = require('./lib/users');
 const { getDb } = require('./lib/db');
 const { getPostBySlug, listPublishedSitemapEntries } = require('./lib/posts');
 const uploads = require('./lib/upload');
+const { startScheduler } = require('./lib/scheduler');
 const settings = require('./lib/settings');
 const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./openapi');
@@ -440,6 +441,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   const { dbPath } = require('./lib/db');
+  startScheduler();
   console.log(`Servidor em http://localhost:${PORT}`);
   console.log(`Admin: http://localhost:${PORT}/admin/`);
   console.log(`Banco SQLite: ${dbPath}`);

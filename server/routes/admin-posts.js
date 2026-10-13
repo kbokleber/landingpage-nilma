@@ -23,6 +23,7 @@ function readMultipartBody(req) {
   const rawAuthor = req.body?.author;
   const rawTags = req.body?.tags;
   const rawStatus = req.body?.status;
+  const rawPublishAt = req.body?.publishAt;
 
   const title = typeof rawTitle === 'string' ? rawTitle : '';
   const excerpt = typeof rawExcerpt === 'string' ? rawExcerpt : '';
@@ -38,10 +39,13 @@ function readMultipartBody(req) {
     } else {
       tags = trimmed.split(',').map((t) => t.trim()).filter(Boolean);
     }
+  } else if (Array.isArray(rawTags)) {
+    tags = rawTags.filter(Boolean);
   }
   const status = typeof rawStatus === 'string' ? rawStatus : undefined;
+  const publishAt = typeof rawPublishAt === 'string' ? rawPublishAt : (rawPublishAt === null ? null : undefined);
 
-  return { title, excerpt, contentHtml, author, tags, status };
+  return { title, excerpt, contentHtml, author, tags, status, publishAt };
 }
 
 function cleanUpFiles(req) {
@@ -70,13 +74,13 @@ router.get('/posts/:id', (req, res) => {
 
 router.post('/posts', upload.single('cover'), (req, res) => {
   try {
-    const { title, excerpt, contentHtml, author, tags, status } = readMultipartBody(req);
+    const { title, excerpt, contentHtml, author, tags, status, publishAt } = readMultipartBody(req);
     if (!title || !contentHtml) {
       cleanUpFiles(req);
       return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
     }
     const coverImage = req.file ? `/uploads/blog/${req.file.filename}` : '';
-    const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status });
+    const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status, publishAt });
     if (req.file) {
       post.coverImageUploaded = true;
     }
@@ -90,9 +94,10 @@ router.post('/posts', upload.single('cover'), (req, res) => {
 router.put('/posts/:id', upload.single('cover'), (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { title, excerpt, contentHtml, author, tags, status } = readMultipartBody(req);
+    const { title, excerpt, contentHtml, author, tags, status, publishAt } = readMultipartBody(req);
     const body = { title, excerpt, contentHtml, author, tags };
     if (status) body.status = status;
+    if (publishAt !== undefined) body.publishAt = publishAt;
     if (req.file) body.coverImage = `/uploads/blog/${req.file.filename}`;
     const post = updatePost(id, body);
     if (!post) {

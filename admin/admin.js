@@ -428,6 +428,7 @@ const blogCoverPreview = document.getElementById('blog-cover-preview');
 const blogCoverRemove = document.getElementById('blog-cover-remove');
 const blogTags = document.getElementById('blog-tags');
 const blogStatus = document.getElementById('blog-status');
+const blogPublishAt = document.getElementById('blog-publish-at');
 const blogStatusFilter = document.getElementById('blog-status-filter');
 const blogDateFrom = document.getElementById('blog-date-from');
 const blogDateTo = document.getElementById('blog-date-to');
@@ -467,8 +468,56 @@ function renderPendingCover(file) {
   blogCover.dataset.pendingSize = String(file.size);
 }
 
+function toDateTimeLocalValue(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type) => parts.find((p) => p.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
+
+function fromDateTimeLocalValue(value) {
+  if (!value) return null;
+  // Interpreta o valor do datetime-local como horário de Brasília
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const [, y, m, d, hh, mm] = match;
+  const asUtc = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), Number(hh) + 3, Number(mm)));
+  // Ajuste simples: Brasília é UTC-3 (sem horário de verão desde 2019)
+  return asUtc.toISOString();
+}
+
+function statusLabel(status) {
+  if (status === 'published') return 'publicado';
+  if (status === 'scheduled') return 'agendado';
+  if (status === 'archived') return 'arquivado';
+  return 'rascunho';
+}
+
 function readBlogForm() {
   const contentHtml = window.BlogEditor ? window.BlogEditor.getHtml() : (blogContent.value || blogContent.innerHTML || '');
+  const publishAtLocal = blogPublishAt ? blogPublishAt.value : '';
+  let status = blogStatus.value || 'draft';
+  const publishAt = fromDateTimeLocalValue(publishAtLocal);
+  if (status === 'scheduled' && !publishAt) {
+    throw new Error('Informe a data/hora em “Publicar em” para agendar o post.');
+  }
+  if (publishAt && status !== 'draft' && status !== 'archived' && status !== 'published') {
+    status = 'scheduled';
+  }
+  if (publishAt && status === 'published') {
+    // Data futura + publicado → agenda; data passada → deixa o servidor publicar agora
+    status = 'scheduled';
+  }
   return {
     title: blogTitle.value.trim(),
     excerpt: blogExcerpt.value.trim(),
@@ -476,7 +525,8 @@ function readBlogForm() {
     coverImage: blogCover.value.trim(),
     author: blogAuthor.value.trim() || 'Dra. Nilma Alves',
     tags: blogTags.value.split(',').map((t) => t.trim()).filter(Boolean),
-    status: blogStatus.value || 'draft',
+    status,
+    publishAt,
   };
 }
 
@@ -492,14 +542,22 @@ function fillBlogForm(post) {
   blogCoverPendingFile = null;
   renderCoverPreview(post.coverImage || '');
   blogTags.value = (post.tags || []).join(', ');
-  blogStatus.value = post.status || 'draft';
+  const status = post.status || 'draft';
+  if (blogStatus.querySelector(`option[value="${status}"]`)) {
+    blogStatus.value = status;
+  } else {
+    blogStatus.value = 'draft';
+  }
+  if (blogPublishAt) {
+    blogPublishAt.value = toDateTimeLocalValue(post.publishAt || '');
+  }
   renderBlogImages(post.images || []);
 }
 
 function resetBlogForm() {
   blogCurrentId = null;
   blogEditorTitle.textContent = 'Novo post';
-  fillBlogForm({ title: '', author: 'Dra. Nilma Alves', excerpt: '', contentHtml: '', coverImage: '', tags: [], images: [] });
+  fillBlogForm({ title: '', author: 'Dra. Nilma Alves', excerpt: '', contentHtml: '', coverImage: '', tags: [], images: [], status: 'draft', publishAt: null });
   setBlogStatus('');
   blogCoverInput.value = '';
 }
@@ -549,14 +607,18 @@ async function loadBlogList() {
     }
     blogList.innerHTML = data.items.map((p) => {
       const createdAt = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-BR') : '—';
+      const scheduledAt = p.publishAt
+        ? new Date(p.publishAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : '';
       return `
       <div class="blog-item">
         <div class="blog-item-info">
           <div class="blog-item-title">${escapeHtml(p.title || '(sem título)')}</div>
           <div class="blog-item-meta">
-            <span class="blog-item-status ${escapeAttr(p.status)}">${escapeHtml(p.status)}</span>
+            <span class="blog-item-status ${escapeAttr(p.status)}">${escapeHtml(statusLabel(p.status))}</span>
             <span>Criado: ${createdAt}</span>
             ${p.publishedAt ? `<span>Publicado: ${new Date(p.publishedAt).toLocaleDateString('pt-BR')}</span>` : ''}
+            ${scheduledAt ? `<span>Agendado: ${escapeHtml(scheduledAt)}</span>` : ''}
             <span>/${escapeHtml(p.slug)}</span>
             ${p.tags && p.tags.length ? `<span>${p.tags.map(escapeHtml).join(', ')}</span>` : ''}
           </div>
@@ -596,10 +658,21 @@ async function loadBlogEditor(id) {
 }
 
 async function saveBlogPost({ publishNow = false } = {}) {
-  const payload = readBlogForm();
+  let payload;
+  try {
+    payload = readBlogForm();
+  } catch (err) {
+    setBlogStatus(err.message);
+    showFlash(err.message, 'err');
+    return;
+  }
   if (!payload.title || !payload.contentHtml) {
     setBlogStatus('Preencha título e conteúdo.');
     return;
+  }
+  if (publishNow) {
+    payload.status = 'published';
+    payload.publishAt = null;
   }
   const useMultipart = !!blogCoverPendingFile;
   try {
@@ -612,6 +685,8 @@ async function saveBlogPost({ publishNow = false } = {}) {
       fd.append('author', payload.author || 'Dra. Nilma Alves');
       fd.append('tags', payload.tags.join(','));
       fd.append('status', payload.status || 'draft');
+      if (payload.publishAt) fd.append('publishAt', payload.publishAt);
+      else fd.append('publishAt', '');
       fd.append('cover', blogCoverPendingFile, blogCoverPendingFile.name);
       const url = blogCurrentId ? `/api/admin/posts/${blogCurrentId}` : '/api/admin/posts';
       const method = blogCurrentId ? 'PUT' : 'POST';
@@ -640,12 +715,14 @@ async function saveBlogPost({ publishNow = false } = {}) {
     if (publishNow && post.status !== 'published') {
       post = await api(`/api/admin/posts/${blogCurrentId}/publish`, { method: 'POST' });
     }
-    if (post.status !== blogStatus.value) {
-      blogStatus.value = post.status;
-    }
+    fillBlogForm(post);
     setBlogStatus(`Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`);
-    const finalStatus = blogStatus.value;
-    const msg = finalStatus === 'published' ? 'Post publicado.' : (finalStatus === 'archived' ? 'Post arquivado.' : 'Rascunho salvo.');
+    const finalStatus = post.status;
+    const msg = finalStatus === 'published'
+      ? 'Post publicado.'
+      : (finalStatus === 'scheduled'
+        ? 'Post agendado.'
+        : (finalStatus === 'archived' ? 'Post arquivado.' : 'Rascunho salvo.'));
     showFlash(msg, 'ok');
     loadBlogList();
   } catch (err) {

@@ -150,6 +150,7 @@
               <select id="blog-status-filter" class="select-inline">
                 <option value="">Todos os status</option>
                 <option value="draft">Rascunhos</option>
+                <option value="scheduled">Agendados</option>
                 <option value="published">Publicados</option>
                 <option value="archived">Arquivados</option>
               </select>
@@ -180,9 +181,15 @@
                 <label for="blog-status">Status</label>
                 <select id="blog-status">
                   <option value="draft">Rascunho (não aparece no site)</option>
+                  <option value="scheduled">Agendado (publica no horário)</option>
                   <option value="published">Publicado (visível no blog público)</option>
                   <option value="archived">Arquivado (não aparece no site)</option>
                 </select>
+              </div>
+              <div>
+                <label for="blog-publish-at">Publicar em</label>
+                <input type="datetime-local" id="blog-publish-at">
+                <p class="sub" style="margin-top:6px">Fuso de Brasília. Preencha para agendar; deixe vazio se for rascunho ou publicação imediata.</p>
               </div>
             </div>
             <label for="blog-excerpt">Resumo (excerpt)</label>

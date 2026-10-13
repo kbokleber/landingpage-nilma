@@ -600,6 +600,7 @@ input[type="date"].select-inline {
   letter-spacing: 0.3px;
 }
 .blog-item-status.draft { background: #fff3cd; color: #856404; }
+.blog-item-status.scheduled { background: #dbeafe; color: #1e40af; }
 .blog-item-status.published { background: #d4edda; color: #155724; }
 .blog-item-status.archived { background: #e2e3e5; color: #6c757d; }
 

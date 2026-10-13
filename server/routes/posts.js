@@ -27,16 +27,16 @@ router.get('/posts', (req, res) => {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const offset = Math.max(0, Number(req.query.offset) || 0);
   const tag = req.query.tag || null;
-  // status: published (padrão) | draft | archived | all
+  // status: published (padrão) | draft | scheduled | archived | all
   const statusRaw = String(req.query.status || 'published').toLowerCase();
-  const allowed = ['published', 'draft', 'archived', 'all'];
+  const allowed = ['published', 'draft', 'scheduled', 'archived', 'all'];
   const status = allowed.includes(statusRaw) ? statusRaw : 'published';
   const { total, items } = listAllPosts({
     status: status === 'all' ? null : status,
     tag,
     limit,
     offset,
-    includeDrafts: status === 'all' || status === 'draft' || status === 'archived',
+    includeDrafts: status === 'all' || status === 'draft' || status === 'scheduled' || status === 'archived',
   });
   res.json({ total, limit, offset, status, items });
 });
@@ -55,25 +55,50 @@ router.get('/posts/:slugOrId', (req, res) => {
 });
 
 router.post('/posts', (req, res) => {
-  const { title, excerpt, contentHtml, coverImage, author, tags, status } = req.body || {};
-  if (!title || !contentHtml) {
-    return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
+  try {
+    const { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = req.body || {};
+    if (!title || !contentHtml) {
+      return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
+    }
+    // status é opcional. Padrão = draft. Use "scheduled" + publishAt para agendar.
+    const allowedStatus = ['draft', 'published', 'scheduled', 'archived'];
+    const finalStatus = allowedStatus.includes(status) ? status : (publishAt ? 'scheduled' : 'draft');
+    const post = createPost({
+      title,
+      excerpt,
+      contentHtml,
+      coverImage,
+      author,
+      tags,
+      status: finalStatus,
+      publishAt,
+    });
+    res.status(201).json(post);
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Falha ao criar post.' });
   }
-  // status é opcional. Padrão = draft. Sistemas externos podem enviar "published"
-  // para criar já público (ex.: após aprovação em revisão).
-  const allowedStatus = ['draft', 'published', 'archived'];
-  const finalStatus = allowedStatus.includes(status) ? status : 'draft';
-  const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status: finalStatus });
-  res.status(201).json(post);
 });
 
 router.put('/posts/:id', (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isFinite(id)) return res.status(400).json({ error: 'ID inválido.' });
-  const { title, excerpt, contentHtml, coverImage, author, tags, status } = req.body || {};
-  const post = updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags, status });
-  if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
-  res.json(post);
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'ID inválido.' });
+    const { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = req.body || {};
+    const post = updatePost(id, {
+      title,
+      excerpt,
+      contentHtml,
+      coverImage,
+      author,
+      tags,
+      status,
+      publishAt,
+    });
+    if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
+    res.json(post);
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Falha ao atualizar post.' });
+  }
 });
 
 router.delete('/posts/:id', (req, res) => {

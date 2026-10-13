@@ -7,8 +7,6 @@ const ALLOWED_TAGS = [
   'hr', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
 ];
 
-const SAFE_STYLE_PATTERN = /^(color|background-color|background|font-family|font-size|font-weight|font-style|text-decoration|text-align|line-height|letter-spacing)(\s*:\s*[^;]+)?(;\s*(color|background-color|background|font-family|font-size|font-weight|font-style|text-decoration|text-align|line-height|letter-spacing)(\s*:\s*[^;]+)?)*\s*;?\s*$/i;
-
 const SANITIZE_OPTS = {
   allowedTags: ALLOWED_TAGS,
   allowedAttributes: {
@@ -118,6 +116,81 @@ function parseTags(value) {
   return [];
 }
 
+function parsePublishAt(value) {
+  if (value == null || value === '') return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error('publishAt inválido. Use ISO 8601, ex.: 2026-10-15T09:00:00-03:00');
+  }
+  return date.toISOString();
+}
+
+function resolvePublishFields({ status, publishAt, existing = null }) {
+  const now = Date.now();
+  let nextPublishAt;
+  if (publishAt !== undefined) {
+    nextPublishAt = parsePublishAt(publishAt);
+  } else {
+    nextPublishAt = existing?.publishAt || null;
+  }
+
+  let desiredStatus = status;
+  if (desiredStatus == null) desiredStatus = existing?.status || 'draft';
+
+  if (desiredStatus === 'draft') {
+    return {
+      status: 'draft',
+      publishedAt: existing?.publishedAt || null,
+      publishAt: null,
+    };
+  }
+
+  if (desiredStatus === 'archived') {
+    return {
+      status: 'archived',
+      publishedAt: existing?.publishedAt || null,
+      publishAt: null,
+    };
+  }
+
+  if (nextPublishAt) {
+    const when = new Date(nextPublishAt).getTime();
+    if (when > now) {
+      return {
+        status: 'scheduled',
+        publishedAt: null,
+        publishAt: nextPublishAt,
+      };
+    }
+    return {
+      status: 'published',
+      publishedAt: new Date().toISOString(),
+      publishAt: null,
+    };
+  }
+
+  if (desiredStatus === 'scheduled') {
+    throw new Error('Para agendar, informe publishAt no futuro.');
+  }
+
+  if (desiredStatus === 'published') {
+    const publishedAt = existing?.status === 'published' && existing.publishedAt
+      ? existing.publishedAt
+      : new Date().toISOString();
+    return {
+      status: 'published',
+      publishedAt,
+      publishAt: null,
+    };
+  }
+
+  return {
+    status: desiredStatus,
+    publishedAt: existing?.publishedAt || null,
+    publishAt: null,
+  };
+}
+
 function rowToPost(row) {
   if (!row) return null;
   return {
@@ -131,6 +204,7 @@ function rowToPost(row) {
     tags: parseTags(row.tags),
     status: row.status,
     publishedAt: row.published_at,
+    publishAt: row.publish_at || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -149,7 +223,7 @@ function listAllPosts({ status = null, tag = null, limit = 20, offset = 0, inclu
   const totalRow = db.prepare(`SELECT COUNT(*) AS c FROM posts ${whereSql}`).get(params);
   const rows = db.prepare(`
     SELECT * FROM posts ${whereSql}
-    ORDER BY COALESCE(published_at, created_at) DESC
+    ORDER BY COALESCE(published_at, publish_at, created_at) DESC
     LIMIT @limit OFFSET @offset
   `).all({ ...params, limit, offset });
   return {
@@ -176,17 +250,16 @@ function getPostImages(postId) {
   return rows.map((r) => ({ id: r.id, url: r.url, alt: r.alt || '', position: r.position }));
 }
 
-function createPost({ title, excerpt, contentHtml, coverImage, author, tags, status }) {
+function createPost({ title, excerpt, contentHtml, coverImage, author, tags, status, publishAt }) {
   const db = getDb();
   const baseSlug = slugify(title);
   const slug = uniqueSlug(baseSlug);
   const safeContent = sanitizeContent(normalizeContent(contentHtml));
   const tagsJson = JSON.stringify(parseTags(tags));
-  const finalStatus = status === 'published' ? 'published' : 'draft';
-  const publishedAt = finalStatus === 'published' ? new Date().toISOString() : null;
+  const lifecycle = resolvePublishFields({ status, publishAt });
   const stmt = db.prepare(`
-    INSERT INTO posts (slug, title, excerpt, content_html, cover_image, author, tags, status, published_at, created_at, updated_at)
-    VALUES (@slug, @title, @excerpt, @contentHtml, @coverImage, @author, @tags, @status, @publishedAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    INSERT INTO posts (slug, title, excerpt, content_html, cover_image, author, tags, status, published_at, publish_at, created_at, updated_at)
+    VALUES (@slug, @title, @excerpt, @contentHtml, @coverImage, @author, @tags, @status, @publishedAt, @publishAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   `);
   const info = stmt.run({
     slug,
@@ -196,13 +269,14 @@ function createPost({ title, excerpt, contentHtml, coverImage, author, tags, sta
     coverImage: coverImage || '',
     author: author || 'Dra. Nilma Alves',
     tags: tagsJson,
-    status: finalStatus,
-    publishedAt,
+    status: lifecycle.status,
+    publishedAt: lifecycle.publishedAt,
+    publishAt: lifecycle.publishAt,
   });
   return getPostById(info.lastInsertRowid);
 }
 
-function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags, status }) {
+function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = {}) {
   const db = getDb();
   const existing = getPostById(id);
   if (!existing) return null;
@@ -211,6 +285,13 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
   if (title && title !== existing.title) {
     newSlug = uniqueSlug(slugify(title), id);
   }
+
+  const lifecycle = resolvePublishFields({
+    status: status !== undefined ? status : existing.status,
+    publishAt: publishAt !== undefined ? publishAt : existing.publishAt,
+    existing,
+  });
+
   const fields = {
     slug: newSlug,
     title: newTitle,
@@ -219,15 +300,11 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
     coverImage: coverImage != null ? coverImage : existing.coverImage,
     author: author != null ? author : existing.author,
     tags: tags != null ? JSON.stringify(parseTags(tags)) : JSON.stringify(existing.tags),
-    status: existing.status,
-    publishedAt: existing.publishedAt,
+    status: lifecycle.status,
+    publishedAt: lifecycle.publishedAt,
+    publishAt: lifecycle.publishAt,
   };
-  if (status === 'published' && existing.status !== 'published') {
-    fields.status = 'published';
-    fields.publishedAt = new Date().toISOString();
-  } else if (status === 'draft' || status === 'archived') {
-    fields.status = status;
-  }
+
   db.prepare(`
     UPDATE posts SET
       slug = @slug,
@@ -239,6 +316,7 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
       tags = @tags,
       status = @status,
       published_at = @publishedAt,
+      publish_at = @publishAt,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = @id
   `).run({ ...fields, id });
@@ -249,11 +327,32 @@ function publishPost(id) {
   const db = getDb();
   const existing = getPostById(id);
   if (!existing) return null;
+  const publishedAt = new Date().toISOString();
   db.prepare(`
-    UPDATE posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(id);
+    UPDATE posts
+    SET status = 'published',
+        published_at = @publishedAt,
+        publish_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = @id
+  `).run({ id, publishedAt });
   return getPostById(id);
+}
+
+function publishDuePosts() {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const info = db.prepare(`
+    UPDATE posts
+    SET status = 'published',
+        published_at = @now,
+        publish_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE status = 'scheduled'
+      AND publish_at IS NOT NULL
+      AND publish_at <= @now
+  `).run({ now });
+  return info.changes;
 }
 
 function deletePost(id) {
@@ -308,6 +407,7 @@ module.exports = {
   createPost,
   updatePost,
   publishPost,
+  publishDuePosts,
   deletePost,
   addPostImage,
   deletePostImage,

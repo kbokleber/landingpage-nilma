@@ -38,8 +38,9 @@ const spec = {
           coverImage: { type: 'string', example: '/uploads/blog/capa-123.jpg' },
           author: { type: 'string', example: 'Dra. Nilma Alves' },
           tags: { type: 'array', items: { type: 'string' }, example: ['imobiliario', '2026'] },
-          status: { type: 'string', enum: ['draft', 'published', 'archived'] },
+          status: { type: 'string', enum: ['draft', 'published', 'scheduled', 'archived'] },
           publishedAt: { type: 'string', format: 'date-time', nullable: true },
+          publishAt: { type: 'string', format: 'date-time', nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
           images: {
@@ -72,8 +73,14 @@ const spec = {
           tags: { type: 'array', items: { type: 'string' } },
           status: {
             type: 'string',
-            enum: ['draft', 'published', 'archived'],
-            description: 'Opcional. Padrão: draft. Use "published" para criar já público.',
+            enum: ['draft', 'published', 'scheduled', 'archived'],
+            description: 'Opcional. Padrão: draft. Use "published" para criar já público ou "scheduled" com publishAt.',
+          },
+          publishAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'ISO 8601. Se for no futuro, o post fica agendado até o horário.',
+            example: '2026-10-15T09:00:00-03:00',
           },
         },
       },
@@ -151,7 +158,7 @@ const spec = {
             name: 'status',
             in: 'query',
             description: 'Filtro de status. Padrão: published. Use all para todos.',
-            schema: { type: 'string', enum: ['published', 'draft', 'archived', 'all'], default: 'published' },
+            schema: { type: 'string', enum: ['published', 'draft', 'scheduled', 'archived', 'all'], default: 'published' },
           },
         ],
         responses: {

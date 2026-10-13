@@ -46,7 +46,13 @@
             {
               "id": "var-status",
               "name": "status",
-              "value": "published",
+              "value": "scheduled",
+              "type": "string"
+            },
+            {
+              "id": "var-publish-at",
+              "name": "publishAt",
+              "value": "2026-10-15T09:00:00-03:00",
               "type": "string"
             },
             {
@@ -111,7 +117,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"excerpt\": {{ JSON.stringify($json.excerpt) }},\n  \"contentHtml\": {{ JSON.stringify($json.contentHtml) }},\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"status\": {{ JSON.stringify($json.status) }}\n}",
+        "jsonBody": "={\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"excerpt\": {{ JSON.stringify($json.excerpt) }},\n  \"contentHtml\": {{ JSON.stringify($json.contentHtml) }},\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"status\": {{ JSON.stringify($json.status) }},\n  \"publishAt\": {{ JSON.stringify($json.publishAt || null) }}\n}",
         "options": {}
       },
       "id": "create-post",

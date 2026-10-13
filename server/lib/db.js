@@ -108,6 +108,12 @@ function initSchema(db) {
   if (!apiKeysCols.find((c) => c.name === 'key_encrypted')) {
     db.exec('ALTER TABLE api_keys ADD COLUMN key_encrypted TEXT');
   }
+
+  const postsCols = db.prepare("PRAGMA table_info(posts)").all();
+  if (!postsCols.find((c) => c.name === 'publish_at')) {
+    db.exec('ALTER TABLE posts ADD COLUMN publish_at DATETIME');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_posts_publish_at ON posts(publish_at)');
 }
 
 function closeDb() {
