@@ -167,6 +167,13 @@ app.get('/sitemap.xml', (req, res) => {
   res.send(xml);
 });
 
+app.get(['/regularizacao', '/regularizacao/'], (req, res) => {
+  res.redirect(301, '/regularizacao-de-imoveis.html');
+});
+app.get(['/inventario', '/inventario/'], (req, res) => {
+  res.redirect(301, '/inventarios-sucessoes.html');
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(ROOT, {

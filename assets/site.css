@@ -190,7 +190,7 @@ body {
 }
 
 /* Services */
-.site .services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.site .services { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
 .site .service {
   position: relative; min-height: 330px; padding: 30px; overflow: hidden;
   border: 1px solid var(--line); border-radius: 4px 18px 4px 4px; background: #fff;
