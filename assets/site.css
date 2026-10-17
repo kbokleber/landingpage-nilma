@@ -527,6 +527,54 @@ body {
 }
 .site .foot-bottom a { color: #d9bd8f; }
 
+/* Cookie consent (Google Ads / LGPD) */
+.cookie-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 70;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  border: 1px solid rgba(91, 33, 49, .18);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(50, 19, 29, .16);
+  color: #32131d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cookie-banner p { margin: 0; flex: 1 1 280px; }
+.cookie-banner a { color: #5b2131; text-decoration: underline; }
+.cookie-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.cookie-banner button {
+  appearance: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.cookie-banner .cookie-accept { background: #5b2131; color: #fff; }
+.cookie-banner .cookie-reject {
+  background: transparent;
+  color: #5b2131;
+  border: 1px solid rgba(91, 33, 49, .35);
+}
+body.has-wa-fixed .cookie-banner { bottom: 84px; }
+@media (min-width: 721px) {
+  .cookie-banner { left: 50%; right: auto; transform: translateX(-50%); width: calc(100% - 32px); }
+  body.has-wa-fixed .cookie-banner { bottom: 16px; }
+}
+
 /* Fixed mobile WhatsApp */
 .site .wa-fixed {
   display: none;
