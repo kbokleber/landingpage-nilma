@@ -113,7 +113,106 @@ function initSchema(db) {
   if (!postsCols.find((c) => c.name === 'publish_at')) {
     db.exec('ALTER TABLE posts ADD COLUMN publish_at DATETIME');
   }
+  if (!postsCols.find((c) => c.name === 'seo_title')) {
+    db.exec('ALTER TABLE posts ADD COLUMN seo_title TEXT');
+  }
+  if (!postsCols.find((c) => c.name === 'cover_alt')) {
+    db.exec('ALTER TABLE posts ADD COLUMN cover_alt TEXT');
+  }
   db.exec('CREATE INDEX IF NOT EXISTS idx_posts_publish_at ON posts(publish_at)');
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS post_slug_redirects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      old_slug TEXT UNIQUE NOT NULL,
+      post_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_post_slug_redirects_post_id ON post_slug_redirects(post_id);
+  `);
+
+  migrateSeoSlugs(db);
+}
+
+const SEO_SLUG_MIGRATIONS = [
+  {
+    id: 17,
+    oldSlug: 'a-familia-quer-vender-o-apartamento-da-praia-mas-o-inventario-ainda-nao-terminou-e-agora',
+    newSlug: 'vender-imovel-durante-inventario',
+    seoTitle: 'Vender imóvel durante o inventário: 3 caminhos | Nilma Alves',
+  },
+  {
+    id: 16,
+    oldSlug: 'meu-pai-esta-esquecendo-as-coisas-ainda-da-tempo-de-organizar-a-vida-dele',
+    newSlug: 'pais-idosos-perdendo-a-lucidez',
+    seoTitle: 'Pais idosos perdendo a lucidez: o que fazer | Nilma Alves',
+  },
+  {
+    id: 15,
+    oldSlug: 'a-familia-tem-a-casa-mas-nao-tem-dinheiro-para-o-imposto-o-inventario-precisa-esperar',
+    newSlug: 'inventario-sem-pagar-itcmd-antes',
+    seoTitle: 'Inventário sem pagar ITCMD antes: o que mudou | Nilma Alves',
+  },
+  {
+    id: 9,
+    oldSlug: 'voces-moram-juntos-ha-6-anos-e-nunca-formalizaram-nada-so-que-para-a-lei-isso-ja-aconteceu-sozinho',
+    newSlug: 'uniao-estavel-sem-formalizar',
+    seoTitle: 'União estável sem papel: o que a lei reconhece | Nilma Alves',
+  },
+  {
+    id: 7,
+    oldSlug: 'ela-escreveu-um-testamento-deixando-tudo-para-uma-so-filha-a-lei-disse-que-so-metade-disso-era-dela-para-decidir',
+    newSlug: 'testamento-e-legitima',
+    seoTitle: 'Testamento e legítima: quanto posso deixar a um filho?',
+  },
+  {
+    id: 6,
+    oldSlug: 'a-casa-da-familia-ainda-esta-no-nome-do-seu-avo-que-morreu-ha-8-anos-isso-pode-custar-mais-caro-do-que-voce-imagina',
+    newSlug: 'imovel-no-nome-de-quem-morreu',
+    seoTitle: 'Imóvel no nome de quem morreu: o que fazer | Nilma Alves',
+  },
+  {
+    id: 1,
+    oldSlug: 'se-voce-tem-imoveis-precisa-pensar-em-sucessao-antes-do-inventario',
+    newSlug: 'sucessao-de-imoveis-antes-do-inventario',
+    seoTitle: 'Sucessão de imóveis antes do inventário | Nilma Alves',
+  },
+];
+
+function migrateSeoSlugs(db) {
+  const getById = db.prepare('SELECT id, slug FROM posts WHERE id = ?');
+  const update = db.prepare(`
+    UPDATE posts
+    SET slug = @newSlug,
+        seo_title = @seoTitle,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = @id
+  `);
+  const insertRedirect = db.prepare(`
+    INSERT OR IGNORE INTO post_slug_redirects (old_slug, post_id)
+    VALUES (@oldSlug, @postId)
+  `);
+
+  const tx = db.transaction(() => {
+    for (const item of SEO_SLUG_MIGRATIONS) {
+      const row = getById.get(item.id);
+      if (!row) continue;
+      const currentSlug = row.slug;
+      if (currentSlug !== item.newSlug) {
+        insertRedirect.run({ oldSlug: currentSlug, postId: item.id });
+        if (item.oldSlug && item.oldSlug !== currentSlug) {
+          insertRedirect.run({ oldSlug: item.oldSlug, postId: item.id });
+        }
+        update.run({ id: item.id, newSlug: item.newSlug, seoTitle: item.seoTitle });
+      } else {
+        insertRedirect.run({ oldSlug: item.oldSlug, postId: item.id });
+        db.prepare('UPDATE posts SET seo_title = COALESCE(NULLIF(seo_title, \'\'), ?) WHERE id = ?')
+          .run(item.seoTitle, item.id);
+      }
+    }
+  });
+  tx();
 }
 
 function closeDb() {

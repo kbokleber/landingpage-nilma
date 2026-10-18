@@ -178,6 +178,18 @@
             </div>
             <div class="grid-2">
               <div>
+                <label for="blog-slug">Slug (endereço /blog/...)</label>
+                <input type="text" id="blog-slug" placeholder="sugerido-a-partir-do-titulo" autocomplete="off">
+                <p class="sub" style="margin-top:6px">Editável. Ao mudar um post publicado, o endereço antigo redireciona com 301.</p>
+              </div>
+              <div>
+                <label for="blog-seo-title">Título SEO (&lt;title&gt;)</label>
+                <input type="text" id="blog-seo-title" maxlength="60" placeholder="Até 60 caracteres (vazio = usa o título)">
+                <p class="sub" style="margin-top:6px"><span id="blog-seo-title-count">0</span>/60</p>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div>
                 <label for="blog-status">Status</label>
                 <select id="blog-status">
                   <option value="draft">Rascunho (não aparece no site)</option>
@@ -215,6 +227,9 @@
                 <input type="file" id="blog-cover-input" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,.svg,.avif,.heic,.heif,.ico,.apng">
                 <button class="btn outline" type="button" id="blog-cover-remove" hidden>Remover capa</button>
               </div>
+              <label for="blog-cover-alt" style="margin-top:10px">Texto alternativo da capa (alt)</label>
+              <input type="text" id="blog-cover-alt" maxlength="125" placeholder="Descreva a imagem (até 125 caracteres)">
+              <p class="sub" style="margin-top:6px"><span id="blog-cover-alt-count">0</span>/125</p>
               <input type="hidden" id="blog-cover" value="">
             </div>
 

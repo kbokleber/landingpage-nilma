@@ -419,6 +419,9 @@ const blogEditor = document.getElementById('blog-editor');
 const blogEditorTitle = document.getElementById('blog-editor-title');
 const blogTitle = document.getElementById('blog-title');
 const blogAuthor = document.getElementById('blog-author');
+const blogSlug = document.getElementById('blog-slug');
+const blogSeoTitle = document.getElementById('blog-seo-title');
+const blogSeoTitleCount = document.getElementById('blog-seo-title-count');
 const blogExcerpt = document.getElementById('blog-excerpt');
 const blogContent = document.getElementById('blog-content');
 const blogToolbar = document.getElementById('blog-toolbar');
@@ -426,9 +429,12 @@ const blogCover = document.getElementById('blog-cover');
 const blogCoverInput = document.getElementById('blog-cover-input');
 const blogCoverPreview = document.getElementById('blog-cover-preview');
 const blogCoverRemove = document.getElementById('blog-cover-remove');
+const blogCoverAlt = document.getElementById('blog-cover-alt');
+const blogCoverAltCount = document.getElementById('blog-cover-alt-count');
 const blogTags = document.getElementById('blog-tags');
 const blogStatus = document.getElementById('blog-status');
 const blogPublishAt = document.getElementById('blog-publish-at');
+let blogSlugTouched = false;
 const blogStatusFilter = document.getElementById('blog-status-filter');
 const blogDateFrom = document.getElementById('blog-date-from');
 const blogDateTo = document.getElementById('blog-date-to');
@@ -503,6 +509,23 @@ function statusLabel(status) {
   return 'rascunho';
 }
 
+function slugifyClient(input) {
+  return String(input || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 120);
+}
+
+function updateSeoCounters() {
+  if (blogSeoTitleCount) blogSeoTitleCount.textContent = String((blogSeoTitle?.value || '').length);
+  if (blogCoverAltCount) blogCoverAltCount.textContent = String((blogCoverAlt?.value || '').length);
+}
+
 function readBlogForm() {
   const contentHtml = window.BlogEditor ? window.BlogEditor.getHtml() : (blogContent.value || blogContent.innerHTML || '');
   const publishAtLocal = blogPublishAt ? blogPublishAt.value : '';
@@ -520,9 +543,12 @@ function readBlogForm() {
   }
   return {
     title: blogTitle.value.trim(),
+    slug: (blogSlug?.value || '').trim(),
+    seoTitle: (blogSeoTitle?.value || '').trim().slice(0, 60),
     excerpt: blogExcerpt.value.trim(),
     contentHtml,
     coverImage: blogCover.value.trim(),
+    coverAlt: (blogCoverAlt?.value || '').trim().slice(0, 125),
     author: blogAuthor.value.trim() || 'Dra. Nilma Alves',
     tags: blogTags.value.split(',').map((t) => t.trim()).filter(Boolean),
     status,
@@ -533,6 +559,10 @@ function readBlogForm() {
 function fillBlogForm(post) {
   blogTitle.value = post.title || '';
   blogAuthor.value = post.author || 'Dra. Nilma Alves';
+  if (blogSlug) blogSlug.value = post.slug || '';
+  blogSlugTouched = !!post.slug;
+  if (blogSeoTitle) blogSeoTitle.value = post.seoTitle || '';
+  if (blogCoverAlt) blogCoverAlt.value = post.coverAlt || '';
   blogExcerpt.value = post.excerpt || '';
   if (window.BlogEditor) {
     window.BlogEditor.setHtml(post.contentHtml || '<p></p>');
@@ -551,13 +581,18 @@ function fillBlogForm(post) {
   if (blogPublishAt) {
     blogPublishAt.value = toDateTimeLocalValue(post.publishAt || '');
   }
+  updateSeoCounters();
   renderBlogImages(post.images || []);
 }
 
 function resetBlogForm() {
   blogCurrentId = null;
+  blogSlugTouched = false;
   blogEditorTitle.textContent = 'Novo post';
-  fillBlogForm({ title: '', author: 'Dra. Nilma Alves', excerpt: '', contentHtml: '', coverImage: '', tags: [], images: [], status: 'draft', publishAt: null });
+  fillBlogForm({
+    title: '', author: 'Dra. Nilma Alves', slug: '', seoTitle: '', excerpt: '',
+    contentHtml: '', coverImage: '', coverAlt: '', tags: [], images: [], status: 'draft', publishAt: null,
+  });
   setBlogStatus('');
   blogCoverInput.value = '';
 }
@@ -619,7 +654,7 @@ async function loadBlogList() {
             <span>Criado: ${createdAt}</span>
             ${p.publishedAt ? `<span>Publicado: ${new Date(p.publishedAt).toLocaleDateString('pt-BR')}</span>` : ''}
             ${scheduledAt ? `<span>Agendado: ${escapeHtml(scheduledAt)}</span>` : ''}
-            <span>/${escapeHtml(p.slug)}</span>
+            <span>/blog/${escapeHtml(p.slug)}</span>
             ${p.tags && p.tags.length ? `<span>${p.tags.map(escapeHtml).join(', ')}</span>` : ''}
           </div>
         </div>
@@ -680,9 +715,12 @@ async function saveBlogPost({ publishNow = false } = {}) {
     if (useMultipart) {
       const fd = new FormData();
       fd.append('title', payload.title);
+      fd.append('slug', payload.slug || '');
+      fd.append('seoTitle', payload.seoTitle || '');
       fd.append('excerpt', payload.excerpt || '');
       fd.append('contentHtml', payload.contentHtml || '');
       fd.append('author', payload.author || 'Dra. Nilma Alves');
+      fd.append('coverAlt', payload.coverAlt || '');
       fd.append('tags', payload.tags.join(','));
       fd.append('status', payload.status || 'draft');
       if (payload.publishAt) fd.append('publishAt', payload.publishAt);
@@ -771,6 +809,17 @@ document.getElementById('blog-publish-btn').addEventListener('click', () => save
 document.getElementById('blog-delete-btn').addEventListener('click', () => {
   if (blogCurrentId) deleteBlogPost(blogCurrentId);
 });
+if (blogTitle && blogSlug) {
+  blogTitle.addEventListener('input', () => {
+    if (blogSlugTouched || blogCurrentId) return;
+    blogSlug.value = slugifyClient(blogTitle.value);
+  });
+  blogSlug.addEventListener('input', () => {
+    blogSlugTouched = true;
+  });
+}
+if (blogSeoTitle) blogSeoTitle.addEventListener('input', updateSeoCounters);
+if (blogCoverAlt) blogCoverAlt.addEventListener('input', updateSeoCounters);
 blogStatusFilter.addEventListener('change', loadBlogList);
 if (blogDateFrom) blogDateFrom.addEventListener('change', loadBlogList);
 if (blogDateTo) blogDateTo.addEventListener('change', loadBlogList);

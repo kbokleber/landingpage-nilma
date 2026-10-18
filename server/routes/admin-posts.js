@@ -24,11 +24,17 @@ function readMultipartBody(req) {
   const rawTags = req.body?.tags;
   const rawStatus = req.body?.status;
   const rawPublishAt = req.body?.publishAt;
+  const rawSlug = req.body?.slug;
+  const rawSeoTitle = req.body?.seoTitle;
+  const rawCoverAlt = req.body?.coverAlt;
 
   const title = typeof rawTitle === 'string' ? rawTitle : '';
   const excerpt = typeof rawExcerpt === 'string' ? rawExcerpt : '';
   const contentHtml = typeof rawContent === 'string' ? rawContent : '';
   const author = typeof rawAuthor === 'string' ? rawAuthor : '';
+  const slug = typeof rawSlug === 'string' ? rawSlug : undefined;
+  const seoTitle = typeof rawSeoTitle === 'string' ? rawSeoTitle : undefined;
+  const coverAlt = typeof rawCoverAlt === 'string' ? rawCoverAlt : undefined;
 
   let tags;
   if (typeof rawTags === 'string') {
@@ -45,7 +51,7 @@ function readMultipartBody(req) {
   const status = typeof rawStatus === 'string' ? rawStatus : undefined;
   const publishAt = typeof rawPublishAt === 'string' ? rawPublishAt : (rawPublishAt === null ? null : undefined);
 
-  return { title, excerpt, contentHtml, author, tags, status, publishAt };
+  return { title, excerpt, contentHtml, author, tags, status, publishAt, slug, seoTitle, coverAlt };
 }
 
 function cleanUpFiles(req) {
@@ -74,13 +80,15 @@ router.get('/posts/:id', (req, res) => {
 
 router.post('/posts', upload.single('cover'), (req, res) => {
   try {
-    const { title, excerpt, contentHtml, author, tags, status, publishAt } = readMultipartBody(req);
+    const { title, excerpt, contentHtml, author, tags, status, publishAt, slug, seoTitle, coverAlt } = readMultipartBody(req);
     if (!title || !contentHtml) {
       cleanUpFiles(req);
       return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
     }
     const coverImage = req.file ? `/uploads/blog/${req.file.filename}` : '';
-    const post = createPost({ title, excerpt, contentHtml, coverImage, author, tags, status, publishAt });
+    const post = createPost({
+      title, excerpt, contentHtml, coverImage, coverAlt, author, tags, status, publishAt, slug, seoTitle,
+    });
     if (req.file) {
       post.coverImageUploaded = true;
     }
@@ -94,10 +102,13 @@ router.post('/posts', upload.single('cover'), (req, res) => {
 router.put('/posts/:id', upload.single('cover'), (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { title, excerpt, contentHtml, author, tags, status, publishAt } = readMultipartBody(req);
+    const { title, excerpt, contentHtml, author, tags, status, publishAt, slug, seoTitle, coverAlt } = readMultipartBody(req);
     const body = { title, excerpt, contentHtml, author, tags };
     if (status) body.status = status;
     if (publishAt !== undefined) body.publishAt = publishAt;
+    if (slug !== undefined) body.slug = slug;
+    if (seoTitle !== undefined) body.seoTitle = seoTitle;
+    if (coverAlt !== undefined) body.coverAlt = coverAlt;
     if (req.file) body.coverImage = `/uploads/blog/${req.file.filename}`;
     const post = updatePost(id, body);
     if (!post) {

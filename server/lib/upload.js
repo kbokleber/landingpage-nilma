@@ -256,6 +256,31 @@ function repairStoredImages(db) {
   return replacements;
 }
 
+function renameCoverToSlug(coverUrl, slug) {
+  const url = String(coverUrl || '').trim();
+  const cleanSlug = String(slug || '').trim();
+  if (!url || !cleanSlug) return url;
+  const match = url.match(/^\/uploads\/blog\/([^/?#]+)$/);
+  if (!match) return url;
+  const oldName = match[1];
+  const ext = extensionFromName(oldName) || path.extname(oldName) || '.jpg';
+  const newName = `${cleanSlug}${ext}`;
+  if (oldName === newName) return url;
+  const dir = getUploadDir();
+  const from = path.join(dir, oldName);
+  const to = path.join(dir, newName);
+  if (!fs.existsSync(from)) return url;
+  if (fs.existsSync(to)) {
+    try { fs.unlinkSync(to); } catch { return url; }
+  }
+  try {
+    fs.renameSync(from, to);
+    return `/uploads/blog/${newName}`;
+  } catch {
+    return url;
+  }
+}
+
 module.exports = {
   upload,
   get getUploadDir() { return getUploadDir(); },
@@ -265,4 +290,5 @@ module.exports = {
   contentTypeForFile,
   extensionFromName,
   repairStoredImages,
+  renameCoverToSlug,
 };

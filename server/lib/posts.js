@@ -197,9 +197,11 @@ function rowToPost(row) {
     id: row.id,
     slug: row.slug,
     title: row.title,
+    seoTitle: row.seo_title || '',
     excerpt: row.excerpt || '',
     contentHtml: row.content_html,
     coverImage: row.cover_image || '',
+    coverAlt: row.cover_alt || '',
     author: row.author || 'Dra. Nilma Alves',
     tags: parseTags(row.tags),
     status: row.status,
@@ -208,6 +210,84 @@ function rowToPost(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function addSlugRedirect(oldSlug, postId) {
+  const clean = slugify(oldSlug);
+  if (!clean || !postId) return;
+  const db = getDb();
+  db.prepare(`
+    INSERT OR IGNORE INTO post_slug_redirects (old_slug, post_id)
+    VALUES (?, ?)
+  `).run(clean, postId);
+}
+
+function getPostByOldSlug(oldSlug) {
+  const db = getDb();
+  const redirect = db.prepare(`
+    SELECT p.*
+    FROM post_slug_redirects r
+    JOIN posts p ON p.id = r.post_id
+    WHERE r.old_slug = ?
+  `).get(slugify(oldSlug) || oldSlug);
+  return rowToPost(redirect);
+}
+
+function resolvePostBySlug(slug) {
+  const direct = getPostBySlug(slug);
+  if (direct) return { post: direct, viaRedirect: false };
+  const redirected = getPostByOldSlug(slug);
+  if (redirected) return { post: redirected, viaRedirect: true };
+  return { post: null, viaRedirect: false };
+}
+
+function truncateSeoTitle(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.slice(0, 60);
+}
+
+function truncateCoverAlt(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.slice(0, 125);
+}
+
+function extractFaqPairs(html) {
+  const source = String(html || '');
+  const pairs = [];
+  const re = /<p[^>]*>\s*<strong[^>]*>([\s\S]*?)<\/strong>\s*([\s\S]*?)<\/p>/gi;
+  let match;
+  while ((match = re.exec(source))) {
+    const question = stripTags(match[1]).trim();
+    const answer = stripTags(match[2]).trim();
+    if (!question || !answer) continue;
+    if (!/\?/.test(question)) continue;
+    pairs.push({ question, answer });
+  }
+  return pairs;
+}
+
+function stripTags(html) {
+  return String(html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function maybeRenameCover(coverImage, slug) {
+  try {
+    const { renameCoverToSlug } = require('./upload');
+    return renameCoverToSlug(coverImage, slug) || coverImage;
+  } catch {
+    return coverImage;
+  }
 }
 
 function listAllPosts({ status = null, tag = null, limit = 20, offset = 0, includeDrafts = true, dateFrom = null, dateTo = null } = {}) {
@@ -250,23 +330,35 @@ function getPostImages(postId) {
   return rows.map((r) => ({ id: r.id, url: r.url, alt: r.alt || '', position: r.position }));
 }
 
-function createPost({ title, excerpt, contentHtml, coverImage, author, tags, status, publishAt }) {
+function createPost({ title, excerpt, contentHtml, coverImage, coverAlt, author, tags, status, publishAt, slug, seoTitle } = {}) {
   const db = getDb();
-  const baseSlug = slugify(title);
-  const slug = uniqueSlug(baseSlug);
+  const requestedSlug = slug != null && String(slug).trim()
+    ? slugify(slug)
+    : slugify(title);
+  if (!requestedSlug) throw new Error('Slug inválido.');
+  const finalSlug = uniqueSlug(requestedSlug);
   const safeContent = sanitizeContent(normalizeContent(contentHtml));
   const tagsJson = JSON.stringify(parseTags(tags));
   const lifecycle = resolvePublishFields({ status, publishAt });
+  const finalCover = maybeRenameCover(coverImage || '', finalSlug);
   const stmt = db.prepare(`
-    INSERT INTO posts (slug, title, excerpt, content_html, cover_image, author, tags, status, published_at, publish_at, created_at, updated_at)
-    VALUES (@slug, @title, @excerpt, @contentHtml, @coverImage, @author, @tags, @status, @publishedAt, @publishAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    INSERT INTO posts (
+      slug, title, seo_title, excerpt, content_html, cover_image, cover_alt,
+      author, tags, status, published_at, publish_at, created_at, updated_at
+    )
+    VALUES (
+      @slug, @title, @seoTitle, @excerpt, @contentHtml, @coverImage, @coverAlt,
+      @author, @tags, @status, @publishedAt, @publishAt, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    )
   `);
   const info = stmt.run({
-    slug,
+    slug: finalSlug,
     title: title.trim(),
+    seoTitle: truncateSeoTitle(seoTitle),
     excerpt: excerpt || '',
     contentHtml: safeContent,
-    coverImage: coverImage || '',
+    coverImage: finalCover || '',
+    coverAlt: truncateCoverAlt(coverAlt),
     author: author || 'Dra. Nilma Alves',
     tags: tagsJson,
     status: lifecycle.status,
@@ -276,14 +368,23 @@ function createPost({ title, excerpt, contentHtml, coverImage, author, tags, sta
   return getPostById(info.lastInsertRowid);
 }
 
-function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = {}) {
+function updatePost(id, {
+  title, excerpt, contentHtml, coverImage, coverAlt, author, tags, status, publishAt, slug, seoTitle,
+} = {}) {
   const db = getDb();
   const existing = getPostById(id);
   if (!existing) return null;
   const newTitle = title != null ? title : existing.title;
+
   let newSlug = existing.slug;
-  if (title && title !== existing.title) {
-    newSlug = uniqueSlug(slugify(title), id);
+  if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
+    const wanted = slugify(slug);
+    if (!wanted) throw new Error('Slug inválido.');
+    newSlug = uniqueSlug(wanted, id);
+  }
+
+  if (newSlug !== existing.slug) {
+    addSlugRedirect(existing.slug, id);
   }
 
   const lifecycle = resolvePublishFields({
@@ -292,12 +393,17 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
     existing,
   });
 
+  let nextCover = coverImage != null ? coverImage : existing.coverImage;
+  nextCover = maybeRenameCover(nextCover, newSlug);
+
   const fields = {
     slug: newSlug,
     title: newTitle,
+    seoTitle: seoTitle !== undefined ? truncateSeoTitle(seoTitle) : (existing.seoTitle || ''),
     excerpt: excerpt != null ? excerpt : existing.excerpt,
     contentHtml: contentHtml != null ? sanitizeContent(normalizeContent(contentHtml)) : existing.contentHtml,
-    coverImage: coverImage != null ? coverImage : existing.coverImage,
+    coverImage: nextCover || '',
+    coverAlt: coverAlt !== undefined ? truncateCoverAlt(coverAlt) : (existing.coverAlt || ''),
     author: author != null ? author : existing.author,
     tags: tags != null ? JSON.stringify(parseTags(tags)) : JSON.stringify(existing.tags),
     status: lifecycle.status,
@@ -309,9 +415,11 @@ function updatePost(id, { title, excerpt, contentHtml, coverImage, author, tags,
     UPDATE posts SET
       slug = @slug,
       title = @title,
+      seo_title = @seoTitle,
       excerpt = @excerpt,
       content_html = @contentHtml,
       cover_image = @coverImage,
+      cover_alt = @coverAlt,
       author = @author,
       tags = @tags,
       status = @status,
@@ -403,6 +511,8 @@ module.exports = {
   listAllPosts,
   getPostBySlug,
   getPostById,
+  getPostByOldSlug,
+  resolvePostBySlug,
   getPostImages,
   createPost,
   updatePost,
@@ -413,4 +523,8 @@ module.exports = {
   deletePostImage,
   listTags,
   listPublishedSitemapEntries,
+  addSlugRedirect,
+  extractFaqPairs,
+  truncateSeoTitle,
+  truncateCoverAlt,
 };

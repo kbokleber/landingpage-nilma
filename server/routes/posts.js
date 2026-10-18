@@ -56,7 +56,9 @@ router.get('/posts/:slugOrId', (req, res) => {
 
 router.post('/posts', (req, res) => {
   try {
-    const { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = req.body || {};
+    const {
+      title, excerpt, contentHtml, coverImage, coverAlt, author, tags, status, publishAt, slug, seoTitle,
+    } = req.body || {};
     if (!title || !contentHtml) {
       return res.status(400).json({ error: 'Campos obrigatórios: title, contentHtml.' });
     }
@@ -68,10 +70,13 @@ router.post('/posts', (req, res) => {
       excerpt,
       contentHtml,
       coverImage,
+      coverAlt,
       author,
       tags,
       status: finalStatus,
       publishAt,
+      slug,
+      seoTitle,
     });
     res.status(201).json(post);
   } catch (err) {
@@ -83,16 +88,21 @@ router.put('/posts/:id', (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: 'ID inválido.' });
-    const { title, excerpt, contentHtml, coverImage, author, tags, status, publishAt } = req.body || {};
+    const {
+      title, excerpt, contentHtml, coverImage, coverAlt, author, tags, status, publishAt, slug, seoTitle,
+    } = req.body || {};
     const post = updatePost(id, {
       title,
       excerpt,
       contentHtml,
       coverImage,
+      coverAlt,
       author,
       tags,
       status,
       publishAt,
+      slug,
+      seoTitle,
     });
     if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
     res.json(post);

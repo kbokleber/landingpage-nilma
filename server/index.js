@@ -17,7 +17,13 @@ const {
 const users = require('./lib/users');
 
 const { getDb } = require('./lib/db');
-const { getPostBySlug, listPublishedSitemapEntries } = require('./lib/posts');
+const {
+  listPublishedSitemapEntries,
+  resolvePostBySlug,
+  getPostImages,
+  sanitizeContent,
+  extractFaqPairs,
+} = require('./lib/posts');
 const uploads = require('./lib/upload');
 const { startScheduler } = require('./lib/scheduler');
 const settings = require('./lib/settings');
@@ -48,6 +54,8 @@ if (repairedCovers.length) {
 const ROOT = path.join(__dirname, '..');
 const SITE_ORIGIN = 'https://nilmaalves.adv.br';
 const POST_SEO_RE = /<!-- post-seo -->[\s\S]*?<!-- \/post-seo -->/;
+const POST_JSONLD_RE = /<!-- post-jsonld -->[\s\S]*?<!-- \/post-jsonld -->/;
+const POST_BODY_RE = /<!-- post-body -->[\s\S]*?<!-- \/post-body -->/;
 const app = express();
 const PORT = (() => {
   try { return Number(settings.get('PORT')) || 3001; } catch { return Number(process.env.PORT) || 3001; }
@@ -97,12 +105,34 @@ function absoluteAssetUrl(url) {
   return `${SITE_ORIGIN}${value.startsWith('/') ? '' : '/'}${value}`;
 }
 
-function renderPostSeo(post, slug) {
-  const title = `${post.title} | Nilma Alves Advocacia`;
+function formatPostDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'America/Sao_Paulo',
+    });
+  } catch {
+    return '';
+  }
+}
+
+function seoPageTitle(post) {
+  const custom = String(post.seoTitle || '').trim();
+  if (custom) return custom;
+  return `${post.title} | Nilma Alves Advocacia`;
+}
+
+function renderPostSeo(post) {
+  const title = seoPageTitle(post);
   const description = metaDescription(post);
-  const pageUrl = `${SITE_ORIGIN}/post.html?slug=${encodeURIComponent(slug)}`;
+  const pageUrl = `${SITE_ORIGIN}/blog/${encodeURIComponent(post.slug)}`;
   const image = absoluteAssetUrl(post.coverImage);
   const imageTag = image ? `\n  <meta property="og:image" content="${escapeHtml(image)}">` : '';
+  const modified = post.updatedAt || post.publishedAt || '';
+  const published = post.publishedAt || post.createdAt || '';
   return `<!-- post-seo -->
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
@@ -112,37 +142,172 @@ function renderPostSeo(post, slug) {
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">${imageTag}
   <meta property="og:url" content="${escapeHtml(pageUrl)}">
+  ${published ? `<meta property="article:published_time" content="${escapeHtml(published)}">` : ''}
+  ${modified ? `<meta property="article:modified_time" content="${escapeHtml(modified)}">` : ''}
   <link rel="canonical" href="${escapeHtml(pageUrl)}">
   <!-- /post-seo -->`;
 }
 
+function renderPostJsonLd(post) {
+  const pageUrl = `${SITE_ORIGIN}/blog/${post.slug}`;
+  const image = absoluteAssetUrl(post.coverImage);
+  const description = metaDescription(post);
+  const blogPosting = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description,
+    image: image || undefined,
+    datePublished: post.publishedAt || post.createdAt || undefined,
+    dateModified: post.updatedAt || post.publishedAt || post.createdAt || undefined,
+    mainEntityOfPage: pageUrl,
+    author: {
+      '@type': 'Person',
+      name: 'Nilma Alves de Oliveira',
+      jobTitle: 'Advogada',
+      identifier: 'OAB/SP 268.128',
+      url: `${SITE_ORIGIN}/sobre.html`,
+    },
+    publisher: {
+      '@type': 'LegalService',
+      name: 'Nilma Alves Advocacia',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_ORIGIN}/assets/nilma-alves-logo.png`,
+      },
+      url: `${SITE_ORIGIN}/`,
+    },
+  };
+  const faqs = extractFaqPairs(post.contentHtml);
+  const blocks = [
+    `<script type="application/ld+json">${JSON.stringify(blogPosting)}</script>`,
+  ];
+  if (faqs.length) {
+    const faqPage = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    };
+    blocks.push(`<script type="application/ld+json">${JSON.stringify(faqPage)}</script>`);
+  }
+  return `<!-- post-jsonld -->\n  ${blocks.join('\n  ')}\n  <!-- /post-jsonld -->`;
+}
+
+function renderPostBody(post, images = []) {
+  const cleanHtml = sanitizeContent(post.contentHtml || '');
+  const tags = (post.tags || [])
+    .map((t) => `<span class="post-tag">${escapeHtml(t)}</span>`)
+    .join('');
+  const gallery = images.length
+    ? `<div class="post-gallery">${images.map((img) =>
+      `<img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || '')}" loading="lazy" width="800" height="500">`
+    ).join('')}</div>`
+    : '';
+  const pageUrl = `${SITE_ORIGIN}/blog/${encodeURIComponent(post.slug)}`;
+  const shareUrl = encodeURIComponent(pageUrl);
+  const shareText = encodeURIComponent(post.title);
+  const coverAlt = escapeHtml(post.coverAlt || post.title || 'Capa do artigo');
+  const cover = post.coverImage
+    ? `<div class="post-cover"><img src="${escapeHtml(post.coverImage)}" alt="${coverAlt}" width="1200" height="630" loading="eager" decoding="async"></div>`
+    : '';
+  const publishedLabel = formatPostDate(post.publishedAt);
+
+  return `<!-- post-body -->
+      <div id="post-main">
+        <section class="page-hero">
+          <div class="wrap">
+            <nav class="breadcrumb" aria-label="Navegação estrutural">
+              <a href="/index.html">Início</a><span aria-hidden="true">/</span><a href="/blog.html">Blog</a><span aria-hidden="true">/</span><span>${escapeHtml(post.title)}</span>
+            </nav>
+            <p class="eyebrow">Blog</p>
+            <h1>${escapeHtml(post.title)}</h1>
+            <div class="post-meta">
+              <span><strong>${escapeHtml(post.author || 'Dra. Nilma Alves')}</strong></span>
+              ${publishedLabel ? `<span>${escapeHtml(publishedLabel)}</span>` : ''}
+            </div>
+          </div>
+        </section>
+        ${cover}
+        <article class="post-article">
+          <div class="wrap-narrow">
+            <div class="post-content">${cleanHtml}</div>
+            ${gallery}
+            ${tags ? `<div class="post-tags">${tags}</div>` : ''}
+            <p class="post-author-byline" style="margin-top:28px">
+              <a class="text-link" href="/sobre.html">Dra. Nilma Alves de Oliveira · OAB/SP 268.128</a>
+            </p>
+            <div class="share-row">
+              <span>Compartilhar:</span>
+              <a href="https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener noreferrer">Facebook</a>
+              <a href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+            <p style="margin-top:28px"><a class="text-link" href="/blog.html">← Voltar ao blog</a></p>
+          </div>
+        </article>
+      </div>
+      <!-- /post-body -->`;
+}
+
+function loadPostTemplate() {
+  return fs.readFileSync(path.join(ROOT, 'post.html'), 'utf8');
+}
+
+function renderBlogPostHtml(post) {
+  let html = loadPostTemplate();
+  const images = getPostImages(post.id);
+  html = html.replace(POST_SEO_RE, renderPostSeo(post));
+  html = html.replace(POST_JSONLD_RE, renderPostJsonLd(post));
+  html = html.replace(POST_BODY_RE, renderPostBody(post, images));
+  return html;
+}
+
 app.use((req, res, next) => {
-  if (requestHost(req) !== 'dev.nilmaalves.adv.br') return next();
-  res.redirect(301, `${SITE_ORIGIN}${req.originalUrl || '/'}`);
+  const host = requestHost(req);
+  if (host === 'dev.nilmaalves.adv.br' || host === 'www.nilmaalves.adv.br') {
+    return res.redirect(301, `${SITE_ORIGIN}${req.originalUrl || '/'}`);
+  }
+  return next();
 });
 
-app.get('/post.html', (req, res, next) => {
-  const slug = String(req.query.slug || '').trim();
-  let html;
+app.get('/blog/:slug', (req, res, next) => {
+  const slug = String(req.params.slug || '').trim();
+  if (!slug) return res.redirect(301, '/blog.html');
   try {
-    html = fs.readFileSync(path.join(ROOT, 'post.html'), 'utf8');
-  } catch (err) {
-    return next(err);
-  }
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  if (!slug) return res.send(html);
-  try {
-    const post = getPostBySlug(slug);
+    const { post, viaRedirect } = resolvePostBySlug(slug);
     if (!post || post.status !== 'published') {
+      const html = loadPostTemplate();
       res.status(404);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.send(html);
     }
-    if (!POST_SEO_RE.test(html)) return res.send(html);
-    return res.send(html.replace(POST_SEO_RE, renderPostSeo(post, slug)));
+    if (viaRedirect || post.slug !== slug) {
+      return res.redirect(301, `/blog/${encodeURIComponent(post.slug)}`);
+    }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(renderBlogPostHtml(post));
   } catch (err) {
     return next(err);
   }
+});
+
+app.get('/post.html', (req, res) => {
+  const slug = String(req.query.slug || '').trim();
+  if (!slug) return res.redirect(301, '/blog.html');
+  const { post } = resolvePostBySlug(slug);
+  if (!post || post.status !== 'published') {
+    return res.redirect(302, '/blog.html');
+  }
+  return res.redirect(301, `/blog/${encodeURIComponent(post.slug)}`);
 });
 
 function xmlEscape(value) {
@@ -156,7 +321,7 @@ function xmlEscape(value) {
 app.get('/sitemap.xml', (req, res) => {
   const base = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
   const articles = listPublishedSitemapEntries().map((entry) => {
-    const loc = `${SITE_ORIGIN}/post.html?slug=${encodeURIComponent(entry.slug)}`;
+    const loc = `${SITE_ORIGIN}/blog/${encodeURIComponent(entry.slug)}`;
     const day = String(entry.updatedAt || '').slice(0, 10);
     const lastmod = /^\d{4}-\d{2}-\d{2}$/.test(day) ? `\n    <lastmod>${day}</lastmod>` : '';
     return `  <url>\n    <loc>${xmlEscape(loc)}</loc>${lastmod}\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;

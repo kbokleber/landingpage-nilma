@@ -8,6 +8,10 @@ import { Color } from 'https://esm.sh/@tiptap/extension-color@2.6.6';
 import { Highlight } from 'https://esm.sh/@tiptap/extension-highlight@2.6.6';
 import TextAlign from 'https://esm.sh/@tiptap/extension-text-align@2.6.6';
 import Placeholder from 'https://esm.sh/@tiptap/extension-placeholder@2.6.6';
+import { Table } from 'https://esm.sh/@tiptap/extension-table@2.6.6';
+import { TableRow } from 'https://esm.sh/@tiptap/extension-table-row@2.6.6';
+import { TableCell } from 'https://esm.sh/@tiptap/extension-table-cell@2.6.6';
+import { TableHeader } from 'https://esm.sh/@tiptap/extension-table-header@2.6.6';
 
 // Estende a TextStyle para incluir fontFamily e fontSize como atributos
 const ExtendedTextStyle = TextStyle.extend({
@@ -97,6 +101,7 @@ function buildToolbar() {
       <button type="button" class="tt-btn" data-action="bulletList" title="Lista">•</button>
       <button type="button" class="tt-btn" data-action="orderedList" title="Lista numerada">1.</button>
       <button type="button" class="tt-btn" data-action="blockquote" title="Citação">❝</button>
+      <button type="button" class="tt-btn" data-action="table" title="Inserir tabela">▦</button>
     </div>
     <div class="tt-group">
       <button type="button" class="tt-btn" data-action="link" title="Inserir link">🔗</button>
@@ -196,6 +201,9 @@ function handleAction(action, color) {
     case 'bulletList': chain.toggleBulletList().run(); break;
     case 'orderedList': chain.toggleOrderedList().run(); break;
     case 'blockquote': chain.toggleBlockquote().run(); break;
+    case 'table':
+      chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+      break;
     case 'link': {
       const prev = editor.getAttributes('link').href;
       const url = window.prompt('URL do link (deixe vazio para remover):', prev || 'https://');
@@ -242,6 +250,10 @@ async function init() {
     Highlight.configure({ multicolor: true }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     Placeholder.configure({ placeholder: 'Comece a escrever o post...' }),
+    Table.configure({ resizable: false }),
+    TableRow,
+    TableHeader,
+    TableCell,
   ];
 
   editor = new Editor({

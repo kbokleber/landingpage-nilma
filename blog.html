@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog | Nilma Alves Advocacia</title>
+  <title>Blog: Família, Herança e Imóveis | Nilma Alves Advocacia</title>
   <meta name="description" content="Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar.">
   <meta name="theme-color" content="#5b2131">
-  <meta property="og:title" content="Blog | Nilma Alves Advocacia">
+  <meta property="og:title" content="Blog: Família, Herança e Imóveis | Nilma Alves Advocacia">
   <meta property="og:description" content="Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar.">
   <meta property="og:url" content="https://nilmaalves.adv.br/blog.html">
   <meta property="og:image" content="https://nilmaalves.adv.br/assets/photos/hero-01.jpg">
@@ -59,8 +59,8 @@
             <a href="index.html">Início</a><span aria-hidden="true">/</span><span>Blog</span>
           </nav>
           <p class="eyebrow">Informação para decisões conscientes</p>
-          <h1>Blog.</h1>
-          <p class="lead">Artigos sobre inventário, sucessão, proteção patrimonial, divórcio e organização familiar, em linguagem clara e responsável.</p>
+          <h1>Artigos sobre família, herança e imóveis</h1>
+          <p class="lead">Conteúdo claro sobre inventário, sucessão, união estável, regularização de imóveis e organização familiar — para decidir com mais segurança.</p>
         </div>
       </section>
 
@@ -165,7 +165,7 @@
           return;
         }
         grid.innerHTML = data.items.map((p) => `
-          <a class="blog-card" href="post.html?slug=${encodeURIComponent(p.slug)}">
+          <a class="blog-card" href="/blog/${encodeURIComponent(p.slug)}">
             <div class="blog-card-media"${p.coverImage ? ` style="background-image:url('${escapeHtml(p.coverImage)}')"` : ''}></div>
             <div class="blog-card-body">
               <small>${escapeHtml(formatDate(p.publishedAt) || 'Blog')}</small>

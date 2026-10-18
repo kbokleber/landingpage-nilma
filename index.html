@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Advocacia em Direito de Família, Inventários e Planejamento Patrimonial. Atendimento estratégico em Guarujá e online.">
-  <title>Nilma Alves Advocacia | Família, Sucessões e Planejamento Patrimonial</title>
+  <title>Advogada de Família e Inventário no Guarujá | Nilma Alves</title>
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#5b2131">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Nilma Alves Advocacia | Família, Sucessões e Planejamento Patrimonial">
+  <meta property="og:title" content="Advogada de Família e Inventário no Guarujá | Nilma Alves">
   <meta property="og:description" content="Advocacia em Direito de Família, Inventários e Planejamento Patrimonial. Atendimento estratégico em Guarujá e online.">
   <meta property="og:image" content="https://nilmaalves.adv.br/assets/og-home-nilmaalves.jpg">
   <meta property="og:url" content="https://nilmaalves.adv.br/">
@@ -17,7 +17,7 @@
   <meta property="og:locale" content="pt_BR">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Nilma Alves Advocacia | Família, Sucessões e Planejamento Patrimonial">
+  <meta name="twitter:title" content="Advogada de Família e Inventário no Guarujá | Nilma Alves">
   <meta name="twitter:description" content="Advocacia em Direito de Família, Inventários e Planejamento Patrimonial. Atendimento estratégico em Guarujá e online.">
   <meta name="twitter:image" content="https://nilmaalves.adv.br/assets/og-home-nilmaalves.jpg">
 
@@ -38,6 +38,12 @@
       "postalCode": "11410-150",
       "addressCountry": "BR"
     },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": -23.9935,
+      "longitude": -46.2569
+    },
+    "hasMap": "https://maps.google.com/maps?q=R.+Washington,+253,+Guaruj%C3%A1",
     "openingHoursSpecification": [
       {"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}
     ],
@@ -45,13 +51,25 @@
     "areaServed": [
       {"@type":"City","name":"Guarujá"},
       {"@type":"City","name":"Santos"},
-      {"@type":"City","name":"São Paulo"}
+      {"@type":"City","name":"São Paulo"},
+      {"@type":"City","name":"Bertioga"},
+      {"@type":"City","name":"São Vicente"},
+      {"@type":"City","name":"Praia Grande"},
+      {"@type":"City","name":"Cubatão"}
+    ],
+    "sameAs": [
+      "https://share.google/rH7qIYf3REkMKofB3",
+      "https://www.instagram.com/advnilmaalves/",
+      "https://www.facebook.com/advnilmaalves",
+      "https://www.linkedin.com/in/nilma-alves-de-oliveira",
+      "https://www.jusbrasil.com.br/advogados/nilma-alves"
     ],
     "knowsAbout": [
       "Direito de Família",
       "Sucessões",
       "Planejamento Patrimonial",
-      "Inventário"
+      "Inventário",
+      "Regularização de Imóveis"
     ]
   }
   </script>
@@ -502,7 +520,7 @@
             var tag = (p.tags && p.tags[0]) || 'Artigo';
             var resumo = (p.excerpt || p.subtitle || 'Leia o conteúdo completo.').replace(/</g, '&lt;');
             return '<article class="blog-card"><small>' + tag + '</small><h3>' + p.title + '</h3><p>' + resumo +
-              '</p><a href="post.html?slug=' + encodeURIComponent(p.slug) + '">Ler artigo →</a></article>';
+              '</p><a href="/blog/' + encodeURIComponent(p.slug) + '">Ler artigo →</a></article>';
           }).join('');
         })
         .catch(function () { /* mantém fallback */ });
